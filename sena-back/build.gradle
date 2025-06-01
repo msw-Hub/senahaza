@@ -1,0 +1,59 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '2.7.14'
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+}
+
+group = 'org.example'
+version = '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring MVC 웹 개발을 위한 기본 스타터 (내장 톰캣 + 스프링 MVC 포함)
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // AOP (관점 지향 프로그래밍) 지원용 스타터
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+    // 롬복: 코드 자동 생성 라이브러리 (Getter, Setter, 생성자 등)
+    compileOnly 'org.projectlombok:lombok:1.18.26'
+    annotationProcessor 'org.projectlombok:lombok:1.18.26'
+    testCompileOnly 'org.projectlombok:lombok:1.18.26'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.26'
+
+    // 스프링 시큐리티: 인증 및 인가 보안 기능 스타터
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // JPA 사용을 위한 스타터 (Spring Data JPA + 하이버네이트 포함)
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // 테스트용 기본 스타터 (JUnit, Mockito 등 포함)
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // 스프링 시큐리티 테스트 지원 라이브러리
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    // MySQL 데이터베이스 커넥터 (런타임 시 필요)
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    // jwt 사용을 위한 의존성
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // validation을 위한 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+}
+
+test {
+    useJUnitPlatform()
+}

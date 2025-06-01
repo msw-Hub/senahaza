@@ -22,3 +22,23 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# Gradle
+sena-back/.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# 백엔드 환경변수 파일 무시
+/sena-back/.env
+
+# 백엔드 MySQL 데이터 폴더 무시
+/sena-back/mysql-data/
+
+# IntelliJ IDEA 설정 폴더 무시
+/.idea/
+
+# 모듈 설정 파일 무시
+/*.iml
+
+# sena-back 내부 특정 환경설정 파일 무시
+/sena-back/src/main/resources/application.yml

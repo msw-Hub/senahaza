@@ -123,5 +123,38 @@ public class RootService {
                 .build();
     }
 
+    // root 권한을 가진 유저의 다른 관리자 권한 변경 - 1명씩만
+    @Transactional
+    public void changeAdminRole(Long adminId, String role) {
+        // role 값이 유효한지 확인
+        if (role == null || (!role.equals("VIEWER") && !role.equals("EDITOR") && !role.equals("ADMIN"))) {
+            throw new IllegalArgumentException("유효하지 않은 역할입니다. VIEWER, EDITOR, ADMIN 중 하나를 선택하세요.");
+        }
+
+        AdminEntity admin = adminRepository.findById(adminId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 관리자가 존재하지 않습니다. ID: " + adminId));
+
+        // 현재 역할과 동일한 경우 예외 처리
+        if (admin.getRole().name().equals(role)) {
+            throw new IllegalArgumentException("현재 역할과 동일합니다. 변경할 필요가 없습니다.");
+        }
+
+        // 역할 변경
+        admin.setRole(AdminEntity.Role.valueOf(role));
+        adminRepository.save(admin);
+
+        log.info("관리자 권한 변경 완료: {} -> {}", admin.getName(), role);
+    }
+
+    @Transactional
+    public void deleteAdmin(Long adminId) {
+        AdminEntity admin = adminRepository.findById(adminId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 관리자가 존재하지 않습니다. ID: " + adminId));
+
+        // 관리자 삭제
+        adminRepository.delete(admin);
+
+        log.info("관리자 삭제 완료: {}", admin.getName());
+    }
 
 }

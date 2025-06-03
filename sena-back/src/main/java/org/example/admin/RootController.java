@@ -55,4 +55,26 @@ public class RootController {
         return ResponseEntity.ok(response);
     }
 
+    // root 권한을 가진 유저의 다른 관리자 권한 변경 - 1명씩만
+    @GetMapping("/adminList/changeRole")
+    public ResponseEntity<?> changeAdminRole(
+            @RequestParam(required = true) Long adminId,
+            @RequestParam(required = true) String role
+    ) {
+        log.info("root권한 유저의 관리자 권한 변경 요청: {}, role: {}", adminId, role);
+        rootService.changeAdminRole(adminId, role);
+        return ResponseEntity.ok().build();
+    }
+
+    // root 권한을 가진 유저의 다른 관리자 삭제 - 1명씩만
+    @DeleteMapping("/adminList/delete")
+    public ResponseEntity<?> deleteAdmin(
+            @RequestParam(required = true) Long adminId
+    ) {
+        log.info("root권한 유저의 관리자 삭제 요청: {}", adminId);
+        rootService.deleteAdmin(adminId);
+        return ResponseEntity.ok().build();
+    }
+
+
 }

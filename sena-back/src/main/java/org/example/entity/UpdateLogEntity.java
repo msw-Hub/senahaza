@@ -2,6 +2,7 @@ package org.example.entity;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.example.admin.entity.AdminEntity;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;

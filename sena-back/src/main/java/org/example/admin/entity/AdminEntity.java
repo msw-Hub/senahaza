@@ -1,7 +1,8 @@
-package org.example.entity;
+package org.example.admin.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import org.example.entity.BaseEntity;
+import org.example.entity.UpdateLogEntity;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -12,6 +13,9 @@ import java.util.List;
 @Table(name = "admin")
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AdminEntity extends BaseEntity {
 
     @Id

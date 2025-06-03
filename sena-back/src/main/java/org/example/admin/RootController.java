@@ -44,5 +44,15 @@ public class RootController {
         rootService.rejectSignUp(userIds);
         return ResponseEntity.ok().build();
     }
+    // root 권한을 가진 유저의 다른 관리자 목록 요청
+    @GetMapping("/adminList")
+    public ResponseEntity<?> getAdminList(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "dept") String sortBy
+    ) {
+        log.info("root권한 유저의 관리자 목록 요청");
+        AdminListResponseDto response = rootService.getAdminList(page, sortBy);
+        return ResponseEntity.ok(response);
+    }
 
 }

@@ -90,4 +90,38 @@ public class RootService {
         }
     }
 
+    // root 권한을 가진 유저의 다른 관리자 목록 조회
+    public AdminListResponseDto getAdminList(int page, String sortBy) {
+        final int pageSize = 20;
+        int pageIndex = (page < 1) ? 0 : page - 1; // 인데스가 0부터 시작이라...
+
+        Sort sort = Sort.by(Sort.Direction.ASC, sortBy);
+
+        PageRequest pageRequest = PageRequest.of(pageIndex, pageSize, sort);
+        Page<AdminEntity> adminPage = adminRepository.findAll(pageRequest);
+
+        List<AdminDto> adminList = adminPage.getContent().stream()
+                .map(admin -> AdminDto.builder()
+                        .adminId(admin.getAdminId())
+                        .name(admin.getName())
+                        .role(admin.getRole())
+                        .dept(admin.getDept())
+                        .email(admin.getEmail())
+                        .tel(admin.getTel())
+                        .lastLoginAt(admin.getLastLoginAt())
+                        .createdAt(admin.getCreatedAt())
+                        .updatedAt(admin.getUpdatedAt())
+                        .status(admin.getStatus())
+                        .build())
+                .collect(Collectors.toList());
+
+        return AdminListResponseDto.builder()
+                .adminList(adminList)
+                .count((int) adminPage.getTotalElements())
+                .totalPages(adminPage.getTotalPages())
+                .currentPage(page)
+                .build();
+    }
+
+
 }

@@ -1,5 +1,6 @@
 package org.example.exception;
 
+import org.example.exception.customException.SameRoleException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -21,5 +22,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception e) {
         return buildErrorResponse("INTERNAL_ERROR", "알 수 없는 오류가 발생했습니다.");
+    }
+
+    @ExceptionHandler(SameRoleException.class)
+    public ResponseEntity<Map<String, Object>> handleSameRoleException(SameRoleException e) {
+        return buildErrorResponse("SAME_ROLE_ERROR", e.getMessage());
     }
 }

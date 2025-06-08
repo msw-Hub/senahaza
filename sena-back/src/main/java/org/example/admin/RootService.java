@@ -10,6 +10,7 @@ import org.example.admin.dto.SignListResponseWrapperDto;
 import org.example.admin.entity.AdminEntity;
 import org.example.admin.repository.AdminRepository;
 import org.example.admin.repository.PendingAdminRepository;
+import org.example.exception.customException.SameRoleException;
 import org.example.jwt.RedisService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -132,7 +133,7 @@ public class RootService {
     @Transactional
     public void changeAdminRole(Long adminId, String role) {
         // role 값이 유효한지 확인
-        if (role == null || (!role.equals("VIEWER") && !role.equals("EDITOR") && !role.equals("ADMIN"))) {
+        if (role == null || (!role.equals("VIEWER") && !role.equals("EDITOR") && !role.equals("ROOT"))) {
             throw new IllegalArgumentException("유효하지 않은 역할입니다. VIEWER, EDITOR, ADMIN 중 하나를 선택하세요.");
         }
 
@@ -141,9 +142,8 @@ public class RootService {
 
         // 현재 역할과 동일한 경우 예외 처리
         if (admin.getRole().name().equals(role)) {
-            throw new IllegalArgumentException("현재 역할과 동일합니다. 변경할 필요가 없습니다.");
+            throw new SameRoleException("이미 동일한 역할입니다: " + admin.getRole().name());
         }
-
         // 역할 변경
         admin.setRole(AdminEntity.Role.valueOf(role));
         adminRepository.save(admin);

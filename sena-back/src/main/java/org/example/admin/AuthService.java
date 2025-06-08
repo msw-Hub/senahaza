@@ -34,8 +34,10 @@ public class AuthService {
         // dto를 AdminSignupRequestDto에서 PendingAdminEntity로 변환
         PendingAdminEntity pendingAdmin = PendingAdminEntity.builder()
                 .name(dto.getName())
+                .dept(dto.getDept())
                 .email(dto.getEmail())
                 .password(encodedPassword)
+                .tel(dto.getTel())
                 .build();
 
         // PendingAdminEntity 저장

@@ -36,4 +36,11 @@ public class PendingAdminEntity {
 
     @Column(name = "requested_at", nullable = false)
     private LocalDateTime requestedAt = LocalDateTime.now();
+
+    @PrePersist
+    public void prePersist() {
+        if (requestedAt == null) {
+            requestedAt = LocalDateTime.now();
+        }
+    }
 }

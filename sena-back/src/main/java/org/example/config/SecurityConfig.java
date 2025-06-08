@@ -1,6 +1,8 @@
 package org.example.config;
 
 import lombok.RequiredArgsConstructor;
+import org.example.admin.AdminLoginService;
+import org.example.admin.RootService;
 import org.example.jwt.JwtFilter;
 import org.example.jwt.JwtLoginFilter;
 import org.example.jwt.JwtUtil;
@@ -25,6 +27,7 @@ public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
     private final JwtUtil jwtUtil;
+    private final AdminLoginService adminLoginService;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
@@ -47,7 +50,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         JwtLoginFilter jwtLoginFilter = new JwtLoginFilter(
-                authenticationManager(http.getSharedObject(AuthenticationConfiguration.class)), jwtUtil
+                authenticationManager(http.getSharedObject(AuthenticationConfiguration.class)), jwtUtil, adminLoginService
         );
         jwtLoginFilter.setFilterProcessesUrl("/api/auth/login");
 

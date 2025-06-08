@@ -3,6 +3,7 @@ package org.example.jwt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.admin.AdminLoginService;
 import org.example.admin.RootService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,7 +24,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
-    private final RootService rootService;
+    private final AdminLoginService adminLoginService;
 
     // 로그인 요청 시 실행되는 메서드
     @Override
@@ -63,7 +64,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         String token = jwtUtil.createToken(email, role);
 
         // 마지막 로그인 시간 업데이트
-        rootService.updateLastLogin(email);
+        adminLoginService.updateLastLogin(email);
 
         log.info("인증성공! 이메일: {}, 역할: {}", email, role);
         log.info("JWT 토큰 생성: {}", token);

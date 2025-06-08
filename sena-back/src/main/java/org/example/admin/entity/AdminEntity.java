@@ -48,7 +48,7 @@ public class AdminEntity extends BaseEntity {
 
     // 연관관계
     @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<UpdateLogEntity> updateLogs = new ArrayList<>();
+    private List<UpdateLogEntity> updateLogs;
 
     public enum Role {
         ROOT, EDITOR, VIEWER;

@@ -159,12 +159,4 @@ public class RootService {
         log.info("관리자 삭제 완료: {}", admin.getName());
     }
 
-    @Transactional
-    public void updateLastLogin(String email) {
-        adminRepository.findByEmail(email).ifPresent(admin -> {
-            admin.setLastLoginAt(LocalDateTime.now());
-            adminRepository.save(admin);
-        });
-    }
-
 }

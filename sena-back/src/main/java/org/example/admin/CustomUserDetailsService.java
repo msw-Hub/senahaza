@@ -15,14 +15,14 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final AdminRepository adminRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // DB에서 username으로 관리자 조회, 없으면 예외 발생
-        AdminEntity admin = adminRepository.findByName(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        // DB에서 email로 관리자 조회, 없으면 예외 발생
+        AdminEntity admin = adminRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + email));
 
         // UserDetails 객체 생성 및 반환
         return new org.springframework.security.core.userdetails.User(
-                admin.getName(),            // 사용자 이름
+                admin.getEmail(),            // 이메일
                 admin.getPassword(),        // 암호화된 비밀번호
                 true,                      // 계정 활성화 여부 (true: 활성화)
                 true,                      // 계정 만료 여부 (true: 만료 안됨)

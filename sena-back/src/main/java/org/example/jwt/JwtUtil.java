@@ -21,15 +21,14 @@ public class JwtUtil {
     }
 
     // 토큰 생성
-    public String createToken(String username, String email, String role) {
+    public String createToken(String email, String role) {
         Date now = new Date();
         // 6시간 = 6 * 60 * 60 * 1000 밀리초
         long expirationMs = 6 * 60 * 60 * 1000;
         Date expiryDate = new Date(now.getTime() + expirationMs);
 
         String token = Jwts.builder()
-                .subject(username)
-                .claim("email", email)
+                .subject(email)
                 .claim("role", role)
                 .issuedAt(now)
                 .expiration(expiryDate)
@@ -50,15 +49,11 @@ public class JwtUtil {
                 .getPayload();
     }
 
-    // 사용자명 추출
+    // 사용자 이름 = 이메일 추출
     public String getUsername(String token) {
         return extractClaims(token).getSubject();
     }
 
-    // 이메일 추출
-    public String getEmail(String token) {
-        return extractClaims(token).get("email", String.class);
-    }
 
     // 역할(role) 추출
     public String getRole(String token) {

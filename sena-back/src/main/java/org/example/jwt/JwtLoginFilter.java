@@ -28,15 +28,17 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
             throws AuthenticationException {
 
+        log.info("[JwtLoginFilter] 로그인 시도 감지됨");
+
         try {
             // JSON에서 username, password 추출
             Map<String, String> loginData = new ObjectMapper().readValue(request.getInputStream(), new TypeReference<Map<String, String>>() {});
 
-            String username = loginData.get("username");
+            String email = loginData.get("email");
             String password = loginData.get("password");
 
             UsernamePasswordAuthenticationToken authRequest =
-                    new UsernamePasswordAuthenticationToken(username, password);
+                    new UsernamePasswordAuthenticationToken(email, password);
 
             // 인증 시도 (UserDetailsService와 연동)
             return authenticationManager.authenticate(authRequest);
@@ -53,15 +55,26 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
                                             FilterChain chain,
                                             Authentication authResult) throws IOException {
 
-        String username = authResult.getName();
+        String email = authResult.getName(); // getName()이 이메일임
         String role = authResult.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
 
-        String token = jwtUtil.createToken(username, "", role);
+        String token = jwtUtil.createToken(email, role);
 
-        log.info("인증 성공! 이름: {}, 권한: {}", username, role);
+        log.info("인증성공! 이메일: {}, 역할: {}", email, role);
         log.info("JWT 토큰 생성: {}", token);
+
 
         response.setContentType("application/json");
         response.getWriter().write("{\"token\":\"" + token + "\"}");
     }
+
+    @Override
+    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
+                                              AuthenticationException failed) throws IOException {
+        log.error("[JwtLoginFilter] 인증 실패: {}", failed.getMessage());
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\": \"Authentication failed: " + failed.getMessage() + "\"}");
+    }
+
 }

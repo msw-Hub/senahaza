@@ -172,15 +172,37 @@ public class RootService {
         log.info("관리자 권한 변경 완료 및 활성 토큰 블랙리스트 처리: {} -> {}", admin.getName(), role);
     }
 
+
     @Transactional
     public void deleteAdmin(Long adminId) {
         AdminEntity admin = adminRepository.findById(adminId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 관리자가 존재하지 않습니다. ID: " + adminId));
 
+        String email = admin.getEmail();
+
         // 관리자 삭제
         adminRepository.delete(admin);
-
         log.info("관리자 삭제 완료: {}", admin.getName());
-    }
 
+        // 삭제된 관리자의 활성 토큰 조회 및 블랙리스트 등록
+        Set<String> activeJtis = redisService.getUserActiveTokens(email);
+        log.info("[DEBUG] 삭제 대상 활성 토큰 개수: {}", (activeJtis == null ? "null" : activeJtis.size()));
+
+        if (activeJtis != null) {
+            for (String jti : activeJtis) {
+                Long expirationMillis = redisService.getExpirationMillis("jti:" + jti);
+                if (expirationMillis == null || expirationMillis <= 0) {
+                    expirationMillis = 3600 * 1000L; // 기본 1시간
+                }
+
+                redisService.deleteActiveToken(jti);
+                redisService.blacklistToken(jti, expirationMillis);
+            }
+        }
+
+        // 활성 토큰 Set 비우기
+        redisService.deleteUserActiveTokens(email);
+
+        log.info("관리자 삭제 후 활성 토큰 블랙리스트 처리 완료: {}", email);
+    }
 }

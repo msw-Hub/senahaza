@@ -28,20 +28,20 @@ public class RootController {
     // root 권한을 가진 유저의 회원가입 승인 요청 (여러명 한번에) - 권한 VIEWER로 변경
     @GetMapping("/signList/approve")
     public ResponseEntity<?> approveSignList(
-            @RequestParam(required = true) List<Long> userIds
+            @RequestParam(required = true) List<Long> pendingAdminIds
     ) {
         log.info("root권한 유저의 회원가입 승인 요청");
-        rootService.approveSignUp(userIds);
+        rootService.approveSignUp(pendingAdminIds);
         return ResponseEntity.ok().build();
     }
 
     // root 권한을 가진 유저의 회원가입 거절 요청 (여러명 한번에)
     @GetMapping("/signList/reject")
     public ResponseEntity<?> rejectSignList(
-            @RequestParam(required = false) List<Long> userIds
+            @RequestParam(required = false) List<Long> pendingAdminIds
     ) {
         log.info("root권한 유저의 회원가입 거절 요청");
-        rootService.rejectSignUp(userIds);
+        rootService.rejectSignUp(pendingAdminIds);
         return ResponseEntity.ok().build();
     }
     // root 권한을 가진 유저의 다른 관리자 목록 요청

@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -53,10 +54,10 @@ public class RootService {
     }
     // root 권한을 가진 유저의 회원가입 승인
     @Transactional
-    public void approveSignUp(List<Long> userIds) {
-        for (Long userId : userIds) {
+    public void approveSignUp(List<Long> pendingAdminIds) {
+        for (Long pendingAdminId : pendingAdminIds) {
             // 해당 유저의 PendingAdmin 엔티티 조회
-            pendingAdminRepository.findById(userId).ifPresent(pendingAdmin -> {
+            pendingAdminRepository.findById(pendingAdminId).ifPresent(pendingAdmin -> {
                 // 새로운 AdminEntity 생성
                 AdminEntity newAdmin = AdminEntity.builder()
                         .name(pendingAdmin.getName())
@@ -65,6 +66,7 @@ public class RootService {
                         .tel(pendingAdmin.getTel())
                         .password(pendingAdmin.getPassword())
                         .role(AdminEntity.Role.valueOf("VIEWER")) // 기본적으로 VIEWER 권한 부여
+                        .status(AdminEntity.Status.ACTIVE) // 상태를 ACTIVE로 설정
                         .build();
 
                 // AdminRepository에 저장
@@ -79,10 +81,10 @@ public class RootService {
     }
 
     // root 권한을 가진 유저의 회원가입 거절
-    public void rejectSignUp(List<Long> userIds) {
-        for (Long userId : userIds) {
+    public void rejectSignUp(List<Long> pendingAdminIds) {
+        for (Long pendingAdminId : pendingAdminIds) {
             // 해당 유저의 PendingAdmin 엔티티 조회
-            pendingAdminRepository.findById(userId).ifPresent(pendingAdmin -> {
+            pendingAdminRepository.findById(pendingAdminId).ifPresent(pendingAdmin -> {
                 // PendingAdmin 엔티티 삭제
                 pendingAdminRepository.delete(pendingAdmin);
                 log.info("회원가입 거절 완료: {}", pendingAdmin);
@@ -155,6 +157,14 @@ public class RootService {
         adminRepository.delete(admin);
 
         log.info("관리자 삭제 완료: {}", admin.getName());
+    }
+
+    @Transactional
+    public void updateLastLogin(String email) {
+        adminRepository.findByEmail(email).ifPresent(admin -> {
+            admin.setLastLoginAt(LocalDateTime.now());
+            adminRepository.save(admin);
+        });
     }
 
 }

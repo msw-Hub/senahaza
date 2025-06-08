@@ -1,6 +1,7 @@
 package org.example.admin.entity;
 
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.example.entity.BaseEntity;
 import org.example.entity.UpdateLogEntity;
 
@@ -13,7 +14,7 @@ import java.util.List;
 @Table(name = "admin")
 @Getter
 @Setter
-@Builder
+@SuperBuilder  // @Builder 대신 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 public class AdminEntity extends BaseEntity {

@@ -37,8 +37,6 @@ public class JwtUtil {
                 .signWith(secretKey)
                 .compact();
 
-        log.info("JWT 토큰 생성: {}", token);
-
         return new TokenInfo(token, jti, expirationMs);
     }
 

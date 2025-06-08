@@ -65,9 +65,14 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         TokenInfo tokenInfo = jwtUtil.createToken(email, role);
 
         // ✅ Redis에 JTI 저장
-        redisService.storeActiveToken(tokenInfo.getJti(), tokenInfo.getExpirationMs());
+        redisService.storeActiveToken(tokenInfo.getJti(), email, tokenInfo.getExpirationMs());
 
-        adminLoginService.updateLastLogin(email);
+        try {
+            adminLoginService.updateLastLogin(email);
+            log.info("updateLastLogin 메서드 종료 후");
+        } catch (Exception e) {
+            log.error("updateLastLogin 호출 중 예외 발생", e);
+        }
 
         log.info("인증성공! 이메일: {}, 역할: {}", email, role);
         log.info("JWT 토큰 생성: {}", tokenInfo.getToken());

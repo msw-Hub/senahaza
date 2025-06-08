@@ -6,6 +6,7 @@ import org.example.admin.RootService;
 import org.example.jwt.JwtFilter;
 import org.example.jwt.JwtLoginFilter;
 import org.example.jwt.JwtUtil;
+import org.example.jwt.RedisService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,6 +29,7 @@ public class SecurityConfig {
     private final JwtFilter jwtFilter;
     private final JwtUtil jwtUtil;
     private final AdminLoginService adminLoginService;
+    private final RedisService redisService;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
@@ -50,7 +52,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         JwtLoginFilter jwtLoginFilter = new JwtLoginFilter(
-                authenticationManager(http.getSharedObject(AuthenticationConfiguration.class)), jwtUtil, adminLoginService
+                authenticationManager(http.getSharedObject(AuthenticationConfiguration.class)), jwtUtil, adminLoginService, redisService
         );
         jwtLoginFilter.setFilterProcessesUrl("/api/auth/login");
 

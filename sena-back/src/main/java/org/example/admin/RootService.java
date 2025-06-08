@@ -10,6 +10,7 @@ import org.example.admin.dto.SignListResponseWrapperDto;
 import org.example.admin.entity.AdminEntity;
 import org.example.admin.repository.AdminRepository;
 import org.example.admin.repository.PendingAdminRepository;
+import org.example.jwt.RedisService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -29,6 +31,7 @@ public class RootService {
     private final PasswordEncoder passwordEncoder;
     private final AdminRepository adminRepository;
     private final PendingAdminRepository pendingAdminRepository;
+    private final RedisService redisService;
 
     // root 권한을 가진 유저의 회원가입 목록 요청
     public SignListResponseWrapperDto getSignList() {
@@ -145,7 +148,28 @@ public class RootService {
         admin.setRole(AdminEntity.Role.valueOf(role));
         adminRepository.save(admin);
 
-        log.info("관리자 권한 변경 완료: {} -> {}", admin.getName(), role);
+        String email = admin.getEmail();
+        Set<String> activeJtis = redisService.getUserActiveTokens(email);
+
+        for (String jti : activeJtis) {
+            // 토큰 만료시간 조회 (Redis에서 JTI 키 TTL 구하기)
+            Long expirationMillis = redisService.getExpirationMillis("jti:" + jti);
+            if (expirationMillis == null || expirationMillis <= 0) {
+                // 만료시간 정보가 없으면 기본값 적용 (예: 1시간)
+                expirationMillis = 3600 * 1000L;
+            }
+
+            // 활성 토큰 삭제
+            redisService.deleteActiveToken(jti);
+
+            // 블랙리스트 등록 (토큰 만료시간 기준)
+            redisService.blacklistToken(jti, expirationMillis);
+        }
+
+        // 활성 토큰 Set 비우기
+        redisService.deleteUserActiveTokens(email);
+
+        log.info("관리자 권한 변경 완료 및 활성 토큰 블랙리스트 처리: {} -> {}", admin.getName(), role);
     }
 
     @Transactional

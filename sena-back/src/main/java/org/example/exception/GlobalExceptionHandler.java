@@ -1,6 +1,6 @@
 package org.example.exception;
 
-import org.example.exception.customException.SameRoleException;
+import org.example.exception.customException.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -27,5 +27,28 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SameRoleException.class)
     public ResponseEntity<Map<String, Object>> handleSameRoleException(SameRoleException e) {
         return buildErrorResponse("SAME_ROLE_ERROR", e.getMessage());
+    }
+
+    @ExceptionHandler(PendingAdminNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handlePendingAdminNotFoundException(PendingAdminNotFoundException e) {
+        return buildErrorResponse("PENDING_ADMIN_NOT_FOUND", e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidSortFieldException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidSortField(InvalidSortFieldException e) {
+        return buildErrorResponse("INVALID_SORT_FIELD", e.getMessage());
+    }
+
+    @ExceptionHandler(PageOutOfRangeException.class)
+    public ResponseEntity<Map<String, Object>> handlePageOutOfRange(PageOutOfRangeException e) {
+        return buildErrorResponse("PAGE_OUT_OF_RANGE", e.getMessage());
+    }
+    @ExceptionHandler(AdminNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleAdminNotFound(AdminNotFoundException e) {
+        return buildErrorResponse("ADMIN_NOT_FOUND", e.getMessage());
+    }
+    @ExceptionHandler(InvalidAdminRoleException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidAdminRole(InvalidAdminRoleException e) {
+        return buildErrorResponse("INVALID_ADMIN_ROLE", e.getMessage());
     }
 }

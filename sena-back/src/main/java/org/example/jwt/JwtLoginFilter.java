@@ -87,8 +87,9 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
                                               AuthenticationException failed) throws IOException {
         log.error("[JwtLoginFilter] 인증 실패: {}", failed.getMessage());
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json");
-        response.getWriter().write("{\"error\": \"Authentication failed: " + failed.getMessage() + "\"}");
+        response.setContentType("application/json; charset=UTF-8"); // 🔥 인코딩 명시!
+        response.setCharacterEncoding("UTF-8");                     // 🔥 인코딩 명시!
+        response.getWriter().write("{\"error\": \"Authentication failed: " + "이메일 또는 비밀번호가 올바르지 않습니다" + "\"}");
     }
 
 }

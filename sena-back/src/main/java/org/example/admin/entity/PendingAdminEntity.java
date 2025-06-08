@@ -1,7 +1,6 @@
 package org.example.admin.entity;
 
 import lombok.*;
-import org.example.entity.BaseEntity;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;

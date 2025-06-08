@@ -2,6 +2,8 @@ package org.example.config;
 
 import lombok.RequiredArgsConstructor;
 import org.example.jwt.JwtFilter;
+import org.example.jwt.JwtLoginFilter;
+import org.example.jwt.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,6 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
+    private final JwtUtil jwtUtil;
 
     // 인증 매니저
     @Bean
@@ -33,26 +36,31 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // Spring Security 필터 체인 정의
+    // SecurityFilterChain 빈 등록
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        // JwtLoginFilter 생성 시 JwtUtil 직접 전달
+        JwtLoginFilter jwtLoginFilter = new JwtLoginFilter(authenticationManager(http.getSharedObject(AuthenticationConfiguration.class)), jwtUtil);
+        jwtLoginFilter.setFilterProcessesUrl("/api/auth/login");
+
         http
                 .csrf().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
                 .antMatchers(
-                        "/api/auth/**", //관리자 계정 생성, 로그인 등
-                        "/main/**" // 일반 유저 접근
+                        "/api/auth/login",   // 로그인은 누구나 접근 허용
+                        "/api/auth/**",      // 관리자 계정 생성 등
+                        "/main/**"           // 일반 유저 접근
                 ).permitAll()
-                .antMatchers("/root/**").hasAnyRole("ROOT")  //  수정권한 관리자
-                .antMatchers("/editor/**").hasAnyRole("ROOT", "VIEWER") // 수정은 ROOT와 VIEWER만 허용
-                .antMatchers("/viewer/**").hasAnyRole("ROOT", "EDITOR","VIEWER") // 뷰는 모두 허용
+                .antMatchers("/root/**").hasRole("ROOT")
+                .antMatchers("/editor/**").hasAnyRole("ROOT", "VIEWER")
+                .antMatchers("/viewer/**").hasAnyRole("ROOT", "EDITOR", "VIEWER")
                 .anyRequest().authenticated()
                 .and()
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilter(jwtLoginFilter)  // 로그인 필터 추가
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);  // JWT 검증 필터 추가
 
         return http.build();
     }
-
 }

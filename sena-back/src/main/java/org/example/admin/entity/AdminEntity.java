@@ -50,6 +50,12 @@ public class AdminEntity extends BaseEntity {
     private List<UpdateLogEntity> updateLogs = new ArrayList<>();
 
     public enum Role {
-        ROOT, EDITOR, VIEWER
+        ROOT, EDITOR, VIEWER;
+        // 스프링 시큐리티 권한 반환용
+
+        public List<org.springframework.security.core.GrantedAuthority> getAuthorities() {
+            return List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + this.name()));
+        }
+
     }
 }

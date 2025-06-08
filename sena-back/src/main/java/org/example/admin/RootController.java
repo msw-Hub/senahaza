@@ -76,5 +76,4 @@ public class RootController {
         return ResponseEntity.ok().build();
     }
 
-
 }

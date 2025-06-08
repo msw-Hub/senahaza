@@ -18,6 +18,7 @@ import java.util.Collections;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final RedisService redisService;
 
     // 매 요청마다 실행되는 필터 로직
     @Override
@@ -30,30 +31,33 @@ public class JwtFilter extends OncePerRequestFilter {
             String token = resolveToken(request);
 
             if (token != null) {
-                if (jwtUtil.validateToken(token)) {
-                    String username = jwtUtil.getUsername(token);
-                    String role = jwtUtil.getRole(token);
-
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    username,
-                                    null,
-                                    Collections.singleton(new SimpleGrantedAuthority("ROLE_" + role))
-                            );
-
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                } else {
-                    // 유효하지 않은 토큰
+                if (!jwtUtil.validateToken(token)) {
                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT token");
                     return;
                 }
+
+                String jti = jwtUtil.getJti(token); // JTI 추출
+                if (redisService.isBlacklisted(jti)) {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token is blacklisted");
+                    return;
+                }
+
+                String username = jwtUtil.getUsername(token);
+                String role = jwtUtil.getRole(token);
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                username,
+                                null,
+                                Collections.singleton(new SimpleGrantedAuthority("ROLE_" + role))
+                        );
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
 
-            // 토큰 없거나 인증 성공 -> 다음 필터로 진행
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
-            // 예외 발생 시 401 응답 반환
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized: " + e.getMessage());
         }
     }

@@ -52,6 +52,9 @@ dependencies {
 
     // validation을 위한 의존성
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // 블랙리스트 토큰을 위한 redis 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
 test {

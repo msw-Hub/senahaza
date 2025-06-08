@@ -25,6 +25,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final AdminLoginService adminLoginService;
+    private final RedisService redisService;
 
     // 로그인 요청 시 실행되는 메서드
     @Override
@@ -61,17 +62,19 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         String email = authResult.getName(); // getName()이 이메일임
         String role = authResult.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
 
-        String token = jwtUtil.createToken(email, role);
+        TokenInfo tokenInfo = jwtUtil.createToken(email, role);
 
-        // 마지막 로그인 시간 업데이트
+        // ✅ Redis에 JTI 저장
+        redisService.storeActiveToken(tokenInfo.getJti(), tokenInfo.getExpirationMs());
+
         adminLoginService.updateLastLogin(email);
 
         log.info("인증성공! 이메일: {}, 역할: {}", email, role);
-        log.info("JWT 토큰 생성: {}", token);
+        log.info("JWT 토큰 생성: {}", tokenInfo.getToken());
 
 
         response.setContentType("application/json");
-        response.getWriter().write("{\"token\":\"" + token + "\"}");
+        response.getWriter().write("{\"token\":\"" + tokenInfo.getToken() + "\"}");
     }
 
     @Override

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -21,14 +22,15 @@ public class JwtUtil {
     }
 
     // 토큰 생성
-    public String createToken(String email, String role) {
+    public TokenInfo createToken(String email, String role) {
         Date now = new Date();
-        // 6시간 = 6 * 60 * 60 * 1000 밀리초
         long expirationMs = 6 * 60 * 60 * 1000;
         Date expiryDate = new Date(now.getTime() + expirationMs);
+        String jti = UUID.randomUUID().toString(); // JTI 생성
 
         String token = Jwts.builder()
                 .subject(email)
+                .id(jti)
                 .claim("role", role)
                 .issuedAt(now)
                 .expiration(expiryDate)
@@ -37,8 +39,9 @@ public class JwtUtil {
 
         log.info("JWT 토큰 생성: {}", token);
 
-        return token;
+        return new TokenInfo(token, jti, expirationMs);
     }
+
 
     // 공통 Claims 추출
     public Claims extractClaims(String token) {
@@ -47,6 +50,10 @@ public class JwtUtil {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    public String getJti(String token) {
+        return extractClaims(token).getId();
     }
 
     // 사용자 이름 = 이메일 추출

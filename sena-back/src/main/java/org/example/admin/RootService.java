@@ -3,10 +3,7 @@ package org.example.admin;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.admin.dto.AdminDto;
-import org.example.admin.dto.AdminListResponseDto;
-import org.example.admin.dto.SignListResponseDto;
-import org.example.admin.dto.SignListResponseWrapperDto;
+import org.example.admin.dto.*;
 import org.example.admin.entity.AdminEntity;
 import org.example.admin.entity.PendingAdminEntity;
 import org.example.admin.repository.AdminRepository;
@@ -60,7 +57,8 @@ public class RootService {
     }
     // root 권한을 가진 유저의 회원가입 승인
     @Transactional
-    public void approveSignUp(List<Long> pendingAdminIds) {
+    public void approveSignUp(PendingRequestDto pendingRequestDto) {
+        List<Long> pendingAdminIds = pendingRequestDto.getPendingAdminIds();
         for (Long pendingAdminId : pendingAdminIds) {
             PendingAdminEntity pendingAdmin = pendingAdminRepository.findById(pendingAdminId)
                     .orElseThrow(() -> new PendingAdminNotFoundException("유효하지 않은 ID입니다: " + pendingAdminId)); // ← 예외 발생
@@ -85,7 +83,8 @@ public class RootService {
 
     // root 권한을 가진 유저의 회원가입 거절
     @Transactional
-    public void rejectSignUp(List<Long> pendingAdminIds) {
+    public void rejectSignUp(PendingRequestDto pendingRequestDto) {
+        List<Long> pendingAdminIds = pendingRequestDto.getPendingAdminIds();
         for (Long pendingAdminId : pendingAdminIds) {
             PendingAdminEntity pendingAdmin = pendingAdminRepository.findById(pendingAdminId)
                     .orElseThrow(() -> new PendingAdminNotFoundException("유효하지 않은 ID입니다: " + pendingAdminId)); // 예외 발생

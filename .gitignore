@@ -26,7 +26,11 @@ replay_pid*
 # Gradle
 sena-back/.gradle/
 build/
+!gradlew
+!gradlew.bat
 !gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
 
 # 백엔드 환경변수 파일 무시
 /sena-back/.env

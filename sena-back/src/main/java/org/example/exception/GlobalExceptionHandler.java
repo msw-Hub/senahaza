@@ -51,4 +51,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleInvalidAdminRole(InvalidAdminRoleException e) {
         return buildErrorResponse("INVALID_ADMIN_ROLE", e.getMessage());
     }
+    @ExceptionHandler(AdminStatusInvalidException.class)
+    public ResponseEntity<Map<String, Object>> handleAdminStatusInvalid(AdminStatusInvalidException e) {
+        return buildErrorResponse("ADMIN_STATUS_INVALID", e.getMessage());
+    }
 }

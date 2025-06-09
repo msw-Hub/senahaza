@@ -24,7 +24,7 @@ public class AuthService {
 
         // 이메일 중복 확인
         if (adminRepository.existsByEmail(dto.getEmail())) {
-            log.error("이미 존재하는 이메일: {}", dto.getEmail());
+            log.info("이미 존재하는 이메일: {}", dto.getEmail());
             return;
         }
 

@@ -1,18 +1,19 @@
 package org.example.admin.dto;
 
+import lombok.Builder;
 import lombok.Data;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @Data
-@Valid
+@Builder
 public class ItemRequestDto {
 
     @NotBlank
     private String itemName;
 
-    @NotBlank
+    @NotNull
     private Long ruby;
 
     private String message;

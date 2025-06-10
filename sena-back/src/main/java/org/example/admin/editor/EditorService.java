@@ -17,6 +17,7 @@ import org.example.repository.ItemRepository;
 import org.example.repository.UpdateLogRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
@@ -35,6 +36,7 @@ public class EditorService {
     private final UpdateLogRepository updateLogRepository;
 
     // 이미지 업로드 메소드
+    @Transactional
     public void createItem(ItemRequestDto itemDto, MultipartFile file) {
         // 0. 현재 작업하는 관리자 정보 조회
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -113,5 +115,10 @@ public class EditorService {
             log.error("이미지 업로드 실패", e);
             throw new ImageUploadException("이미지 업로드 중 오류가 발생했습니다.");
         }
+    }
+
+    @Transactional
+    public void getItemList() {
+        
     }
 }

@@ -16,12 +16,20 @@ public class EditorController {
 
     private final EditorService editorService;
 
+    // 아이템 등록 + 이미지포함
     @PostMapping("/items")
     public ResponseEntity<?> createItem(
-            @RequestPart("item") ItemRequestDto itemDto,
-            @RequestPart(value = "file", required = true) MultipartFile file
+            @RequestParam("itemName") String itemName,
+            @RequestParam("ruby") Long ruby,
+            @RequestParam(value = "message", required = false) String message,
+            @RequestPart("file") MultipartFile file
     ) {
         log.info("아이템 등록 요청");
+        ItemRequestDto itemDto = ItemRequestDto.builder()
+                .itemName(itemName)
+                .ruby(ruby)
+                .message(message)
+                .build();
 
         if (file == null || file.isEmpty()) {
             throw new InvalidFileException("파일이 비어있거나 존재하지 않습니다.");
@@ -29,5 +37,14 @@ public class EditorController {
 
         editorService.createItem(itemDto, file);
         return ResponseEntity.ok("아이템 등록 완료");
+    }
+
+    // 아이템 전체 목록 반환
+    @GetMapping("/items")
+    public ResponseEntity<?> getItemList(
+    ) {
+        log.info("아이템 목록 요청");
+        editorService.getItemList();
+        return ResponseEntity.ok("아이템 목록 반환 완료");
     }
 }

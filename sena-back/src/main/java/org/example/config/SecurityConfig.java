@@ -19,6 +19,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
@@ -56,6 +61,8 @@ public class SecurityConfig {
         jwtLoginFilter.setFilterProcessesUrl("/api/auth/login");
 
         http
+                .cors() // ✅ CORS 설정을 활성화
+                .and()
                 .csrf().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
@@ -66,7 +73,7 @@ public class SecurityConfig {
                         "/main/**"
                 ).permitAll()
                 .antMatchers("/root/**").hasRole("ROOT")
-                .antMatchers("/editor/**").hasAnyRole("ROOT", "VIEWER")
+                .antMatchers("/editor/**").hasAnyRole("ROOT", "EDITOR")
                 .antMatchers("/viewer/**").hasAnyRole("ROOT", "EDITOR", "VIEWER")
                 .anyRequest().authenticated()
                 .and()
@@ -74,5 +81,18 @@ public class SecurityConfig {
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:3000")); // 프론트 주소
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true); // 쿠키/인증 정보 허용
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 }

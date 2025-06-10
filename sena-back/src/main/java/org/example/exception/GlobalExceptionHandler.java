@@ -19,10 +19,10 @@ public class GlobalExceptionHandler {
         ));
     }
     // 예외가 지정되지 않은 경우의 기본 처리
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGenericException(Exception e) {
-        return buildErrorResponse("INTERNAL_ERROR", "알 수 없는 오류가 발생했습니다.");
-    }
+//    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<Map<String, Object>> handleGenericException(Exception e) {
+//        return buildErrorResponse("INTERNAL_ERROR", "알 수 없는 오류가 발생했습니다.");
+//    }
 
     @ExceptionHandler(SameRoleException.class)
     public ResponseEntity<Map<String, Object>> handleSameRoleException(SameRoleException e) {

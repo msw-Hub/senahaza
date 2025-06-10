@@ -87,6 +87,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         response.addCookie(cookie);
 
         response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
         response.getWriter().write("{\"message\":\"로그인 성공\"}");
 
     }

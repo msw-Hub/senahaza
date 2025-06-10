@@ -1,8 +1,7 @@
-package org.example.admin;
+package org.example.admin.all;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.admin.entity.AdminEntity;
 import org.example.admin.repository.AdminRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

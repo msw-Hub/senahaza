@@ -1,8 +1,7 @@
 package org.example.config;
 
 import lombok.RequiredArgsConstructor;
-import org.example.admin.AdminLoginService;
-import org.example.admin.RootService;
+import org.example.admin.all.AdminLoginService;
 import org.example.jwt.JwtFilter;
 import org.example.jwt.JwtLoginFilter;
 import org.example.jwt.JwtUtil;

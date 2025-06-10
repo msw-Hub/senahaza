@@ -1,7 +1,6 @@
 package org.example.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.example.admin.entity.AdminEntity;
 
 import javax.persistence.*;
@@ -11,6 +10,9 @@ import java.time.LocalDateTime;
 @Table(name = "update_log")
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UpdateLogEntity {
 
     @Id

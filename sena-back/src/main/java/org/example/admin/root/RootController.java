@@ -1,4 +1,4 @@
-package org.example.admin;
+package org.example.admin.root;
 
 
 import lombok.RequiredArgsConstructor;
@@ -9,8 +9,6 @@ import org.example.admin.dto.PendingRequestDto;
 import org.example.admin.dto.SignListResponseWrapperDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Slf4j
 @RestController

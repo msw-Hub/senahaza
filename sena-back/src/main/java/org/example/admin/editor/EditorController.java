@@ -1,0 +1,33 @@
+package org.example.admin.editor;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.admin.dto.ItemRequestDto;
+import org.example.exception.customException.InvalidFileException;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+@Slf4j
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/editor")
+public class EditorController {
+
+    private final EditorService editorService;
+
+    @PostMapping("/items")
+    public ResponseEntity<?> createItem(
+            @RequestPart("item") ItemRequestDto itemDto,
+            @RequestPart(value = "file", required = true) MultipartFile file
+    ) {
+        log.info("아이템 등록 요청");
+
+        if (file == null || file.isEmpty()) {
+            throw new InvalidFileException("파일이 비어있거나 존재하지 않습니다.");
+        }
+
+        editorService.createItem(itemDto, file);
+        return ResponseEntity.ok("아이템 등록 완료");
+    }
+}

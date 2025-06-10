@@ -1,4 +1,4 @@
-package org.example.admin;
+package org.example.admin.viewer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package org.example.admin;
+package org.example.admin.all;
 
 import lombok.RequiredArgsConstructor;
 import org.example.admin.entity.AdminEntity;

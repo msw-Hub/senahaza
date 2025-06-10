@@ -1,7 +1,7 @@
 package org.example.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -11,6 +11,9 @@ import java.util.List;
 @Table(name = "item")
 @Getter
 @Setter
+@SuperBuilder  // @Builder 대신 @SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ItemEntity extends BaseEntity {
 
     @Id
@@ -29,8 +32,8 @@ public class ItemEntity extends BaseEntity {
 
     // 연관관계
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PackageItemEntity> packageItems = new ArrayList<>();
+    private List<PackageItemEntity> packageItems;
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<UpdateLogEntity> updateLogs = new ArrayList<>();
+    private List<UpdateLogEntity> updateLogs;
 }

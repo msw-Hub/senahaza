@@ -55,4 +55,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleAdminStatusInvalid(AdminStatusInvalidException e) {
         return buildErrorResponse("ADMIN_STATUS_INVALID", e.getMessage());
     }
+    @ExceptionHandler(AlreadyExistingItemException.class)
+    public ResponseEntity<Map<String, Object>> handleAlreadyExistingItem(AlreadyExistingItemException e) {
+        return buildErrorResponse("ALREADY_EXISTING_ITEM", e.getMessage());
+    }
+    @ExceptionHandler(InvalidFileException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidFileName(InvalidFileException e) {
+        return buildErrorResponse("INVALID_FILE", e.getMessage());
+    }
+    @ExceptionHandler(ImageUploadException.class)
+    public ResponseEntity<Map<String, Object>> handleImageUploadException(ImageUploadException e) {
+        return buildErrorResponse("IMAGE_UPLOAD_ERROR", e.getMessage());
+    }
 }

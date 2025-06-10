@@ -3,12 +3,14 @@ package org.example.admin.dto;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
 
+
 @EqualsAndHashCode(callSuper = true)
 @Data
-@Builder
+@SuperBuilder
 public class AdminItemResponseDto extends ItemResponseDto{
 
     // 최종 수정자 정보 추가

@@ -2,11 +2,11 @@ package org.example.admin.dto;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.SuperBuilder;
 
-import java.time.LocalDateTime;
 
 @Data
-@Builder
+@SuperBuilder
 public class ItemResponseDto {
 
     private Long itemId;

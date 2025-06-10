@@ -2,6 +2,7 @@ package org.example.admin.viewer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.admin.dto.AdminItemResponseDto;
 import org.example.admin.dto.ItemResponseDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,7 +34,7 @@ public class ViewerController {
     public ResponseEntity<?> getItemList(
     ) {
         log.info("아이템 목록 요청");
-        List<ItemResponseDto> result = viewerService.getItemList();
+        List<AdminItemResponseDto> result = viewerService.getItemList();
         return ResponseEntity.ok(result);
     }
 }

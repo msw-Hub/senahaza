@@ -2,6 +2,7 @@ package org.example.admin.viewer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.admin.dto.AdminItemResponseDto;
 import org.example.admin.dto.ItemResponseDto;
 import org.example.admin.entity.AdminEntity;
 import org.example.admin.repository.AdminRepository;
@@ -42,8 +43,7 @@ public class ViewerService {
     }
 
     @Transactional
-    public List<ItemResponseDto> getItemList() {
-        // 아이템 목록 조회
+    public List<AdminItemResponseDto> getItemList() {
         List<ItemEntity> itemEntities = itemRepository.findAll();
 
         if (itemEntities.isEmpty()) {
@@ -51,22 +51,19 @@ public class ViewerService {
             return Collections.emptyList();
         }
 
-        // 엔티티를 DTO로 변환하여 반환
         return itemEntities.stream()
                 .filter(item -> item.getStatus() == BaseEntity.Status.ACTIVE)
                 .map(item -> {
-                    // 최종 수정 로그 찾기 (updateLogs가 비어있을 수도 있음)
                     UpdateLogEntity latestLog = item.getUpdateLogs().stream()
                             .filter(log -> log.getUpdatedAt() != null)
                             .max(Comparator.comparing(UpdateLogEntity::getUpdatedAt))
                             .orElse(null);
 
-                    return ItemResponseDto.builder()
+                    return AdminItemResponseDto.builder()
                             .itemId(item.getItemId())
                             .itemName(item.getItemName())
                             .ruby(item.getRuby())
                             .img(item.getImg())
-                            // 최종 수정 로그가 있으면 정보 넣기
                             .lastModifiedBy(latestLog != null ? latestLog.getAdmin().getName() : null)
                             .lastModifiedAt(latestLog != null ? latestLog.getUpdatedAt() : null)
                             .lastModifiedMessage(latestLog != null ? latestLog.getMessage() : null)
@@ -74,5 +71,6 @@ public class ViewerService {
                 })
                 .collect(Collectors.toList());
     }
+
 
 }

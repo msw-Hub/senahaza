@@ -2,11 +2,14 @@ package org.example.admin.viewer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.admin.dto.ItemResponseDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -23,5 +26,14 @@ public class ViewerController {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         viewerService.checkStatus(email);
         return ResponseEntity.ok().body("유효성 확인되었습니다.");
+    }
+
+    // 아이템 전체 목록 반환
+    @GetMapping("/items")
+    public ResponseEntity<?> getItemList(
+    ) {
+        log.info("아이템 목록 요청");
+        List<ItemResponseDto> result = viewerService.getItemList();
+        return ResponseEntity.ok("아이템 목록 반환 완료");
     }
 }

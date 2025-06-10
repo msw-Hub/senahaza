@@ -2,12 +2,20 @@ package org.example.admin.viewer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.admin.dto.ItemResponseDto;
 import org.example.admin.entity.AdminEntity;
 import org.example.admin.repository.AdminRepository;
 import org.example.entity.BaseEntity;
+import org.example.entity.ItemEntity;
 import org.example.exception.customException.AdminNotFoundException;
 import org.example.exception.customException.AdminStatusInvalidException;
+import org.example.repository.ItemRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -15,6 +23,7 @@ import org.springframework.stereotype.Service;
 public class ViewerService {
 
     private final AdminRepository adminRepository;
+    private final ItemRepository itemRepository;
 
     public void checkStatus(String email) {
         // 이메일로 해당 관리자 계정 조회
@@ -29,4 +38,27 @@ public class ViewerService {
             throw new AdminStatusInvalidException("해당 관리자의 상태가 유효하지 않습니다.");
         }
     }
+
+    @Transactional
+    public List<ItemResponseDto> getItemList() {
+        // 아이템 목록 조회
+        List<ItemEntity> itemEntities = itemRepository.findAll();
+
+        if (itemEntities.isEmpty()) {
+            log.info("아이템 목록이 비어 있습니다.");
+            return Collections.emptyList();
+        }
+
+        // 엔티티를 DTO로 변환하여 반환
+        return itemEntities.stream()
+                .filter(item -> item.getStatus() == BaseEntity.Status.ACTIVE)
+                .map(item -> ItemResponseDto.builder()
+                        .itemId(item.getItemId())
+                        .itemName(item.getItemName())
+                        .ruby(item.getRuby())
+                        .img(item.getImg())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
 }

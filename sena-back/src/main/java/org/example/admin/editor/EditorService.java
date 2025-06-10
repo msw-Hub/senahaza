@@ -117,8 +117,4 @@ public class EditorService {
         }
     }
 
-    @Transactional
-    public void getItemList() {
-        
-    }
 }

@@ -77,8 +77,12 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         log.info("JWT 토큰 생성: {}", tokenInfo.getToken());
 
 
+        // 응답 바디 대신 응답 헤더에 토큰 추가
+        response.setHeader("Authorization", "Bearer " + tokenInfo.getToken());
+
+        // 응답 컨텐츠 타입 설정 (필요하다면)
         response.setContentType("application/json");
-        response.getWriter().write("{\"token\":\"" + tokenInfo.getToken() + "\"}");
+        response.getWriter().write("{\"message\":\"로그인 성공\"}");
     }
 
     @Override

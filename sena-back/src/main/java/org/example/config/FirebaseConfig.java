@@ -4,6 +4,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
@@ -14,6 +15,9 @@ import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class FirebaseConfig {
+
+    @Value("${path.file.config}")
+    private String firebaseConfigPath;
 
     @PostConstruct
     public void initializeFirebase() throws IOException {
@@ -27,7 +31,7 @@ public class FirebaseConfig {
                     .setStorageBucket("senahaza-a5333.firebasestorage.app")
                     .build();
         } else {
-            FileInputStream serviceAccount = new FileInputStream("sena-back/config/firebase-service-account.json");
+            FileInputStream serviceAccount = new FileInputStream(firebaseConfigPath);
             options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                     .setStorageBucket("senahaza-a5333.firebasestorage.app")

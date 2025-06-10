@@ -39,12 +39,4 @@ public class EditorController {
         return ResponseEntity.ok("아이템 등록 완료");
     }
 
-    // 아이템 전체 목록 반환
-    @GetMapping("/items")
-    public ResponseEntity<?> getItemList(
-    ) {
-        log.info("아이템 목록 요청");
-        editorService.getItemList();
-        return ResponseEntity.ok("아이템 목록 반환 완료");
-    }
 }

@@ -28,12 +28,12 @@ public class ViewerController {
         return ResponseEntity.ok().body("유효성 확인되었습니다.");
     }
 
-    // 아이템 전체 목록 반환
+    // 아이템 전체 목록 반환 - 관리자 관점
     @GetMapping("/items")
     public ResponseEntity<?> getItemList(
     ) {
         log.info("아이템 목록 요청");
         List<ItemResponseDto> result = viewerService.getItemList();
-        return ResponseEntity.ok("아이템 목록 반환 완료");
+        return ResponseEntity.ok(result);
     }
 }

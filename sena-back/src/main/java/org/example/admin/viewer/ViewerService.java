@@ -7,6 +7,7 @@ import org.example.admin.entity.AdminEntity;
 import org.example.admin.repository.AdminRepository;
 import org.example.entity.BaseEntity;
 import org.example.entity.ItemEntity;
+import org.example.entity.UpdateLogEntity;
 import org.example.exception.customException.AdminNotFoundException;
 import org.example.exception.customException.AdminStatusInvalidException;
 import org.example.repository.ItemRepository;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,12 +54,24 @@ public class ViewerService {
         // 엔티티를 DTO로 변환하여 반환
         return itemEntities.stream()
                 .filter(item -> item.getStatus() == BaseEntity.Status.ACTIVE)
-                .map(item -> ItemResponseDto.builder()
-                        .itemId(item.getItemId())
-                        .itemName(item.getItemName())
-                        .ruby(item.getRuby())
-                        .img(item.getImg())
-                        .build())
+                .map(item -> {
+                    // 최종 수정 로그 찾기 (updateLogs가 비어있을 수도 있음)
+                    UpdateLogEntity latestLog = item.getUpdateLogs().stream()
+                            .filter(log -> log.getUpdatedAt() != null)
+                            .max(Comparator.comparing(UpdateLogEntity::getUpdatedAt))
+                            .orElse(null);
+
+                    return ItemResponseDto.builder()
+                            .itemId(item.getItemId())
+                            .itemName(item.getItemName())
+                            .ruby(item.getRuby())
+                            .img(item.getImg())
+                            // 최종 수정 로그가 있으면 정보 넣기
+                            .lastModifiedBy(latestLog != null ? latestLog.getAdmin().getName() : null)
+                            .lastModifiedAt(latestLog != null ? latestLog.getUpdatedAt() : null)
+                            .lastModifiedMessage(latestLog != null ? latestLog.getMessage() : null)
+                            .build();
+                })
                 .collect(Collectors.toList());
     }
 

@@ -12,6 +12,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import javax.servlet.FilterChain;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -77,12 +78,17 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         log.info("JWT 토큰 생성: {}", tokenInfo.getToken());
 
 
-        // 응답 바디 대신 응답 헤더에 토큰 추가
-        response.setHeader("Authorization", "Bearer " + tokenInfo.getToken());
+        Cookie cookie = new Cookie("token", tokenInfo.getToken());
+        cookie.setHttpOnly(true);         // JS에서 접근 불가 (보안)
+        cookie.setSecure(true);           // HTTPS 환경에서만 전송
+        cookie.setPath("/");              // 전체 경로에 적용
+        cookie.setMaxAge((int)(tokenInfo.getExpirationMs() / 1000));  // 만료시간 초단위로 설정
 
-        // 응답 컨텐츠 타입 설정 (필요하다면)
+        response.addCookie(cookie);
+
         response.setContentType("application/json");
         response.getWriter().write("{\"message\":\"로그인 성공\"}");
+
     }
 
     @Override

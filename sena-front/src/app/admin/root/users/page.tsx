@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 interface Admin {
@@ -42,6 +43,8 @@ export default function UsersPage() {
   const [sortBy, setSortBy] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
+  const router = useRouter();
+
   // 관리자 목록 테이블 제목
   const adminListTitle = ["이름", "권한", "부서", "이메일", "전화번호", "최근 로그인", "권한 변경", "삭제"];
 
@@ -57,8 +60,8 @@ export default function UsersPage() {
       setAdminData(response.data);
       console.log("관리자 목록:", response.data);
     } catch (error) {
-      console.error("관리자 목록 조회 중 오류 발생", error);
-      alert("관리자 목록 조회 중 오류가 발생했습니다.");
+      // 권한이 없으므로 에러 발생시 packages 페이지로 리다이렉트
+      router.push("/admin/root/packages");
     }
   };
 

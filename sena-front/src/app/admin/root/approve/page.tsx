@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 interface SignupRequest {
@@ -17,7 +18,7 @@ interface SignupRequestList {
   signList: SignupRequest[]; // 승인 대기 중인 사용자 목록
 }
 
-export default function ApprovalPage() {
+export default function ApprovePage() {
   // 이 페이지는 관리자 전용 페이지로, 토큰 검증은 미들웨어에서 처리됨
   // 따라서 이곳에서는 별도의 인증 로직이 필요 없음
   // 구현 기능 리스트
@@ -37,6 +38,8 @@ export default function ApprovalPage() {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  const router = useRouter();
+
   // 가입 승인 리스트 제목
   const signupReqTitle = ["선택", "부서", "이메일", "이름", "전화번호", "요청 일시", "승인", "거절"];
 
@@ -45,12 +48,11 @@ export default function ApprovalPage() {
     setIsLoading(true);
     try {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/root/signList`, { withCredentials: true });
-
       setSignupReqs(response.data);
       console.log("승인 대기 중인 사용자 목록:", response.data);
     } catch (error) {
-      console.error("승인 요청 중 오류 발생", error);
-      alert("승인 요청 중 오류가 발생했습니다.");
+      // 권한이 없으므로 에러 발생시 packages 페이지로 리다이렉트
+      router.push("/admin/root/packages");
     } finally {
       setIsLoading(false);
     }

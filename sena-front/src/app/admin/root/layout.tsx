@@ -12,7 +12,7 @@ interface SideBarMenu {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const sideBarMenu: SideBarMenu[] = [
-    { name: "승인 관리", url: "approval", path: "/admin/root/approval" },
+    { name: "승인 관리", url: "approve", path: "/admin/root/approve" },
     { name: "회원 관리", url: "users", path: "/admin/root/users" },
     { name: "패키지 관리", url: "packages", path: "/admin/root/packages" },
     { name: "통계 관리", url: "stats", path: "/admin/root/stats" },

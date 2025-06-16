@@ -46,31 +46,35 @@ public class CommonService {
     // 패키지 전체 목록 반환
     @Transactional(readOnly = true)
     public PackageListResponseDto getPackages() {
-        // 1. 활성화된 패키지 조회
-        List<PackageEntity> packageEntities = packageRepository.findAllByStatus(BaseEntity.Status.ACTIVE);
+        log.info("1. 패키지 조회 시작");
 
-        // 2. 각 패키지를 DTO로 변환
+        List<PackageEntity> packageEntities = packageRepository.findAllByStatus(BaseEntity.Status.ACTIVE);
+        log.info("2. 패키지 개수: {}", packageEntities.size());
+
         List<PackageDto> packageDtos = packageEntities.stream()
                 .map(pkg -> {
-                    // 구성 아이템 필터링 및 매핑 (아이템이 ACTIVE 상태인 경우만)
+                    log.info("3. 패키지 ID: {}", pkg.getPackageId());
+                    log.info("3-1. 아이템 수: {}", pkg.getPackageItems().size());
+
                     List<PackageItemDto> itemDtos = pkg.getPackageItems().stream()
                             .filter(pi -> pi.getItem().getStatus() == BaseEntity.Status.ACTIVE)
-                            .map(pi -> PackageItemDto.builder()
-                                    .itemId(pi.getItem().getItemId())
-                                    .itemName(pi.getItem().getItemName())
-                                    .ruby(pi.getItem().getRuby())
-                                    .imgUrl(pi.getItem().getImg())
-                                    .quantity(pi.getQuantity())
-                                    .build()
-                            )
+                            .map(pi -> {
+                                log.info("4. 아이템 이름: {}", pi.getItem().getItemName());
+                                return PackageItemDto.builder()
+                                        .itemId(pi.getItem().getItemId())
+                                        .itemName(pi.getItem().getItemName())
+                                        .ruby(pi.getItem().getRuby())
+                                        .imgUrl(pi.getItem().getImg())
+                                        .quantity(pi.getQuantity())
+                                        .build();
+                            })
                             .collect(Collectors.toList());
 
-                    // 총 루비, 총 현금 계산
                     double totalRuby = itemDtos.stream()
                             .mapToDouble(i -> i.getRuby() * i.getQuantity())
                             .sum();
 
-                    Double totalCash = totalRuby * 7.5; // 예시 환율 10원
+                    Double totalCash = totalRuby * 7.5;
 
                     return PackageDto.builder()
                             .packageId(pkg.getPackageId())
@@ -82,7 +86,9 @@ public class CommonService {
                 })
                 .collect(Collectors.toList());
 
-        // 3. 마지막 업데이트 일시 (전체 기준)
+        log.info("5. 패키지 DTO 변환 완료");
+
+        // 마지막 업데이트 시각
         LocalDateTime latestUpdated = packageEntities.stream()
                 .flatMap(pkg -> pkg.getUpdateLogs().stream())
                 .map(UpdateLogEntity::getUpdatedAt)
@@ -93,9 +99,12 @@ public class CommonService {
                 ? latestUpdated.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
                 : null;
 
+        log.info("6. 최종 응답 준비 완료");
+
         return PackageListResponseDto.builder()
                 .lastUpdatedAt(lastUpdatedAt)
                 .packages(packageDtos)
                 .build();
     }
+
 }

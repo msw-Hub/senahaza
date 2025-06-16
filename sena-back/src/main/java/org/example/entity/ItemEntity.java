@@ -25,7 +25,7 @@ public class ItemEntity extends BaseEntity {
     private String itemName;
 
     @Column(name = "ruby", nullable = false)
-    private Long ruby;
+    private Double ruby;
 
     @Column(name = "img")
     private String img;

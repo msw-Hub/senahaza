@@ -14,7 +14,7 @@ public class ItemRequestDto {
     private String itemName;
 
     @NotNull
-    private Long ruby;
+    private Double ruby;
 
     private String message;
 }

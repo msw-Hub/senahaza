@@ -1,7 +1,9 @@
 package org.example.entity;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -11,6 +13,8 @@ import java.util.List;
 @Table(name = "package_item")
 @Getter
 @Setter
+@SuperBuilder
+@NoArgsConstructor
 public class PackageItemEntity extends BaseEntity {
 
     @Id

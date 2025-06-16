@@ -12,5 +12,6 @@ public class PackageDto {
     private String packageName;
     private Double totalRuby;
     private Double totalCash;
+    private Double packagePrice;
     private List<PackageItemDto> items;
 }

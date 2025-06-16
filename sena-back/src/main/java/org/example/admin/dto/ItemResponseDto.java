@@ -11,6 +11,6 @@ public class ItemResponseDto {
 
     private Long itemId;
     private String itemName;
-    private Long ruby;
+    private Double ruby;
     private String img;
 }

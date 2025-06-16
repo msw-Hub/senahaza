@@ -3,6 +3,7 @@ package org.example.admin.editor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.admin.dto.ItemRequestDto;
+import org.example.common.dto.PackageListResponseDto;
 import org.example.exception.customException.InvalidFileException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +21,7 @@ public class EditorController {
     @PostMapping("/items")
     public ResponseEntity<?> createItem(
             @RequestParam("itemName") String itemName,
-            @RequestParam("ruby") Long ruby,
+            @RequestParam("ruby") Double ruby,
             @RequestParam(value = "message", required = false) String message,
             @RequestPart("file") MultipartFile file
     ) {
@@ -44,7 +45,7 @@ public class EditorController {
     public ResponseEntity<?> updateItem(
             @PathVariable Long itemId,
             @RequestParam(value = "itemName", required = false) String itemName,
-            @RequestParam(value = "ruby", required = false) Long ruby,
+            @RequestParam(value = "ruby", required = false) Double ruby,
             @RequestParam(value = "message", required = false) String message,
             @RequestPart(value = "file", required = false) MultipartFile file,
             @RequestParam(value = "status", required = false) String status

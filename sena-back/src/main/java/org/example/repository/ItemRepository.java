@@ -15,4 +15,6 @@ public interface ItemRepository extends JpaRepository<ItemEntity, Long> {
 
     boolean existsByItemNameAndStatusNotAndItemIdNot(String itemName, BaseEntity.Status status, Long itemId);
 
+    List<ItemEntity> findAllByStatus(BaseEntity.Status status);
+
 }

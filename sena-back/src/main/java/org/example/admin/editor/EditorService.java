@@ -117,7 +117,7 @@ public class EditorService {
     }
 
     @Transactional
-    public void updateItem(Long itemId, String itemName, Long ruby, String message, MultipartFile file, String status) {
+    public void updateItem(Long itemId, String itemName, Double ruby, String message, MultipartFile file, String status) {
         // 0. 현재 작업하는 관리자 정보 조회
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         AdminEntity adminEntity = adminRepository.findByEmail(email)

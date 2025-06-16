@@ -79,4 +79,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleItemNotFoundException(ItemNotFoundException e) {
         return buildErrorResponse("ITEM_NOT_FOUND", e.getMessage());
     }
+    @ExceptionHandler(PackageNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handlePackageNotFoundException(PackageNotFoundException e) {
+        return buildErrorResponse("PACKAGE_NOT_FOUND", e.getMessage());
+    }
 }

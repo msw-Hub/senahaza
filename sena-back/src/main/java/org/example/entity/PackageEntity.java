@@ -30,8 +30,8 @@ public class PackageEntity extends BaseEntity {
     private Double packagePrice;    // 패키지 실제 현금가
 
     // 연관관계
-    @OneToMany(mappedBy = "packageEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PackageItemEntity> packageItems;
+    @OneToMany(mappedBy = "packageEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<PackageItemEntity> packageItems = new ArrayList<>();
 
     @OneToMany(mappedBy = "packageEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<UpdateLogEntity> updateLogs;

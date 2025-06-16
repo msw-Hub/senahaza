@@ -4,9 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.admin.dto.ItemRequestDto;
 import org.example.admin.dto.PackageCreateRequestDto;
-import org.example.common.dto.PackageListResponseDto;
 import org.example.exception.customException.InvalidFileException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -81,5 +82,19 @@ public class EditorController {
 
         editorService.createPackage(dto);
         return ResponseEntity.ok("패키지 등록 완료");
+    }
+
+    // 패키지 수정
+    @PatchMapping("/packages/{packageId}")
+    public ResponseEntity<?> updatePackage(
+            @PathVariable Long packageId,
+            @RequestBody PackageCreateRequestDto dto
+    ) {
+        log.info("패키지 수정 요청: packageId={}, dto={}", packageId, dto);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        log.info("auth: {}", auth);
+
+        editorService.updatePackage(packageId, dto);
+        return ResponseEntity.ok("패키지 수정 완료");
     }
 }

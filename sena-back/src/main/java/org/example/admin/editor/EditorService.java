@@ -5,11 +5,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.admin.dto.ItemRequestDto;
 import org.example.admin.dto.PackageCreateRequestDto;
+import org.example.admin.dto.PackageItemCreateDto;
 import org.example.admin.entity.AdminEntity;
 import org.example.admin.repository.AdminRepository;
 import org.example.entity.*;
 import org.example.exception.customException.*;
 import org.example.repository.ItemRepository;
+import org.example.repository.PackageItemRepository;
 import org.example.repository.PackageRepository;
 import org.example.repository.UpdateLogRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,8 +24,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,6 +36,7 @@ public class EditorService {
     private final ItemRepository itemRepository;
     private final UpdateLogRepository updateLogRepository;
     private final PackageRepository packageRepository;
+    private final PackageItemRepository packageItemRepository;
 
 
     @Transactional
@@ -269,7 +271,7 @@ public class EditorService {
                 .map(itemDto -> {
                     // 아이템 엔티티 조회
                     ItemEntity item = itemRepository.findById(itemDto.getItemId())
-                            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이템 ID: " + itemDto.getItemId()));
+                            .orElseThrow(() -> new ItemNotFoundException("아이템을 찾을 수 없습니다: " + itemDto.getItemId()));
 
                     return PackageItemEntity.builder()
                             .packageEntity(newPackage)
@@ -297,4 +299,99 @@ public class EditorService {
 
         log.info("패키지 생성 완료: {}", dto.getPackageName());
     }
+
+    // 패키지 수정 로직
+    @Transactional
+    public void updatePackage(Long packageId, PackageCreateRequestDto dto) {
+        log.info("updatePackage 시작: packageId={}, dto={}", packageId, dto);
+
+        // 0. 현재 작업하는 관리자 정보 조회
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("현재 관리자 email: {}", email);
+        AdminEntity admin = adminRepository.findByEmail(email)
+                .orElseThrow(() -> new AdminNotFoundException("관리자 정보를 찾을 수 없습니다."));
+
+        // 1. 패키지 조회
+        PackageEntity pkg = packageRepository.findById(packageId)
+                .orElseThrow(() -> new PackageNotFoundException("패키지를 찾을 수 없습니다."));
+        log.info("패키지 조회 성공: {}", pkg.getPackageName());
+
+        // 수정 전 값 보관
+        String originalName = pkg.getPackageName();
+        Double originalPrice = pkg.getPackagePrice();
+
+        // 2. 패키지 이름 변경
+        if (!pkg.getPackageName().equals(dto.getPackageName())) {
+            log.info("패키지 이름 변경 시도: {} -> {}", originalName, dto.getPackageName());
+            boolean exists = packageRepository.existsByPackageNameAndStatusNotAndPackageIdNot(
+                    dto.getPackageName(), BaseEntity.Status.DELETED, packageId
+            );
+            if (exists) {
+                throw new AlreadyExistingItemException("이미 존재하는 패키지 이름입니다: " + dto.getPackageName());
+            }
+            pkg.setPackageName(dto.getPackageName());
+        }
+
+        // 3. 패키지 가격 변경
+        if (!Objects.equals(pkg.getPackagePrice(), dto.getPackagePrice())) {
+            log.info("패키지 가격 변경 시도: {} -> {}", originalPrice, dto.getPackagePrice());
+            pkg.setPackagePrice(dto.getPackagePrice());
+        }
+
+        // 4. 기존 구성 아이템 제거
+        log.info("기존 구성 아이템 제거: {}개", pkg.getPackageItems().size());
+        pkg.getPackageItems().clear();  // orphanRemoval = true 이므로 삭제 처리 됨
+
+        // 5. 새 구성 아이템 등록
+        Set<Long> seen = new HashSet<>();
+        for (PackageItemCreateDto itemDto : dto.getItems()) {
+            if (!seen.add(itemDto.getItemId())) {
+                throw new AlreadyExistingItemException("아이템이 중복되었습니다: " + itemDto.getItemId());
+            }
+            ItemEntity item = itemRepository.findById(itemDto.getItemId())
+                    .orElseThrow(() -> new ItemNotFoundException("아이템을 찾을 수 없습니다: " + itemDto.getItemId()));
+
+            PackageItemEntity packageItem = PackageItemEntity.builder()
+                    .item(item)
+                    .quantity(itemDto.getQuantity())
+                    .packageEntity(pkg)
+                    .build();
+
+            pkg.getPackageItems().add(packageItem);
+            log.info("새 아이템 추가: itemId={}, quantity={}", itemDto.getItemId(), itemDto.getQuantity());
+        }
+
+//        // 6. 저장
+//        packageRepository.save(pkg);
+//        log.info("패키지 저장 완료");
+
+        try {
+            packageRepository.save(pkg);
+            log.info("패키지 저장 완료");
+        } catch (Exception ex) {
+            log.error("패키지 저장 중 오류 발생", ex);
+            throw ex;  // 예외 재던지기 (없으면 서비스가 정상 종료됨)
+        }
+
+        // 7. 패키지 수정 로그 작성
+        StringBuilder logMsg = new StringBuilder("패키지 수정: ");
+        if (!originalName.equals(dto.getPackageName())) {
+            logMsg.append("[이름 변경] ");
+        }
+        if (!Objects.equals(originalPrice, dto.getPackagePrice())) {
+            logMsg.append("[가격 변경] ");
+        }
+        logMsg.append("[구성 변경] ");
+
+        updateLogRepository.save(UpdateLogEntity.builder()
+                .updatedAt(LocalDateTime.now())
+                .message(logMsg.toString())
+                .admin(admin)
+                .packageEntity(pkg)
+                .build());
+
+        log.info("패키지 수정 완료: {}", pkg.getPackageName());
+    }
+
+
 }

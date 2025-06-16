@@ -11,4 +11,6 @@ public interface PackageRepository extends JpaRepository<PackageEntity, Long> {
     List<PackageEntity> findAllByStatus(BaseEntity.Status status);
 
     boolean existsByPackageNameAndStatusNot(String packageName, BaseEntity.Status status);
+
+    boolean existsByPackageNameAndStatusNotAndPackageIdNot(String packageName, BaseEntity.Status status, Long packageId);
 }

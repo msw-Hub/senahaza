@@ -75,9 +75,24 @@ public class JwtUtil {
     public boolean validateToken(String token) {
         try {
             Claims claims = extractClaims(token);
-            return !isTokenExpired(token);
+
+            // 만료 여부
+            if (claims.getExpiration().before(new Date())) {
+                log.warn("JWT 만료됨");
+                return false;
+            }
+
+            // 필수 클레임 검사
+            if (claims.getSubject() == null || claims.get("role") == null || claims.getId() == null) {
+                log.warn("JWT 클레임 누락");
+                return false;
+            }
+
+            return true;
         } catch (Exception e) {
+            log.error("JWT 유효성 검사 실패", e);
             return false;
         }
     }
+
 }

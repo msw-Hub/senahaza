@@ -39,4 +39,28 @@ public class EditorController {
         return ResponseEntity.ok("아이템 등록 완료");
     }
 
+    // 아이템 정보 수정
+    @PatchMapping("/items/{itemId}")
+    public ResponseEntity<?> updateItem(
+            @PathVariable Long itemId,
+            @RequestParam(value = "itemName", required = false) String itemName,
+            @RequestParam(value = "ruby", required = false) Long ruby,
+            @RequestParam(value = "message", required = false) String message,
+            @RequestPart(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "status", required = false) String status
+    ) {
+        log.info("아이템 수정 요청: itemId={}", itemId);
+
+        editorService.updateItem(itemId, itemName, ruby, message, file, status);
+        return ResponseEntity.ok("아이템 수정 완료");
+    }
+
+    // 아이템 삭제
+    @DeleteMapping("/items/{itemId}")
+    public ResponseEntity<?> deleteItem(@PathVariable Long itemId) {
+        log.info("아이템 삭제 요청: itemId={}", itemId);
+
+        editorService.deleteItem(itemId);
+        return ResponseEntity.ok("아이템 삭제 완료");
+    }
 }

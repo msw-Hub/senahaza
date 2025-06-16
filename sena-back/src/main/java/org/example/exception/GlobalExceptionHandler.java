@@ -67,4 +67,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleImageUploadException(ImageUploadException e) {
         return buildErrorResponse("IMAGE_UPLOAD_ERROR", e.getMessage());
     }
+    @ExceptionHandler(ImageDeleteException.class)
+    public ResponseEntity<Map<String, Object>> handleImageDeleteException(ImageDeleteException e) {
+        return buildErrorResponse("IMAGE_DELETE_ERROR", e.getMessage());
+    }
+    @ExceptionHandler(InvalidStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidStatusException(InvalidStatusException e) {
+        return buildErrorResponse("INVALID_STATUS", e.getMessage());
+    }
+    @ExceptionHandler(ItemNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleItemNotFoundException(ItemNotFoundException e) {
+        return buildErrorResponse("ITEM_NOT_FOUND", e.getMessage());
+    }
 }

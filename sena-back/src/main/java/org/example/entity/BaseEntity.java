@@ -32,6 +32,6 @@ public abstract class BaseEntity {
     private Status status;
 
     public enum Status {
-        ACTIVE, INACTIVE
+        ACTIVE, INACTIVE, DELETED
     }
 }

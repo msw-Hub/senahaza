@@ -21,16 +21,10 @@ public class PackageEntity extends BaseEntity {
     @Column(name = "package_name", nullable = false)
     private String packageName;
 
-    @Column(name = "cash_amount", nullable = false)
-    private Long cashAmount;
-
-    @Column(name = "ruby_amount")
-    private Double rubyAmount;
-
     // 연관관계
     @OneToMany(mappedBy = "packageEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PackageItemEntity> packageItems = new ArrayList<>();
+    private List<PackageItemEntity> packageItems;
 
     @OneToMany(mappedBy = "packageEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<UpdateLogEntity> updateLogs = new ArrayList<>();
+    private List<UpdateLogEntity> updateLogs;
 }

@@ -44,7 +44,7 @@ public class ViewerService {
 
     @Transactional
     public List<AdminItemResponseDto> getItemList() {
-        List<ItemEntity> itemEntities = itemRepository.findAll();
+        List<ItemEntity> itemEntities = itemRepository.findByStatusNot(BaseEntity.Status.DELETED);
 
         if (itemEntities.isEmpty()) {
             log.info("아이템 목록이 비어 있습니다.");
@@ -52,7 +52,6 @@ public class ViewerService {
         }
 
         return itemEntities.stream()
-                .filter(item -> item.getStatus() == BaseEntity.Status.ACTIVE)
                 .map(item -> {
                     UpdateLogEntity latestLog = item.getUpdateLogs().stream()
                             .filter(log -> log.getUpdatedAt() != null)
@@ -71,6 +70,4 @@ public class ViewerService {
                 })
                 .collect(Collectors.toList());
     }
-
-
 }

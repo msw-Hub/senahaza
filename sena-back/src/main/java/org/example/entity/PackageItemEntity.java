@@ -31,5 +31,5 @@ public class PackageItemEntity extends BaseEntity {
     private ItemEntity item;
 
     @OneToMany(mappedBy = "packageItem", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<UpdateLogEntity> updateLogs = new ArrayList<>();
+    private List<UpdateLogEntity> updateLogs;
 }

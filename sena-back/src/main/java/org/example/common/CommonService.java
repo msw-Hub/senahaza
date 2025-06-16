@@ -81,6 +81,7 @@ public class CommonService {
                             .packageName(pkg.getPackageName())
                             .totalRuby(totalRuby)
                             .totalCash(totalCash)
+                            .packagePrice(pkg.getPackagePrice())
                             .items(itemDtos)
                             .build();
                 })

@@ -3,6 +3,7 @@ package org.example.admin.editor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.admin.dto.ItemRequestDto;
+import org.example.admin.dto.PackageCreateRequestDto;
 import org.example.common.dto.PackageListResponseDto;
 import org.example.exception.customException.InvalidFileException;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,9 @@ public class EditorController {
 
     private final EditorService editorService;
 
+    /**
+     * 아이템 등록 및 수정 기능을 제공하는 API입니다.
+     */
     // 아이템 등록 + 이미지포함
     @PostMapping("/items")
     public ResponseEntity<?> createItem(
@@ -63,5 +67,19 @@ public class EditorController {
 
         editorService.deleteItem(itemId);
         return ResponseEntity.ok("아이템 삭제 완료");
+    }
+
+    /**
+     * 패키지 등록, 수정, 삭제 기능을 제공하는 API입니다.
+     */
+    // 패키지 등록
+    @PostMapping("/packages")
+    public ResponseEntity<?> createPackage(
+            @RequestBody PackageCreateRequestDto dto
+    ){
+        log.info("패키지 등록 요청: {}", dto);
+
+        editorService.createPackage(dto);
+        return ResponseEntity.ok("패키지 등록 완료");
     }
 }

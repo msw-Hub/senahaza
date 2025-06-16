@@ -4,13 +4,13 @@ import com.google.firebase.cloud.StorageClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.admin.dto.ItemRequestDto;
+import org.example.admin.dto.PackageCreateRequestDto;
 import org.example.admin.entity.AdminEntity;
 import org.example.admin.repository.AdminRepository;
-import org.example.entity.BaseEntity;
-import org.example.entity.ItemEntity;
-import org.example.entity.UpdateLogEntity;
+import org.example.entity.*;
 import org.example.exception.customException.*;
 import org.example.repository.ItemRepository;
+import org.example.repository.PackageRepository;
 import org.example.repository.UpdateLogRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,9 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -32,6 +34,7 @@ public class EditorService {
     private final AdminRepository adminRepository;
     private final ItemRepository itemRepository;
     private final UpdateLogRepository updateLogRepository;
+    private final PackageRepository packageRepository;
 
 
     @Transactional
@@ -238,5 +241,60 @@ public class EditorService {
         updateLogRepository.save(updateLog);
 
         log.info("아이템 삭제 완료: itemId={}, itemName={}", itemId, itemEntity.getItemName());
+    }
+
+    // 패키지 등록 로직
+    @Transactional
+    public void createPackage(PackageCreateRequestDto dto){
+        // 0. 현재 작업하는 관리자 정보 조회
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        AdminEntity adminEntity = adminRepository.findByEmail(email)
+                .orElseThrow(() -> new AdminNotFoundException("관리자 정보를 찾을 수 없습니다."));
+
+        // 1. 패키지 이름 중복 체크
+        if (packageRepository.existsByPackageNameAndStatusNot(dto.getPackageName(), BaseEntity.Status.DELETED)) {
+            log.warn("패키지 이름 중복: {}", dto.getPackageName());
+            throw new AlreadyExistingItemException("이미 존재하는 패키지 이름입니다: " + dto.getPackageName());
+        }
+
+        // 2. 패키지 Entity 생성
+        PackageEntity newPackage = PackageEntity.builder()
+                .packageName(dto.getPackageName())
+                .status(BaseEntity.Status.ACTIVE) // 활성 상태로 설정
+                .packagePrice(dto.getPackagePrice())
+                .build();
+
+        // 2-1. 패키지 아이템 리스트 생성
+        List<PackageItemEntity> packageItems = dto.getItems().stream()
+                .map(itemDto -> {
+                    // 아이템 엔티티 조회
+                    ItemEntity item = itemRepository.findById(itemDto.getItemId())
+                            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이템 ID: " + itemDto.getItemId()));
+
+                    return PackageItemEntity.builder()
+                            .packageEntity(newPackage)
+                            .item(item)
+                            .quantity(itemDto.getQuantity())
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        // 패키지에 아이템 리스트 설정
+        newPackage.setPackageItems(packageItems);
+
+        // 패키지 저장 (cascade 설정에 따라 packageItems도 저장됨)
+        packageRepository.save(newPackage);
+
+        // 3. 패키지 생성 로그 작성
+        UpdateLogEntity updateLog = UpdateLogEntity.builder()
+                .updatedAt(LocalDateTime.now())
+                .message("패키지 생성: " + dto.getPackageName())
+                .admin(adminEntity)
+                .packageEntity(newPackage)  // 연관 관계 설정 필요
+                .build();
+
+        updateLogRepository.save(updateLog);
+
+        log.info("패키지 생성 완료: {}", dto.getPackageName());
     }
 }

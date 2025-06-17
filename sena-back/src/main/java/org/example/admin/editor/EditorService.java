@@ -383,6 +383,10 @@ public class EditorService {
         }
         logMsg.append("[구성 변경] ");
 
+        if(dto.getMessage() != null) {
+            logMsg.append(dto.getMessage());
+        }
+
         updateLogRepository.save(UpdateLogEntity.builder()
                 .updatedAt(LocalDateTime.now())
                 .message(logMsg.toString())
@@ -391,6 +395,40 @@ public class EditorService {
                 .build());
 
         log.info("패키지 수정 완료: {}", pkg.getPackageName());
+    }
+
+
+    // 패키지 삭제 로직
+    @Transactional
+    public void deletePackage(Long packageId) {
+        // 0. 현재 작업하는 관리자 정보 조회
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        AdminEntity adminEntity = adminRepository.findByEmail(email)
+                .orElseThrow(() -> new AdminNotFoundException("관리자 정보를 찾을 수 없습니다."));
+
+        // 1. 패키지 조회
+        PackageEntity packageEntity = packageRepository.findById(packageId)
+                .orElseThrow(() -> new PackageNotFoundException("존재하지 않는 패키지입니다: " + packageId));
+
+        // 2. 이미 삭제된 상태라면 예외 처리
+        if (packageEntity.getStatus() == BaseEntity.Status.DELETED) {
+            throw new InvalidStatusException("이미 삭제된 패키지입니다: " + packageId);
+        }
+
+        // 3. 상태를 DELETED로 변경
+        packageEntity.setStatus(BaseEntity.Status.DELETED);
+        packageRepository.save(packageEntity);
+
+        // 4. 패키지 삭제 로그 작성
+        UpdateLogEntity updateLog = UpdateLogEntity.builder()
+                .updatedAt(LocalDateTime.now())
+                .message("패키지 삭제 처리")
+                .admin(adminEntity)
+                .packageEntity(packageEntity)  // 연관 관계 설정 필요
+                .build();
+        updateLogRepository.save(updateLog);
+
+        log.info("패키지 삭제 완료: packageId={}, packageName={}", packageId, packageEntity.getPackageName());
     }
 
 

@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -54,10 +55,12 @@ public class CommonService {
         List<PackageDto> packageDtos = packageEntities.stream()
                 .map(pkg -> {
                     log.info("3. 패키지 ID: {}", pkg.getPackageId());
-                    log.info("3-1. 아이템 수: {}", pkg.getPackageItems().size());
+                    log.info("3-1. 구성품 수: {}", pkg.getPackageItems().size());
 
+                    // 활성화된 구성품 + 활성화된 아이템만 포함
                     List<PackageItemDto> itemDtos = pkg.getPackageItems().stream()
-                            .filter(pi -> pi.getItem().getStatus() == BaseEntity.Status.ACTIVE)
+                            .filter(pi -> pi.getStatus() == BaseEntity.Status.ACTIVE) // 구성품이 ACTIVE
+                            .filter(pi -> pi.getItem().getStatus() == BaseEntity.Status.ACTIVE) // 아이템이 ACTIVE
                             .map(pi -> {
                                 log.info("4. 아이템 이름: {}", pi.getItem().getItemName());
                                 return PackageItemDto.builder()
@@ -89,10 +92,10 @@ public class CommonService {
 
         log.info("5. 패키지 DTO 변환 완료");
 
-        // 마지막 업데이트 시각
         LocalDateTime latestUpdated = packageEntities.stream()
                 .flatMap(pkg -> pkg.getUpdateLogs().stream())
                 .map(UpdateLogEntity::getUpdatedAt)
+                .filter(Objects::nonNull)
                 .max(LocalDateTime::compareTo)
                 .orElse(null);
 

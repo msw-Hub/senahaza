@@ -1,12 +1,12 @@
 package org.example.common.dto;
 
-import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
 @Data
-@Builder
+@SuperBuilder
 public class PackageDto {
     private Long packageId;
     private String packageName;

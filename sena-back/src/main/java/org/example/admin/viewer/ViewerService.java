@@ -2,22 +2,20 @@ package org.example.admin.viewer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.admin.dto.AdminItemResponseDto;
-import org.example.admin.dto.ItemResponseDto;
+import org.example.admin.dto.*;
 import org.example.admin.entity.AdminEntity;
 import org.example.admin.repository.AdminRepository;
-import org.example.entity.BaseEntity;
-import org.example.entity.ItemEntity;
-import org.example.entity.UpdateLogEntity;
-import org.example.exception.customException.AdminNotFoundException;
-import org.example.exception.customException.AdminStatusInvalidException;
+import org.example.common.dto.PackageItemDto;
+import org.example.entity.*;
+import org.example.exception.customException.*;
 import org.example.repository.ItemRepository;
+import org.example.repository.PackageRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -27,6 +25,7 @@ public class ViewerService {
 
     private final AdminRepository adminRepository;
     private final ItemRepository itemRepository;
+    private final PackageRepository packageRepository;
 
     public void checkStatus(String email) {
         // 이메일로 해당 관리자 계정 조회
@@ -42,7 +41,8 @@ public class ViewerService {
         }
     }
 
-    @Transactional
+    // 아이템 전체 목록 반환 - 관리자 관점
+    @Transactional(readOnly = true)
     public List<AdminItemResponseDto> getItemList() {
         List<ItemEntity> itemEntities = itemRepository.findByStatusNot(BaseEntity.Status.DELETED);
 
@@ -63,6 +63,7 @@ public class ViewerService {
                             .itemName(item.getItemName())
                             .ruby(item.getRuby())
                             .img(item.getImg())
+                            .status(item.getStatus())
                             .lastModifiedBy(latestLog != null ? latestLog.getAdmin().getName() : null)
                             .lastModifiedAt(latestLog != null ? latestLog.getUpdatedAt() : null)
                             .lastModifiedMessage(latestLog != null ? latestLog.getMessage() : null)
@@ -70,4 +71,194 @@ public class ViewerService {
                 })
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public AdminPackageResponseDto getPackageInfo() {
+        log.info("1. 삭제되지 않은 패키지 조회 시작");
+
+        List<PackageEntity> packageEntities = packageRepository.findByStatusNot(BaseEntity.Status.DELETED);
+        log.info("2. 조회된 패키지 수: {}", packageEntities.size());
+
+        List<AdminPackageDto> packageDtos = packageEntities.stream()
+                .map(pkg -> {
+                    log.info("3. 패키지 ID: {}, 이름: {}", pkg.getPackageId(), pkg.getPackageName());
+
+                    // 최신 업데이트 로그 찾기
+                    UpdateLogEntity latestLog = pkg.getUpdateLogs().stream()
+                            .filter(log -> log.getUpdatedAt() != null)
+                            .max(Comparator.comparing(UpdateLogEntity::getUpdatedAt))
+                            .orElse(null);
+
+                    // DELETED가 아닌 패키지 아이템만 필터링
+                    List<PackageItemDto> itemDtos = pkg.getPackageItems().stream()
+                            .filter(pi -> pi.getStatus() != BaseEntity.Status.DELETED)
+                            .map(pi -> PackageItemDto.builder()
+                                    .itemId(pi.getItem().getItemId())
+                                    .itemName(pi.getItem().getItemName())
+                                    .ruby(pi.getItem().getRuby())
+                                    .imgUrl(pi.getItem().getImg())
+                                    .quantity(pi.getQuantity())
+                                    .build())
+                            .collect(Collectors.toList());
+
+                    // 총 루비 계산: ACTIVE 아이템만 대상으로 함
+                    double totalRuby = pkg.getPackageItems().stream()
+                            .filter(pi -> pi.getStatus() != BaseEntity.Status.DELETED)
+                            .filter(pi -> pi.getItem().getStatus() == BaseEntity.Status.ACTIVE)
+                            .mapToDouble(pi -> pi.getItem().getRuby() * pi.getQuantity())
+                            .sum();
+
+                    double totalCash = totalRuby * 7.5;
+
+                    return AdminPackageDto.builder()
+                            .packageId(pkg.getPackageId())
+                            .packageName(pkg.getPackageName())
+                            .totalRuby(totalRuby)
+                            .totalCash(totalCash)
+                            .packagePrice(pkg.getPackagePrice())
+                            .items(itemDtos)
+                            .status(pkg.getStatus())
+                            .lastModifiedBy(latestLog != null ? latestLog.getAdmin().getName() : null)
+                            .lastModifiedAt(latestLog != null ? latestLog.getUpdatedAt() : null)
+                            .lastModifiedMessage(latestLog != null ? latestLog.getMessage() : null)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        log.info("4. 패키지 DTO 생성 완료");
+
+        LocalDateTime latestUpdated = packageEntities.stream()
+                .flatMap(pkg -> pkg.getUpdateLogs().stream())
+                .map(UpdateLogEntity::getUpdatedAt)
+                .filter(Objects::nonNull)
+                .max(LocalDateTime::compareTo)
+                .orElse(null);
+
+        String lastUpdatedAt = latestUpdated != null
+                ? latestUpdated.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                : null;
+
+        return AdminPackageResponseDto.builder()
+                .lastUpdatedAt(lastUpdatedAt)
+                .packages(packageDtos)
+                .build();
+    }
+
+    // 특정 아이템의 상세한 정보 조회
+    @Transactional(readOnly = true)
+    public ItemDetailResponseDto getItemDetail(Long itemId) {
+        log.info("1. 아이템 조회 시작: itemId={}", itemId);
+
+        ItemEntity item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new ItemNotFoundException("해당 아이템이 존재하지 않습니다."));
+
+        if (item.getStatus() == BaseEntity.Status.DELETED) {
+            log.warn("아이템이 삭제된 상태입니다: itemId={}", itemId);
+            throw new InvalidStatusException("해당 아이템은 삭제된 상태입니다.");
+        }
+
+        log.info("2. 아이템 조회 완료: itemName={}, ruby={}, img={}", item.getItemName(), item.getRuby(), item.getImg());
+
+        List<UpdateLogDto> updateLogDtos = item.getUpdateLogs().stream()
+                .filter(log -> log.getUpdatedAt() != null)
+                .sorted(Comparator.comparing(UpdateLogEntity::getUpdatedAt).reversed())
+                .map(log -> UpdateLogDto.builder()
+                        .adminName(log.getAdmin().getName())
+                        .updatedAt(String.valueOf(log.getUpdatedAt()))
+                        .message(log.getMessage())
+                        .build())
+                .collect(Collectors.toList());
+
+        log.info("3. 업데이트 로그 조회 완료: 로그 수={}", updateLogDtos.size());
+
+        List<PackageSummaryDto> packageSummaries = item.getPackageItems().stream()
+                .map(PackageItemEntity::getPackageEntity)
+                .filter(Objects::nonNull)
+                .map(pkg -> PackageSummaryDto.builder()
+                        .packageId(pkg.getPackageId())
+                        .packageName(pkg.getPackageName())
+                        .build())
+                .collect(Collectors.toList());
+
+        return ItemDetailResponseDto.builder()
+                .itemId(item.getItemId())
+                .itemName(item.getItemName())
+                .ruby(item.getRuby())
+                .img(item.getImg())
+                .status(item.getStatus())
+                .updateLogs(updateLogDtos)
+                .packages(packageSummaries)
+                .build();
+    }
+
+    // 특정 패키지의 상세한 정보 조회
+    @Transactional(readOnly = true)
+    public PackageDetailResponseDto getPackageDetail(Long packageId) {
+        log.info("1. 패키지 조회 시작: packageId={}", packageId);
+
+        PackageEntity pkg = packageRepository.findById(packageId)
+                .orElseThrow(() -> new PackageNotFoundException("해당 패키지가 존재하지 않습니다. packageId=" + packageId));
+
+        if (pkg.getStatus() == BaseEntity.Status.DELETED) {
+            log.warn("삭제된 패키지입니다: packageId={}", packageId);
+            throw new InvalidStatusException("해당 패키지는 삭제된 상태입니다.");
+        }
+
+        log.info("2. 패키지 조회 완료: packageName={}, price={}", pkg.getPackageName(), pkg.getPackagePrice());
+
+        // 구성품 가져오기
+        List<PackageItemEntity> packageItems = pkg.getPackageItems();
+
+        List<PackageItemAndStatusDto> itemDtos = new ArrayList<>();
+        double totalRuby = 0.0;
+
+        for (PackageItemEntity pi : packageItems) {
+            ItemEntity item = pi.getItem();
+            if (item == null) continue;
+            // 삭제된 아이템은 제외
+            if (item.getStatus() == BaseEntity.Status.DELETED) continue;
+
+            // 삭제는 이미 필터링 됐으니 모두 포함
+            itemDtos.add(PackageItemAndStatusDto.builder()
+                    .itemId(item.getItemId())
+                    .itemName(item.getItemName())
+                    .imgUrl(item.getImg())
+                    .ruby(item.getRuby())
+                    .quantity(pi.getQuantity())
+                    .status(item.getStatus())
+                    .build());
+
+            // 상태가 ACTIVE인 구성품만 루비 합산
+            if (item.getStatus() == BaseEntity.Status.ACTIVE) {
+                totalRuby += item.getRuby() * pi.getQuantity();
+            }
+        }
+
+        double totalCash = totalRuby * 7.5;
+
+        // 패키지에 대한 업데이트 로그
+        List<UpdateLogDto> updateLogs = pkg.getUpdateLogs().stream()
+                .filter(log -> log.getUpdatedAt() != null)
+                .sorted(Comparator.comparing(UpdateLogEntity::getUpdatedAt).reversed())
+                .map(log -> UpdateLogDto.builder()
+                        .adminName(log.getAdmin().getName())
+                        .updatedAt(String.valueOf(log.getUpdatedAt()))
+                        .message(log.getMessage())
+                        .build())
+                .collect(Collectors.toList());
+
+        log.info("3. 패키지 구성품 개수={}, 업데이트 로그 개수={}", itemDtos.size(), updateLogs.size());
+
+        return PackageDetailResponseDto.builder()
+                .packageId(pkg.getPackageId())
+                .packageName(pkg.getPackageName())
+                .packagePrice(pkg.getPackagePrice())
+                .totalRuby(totalRuby)
+                .totalCash(totalCash)
+                .items(itemDtos)
+                .updateLogList(updateLogs)
+                .status(pkg.getStatus())
+                .build();
+    }
+
 }

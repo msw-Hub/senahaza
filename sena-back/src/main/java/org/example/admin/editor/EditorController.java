@@ -106,5 +106,5 @@ public class EditorController {
         editorService.deletePackage(packageId);
         return ResponseEntity.ok("패키지 삭제 완료");
     }
-    
+
 }

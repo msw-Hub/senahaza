@@ -383,6 +383,10 @@ public class EditorService {
         }
         logMsg.append("[구성 변경] ");
 
+        if(dto.getMessage() != null) {
+            logMsg.append(dto.getMessage());
+        }
+
         updateLogRepository.save(UpdateLogEntity.builder()
                 .updatedAt(LocalDateTime.now())
                 .message(logMsg.toString())

@@ -2,9 +2,7 @@ package org.example.admin.viewer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.admin.dto.AdminItemResponseDto;
-import org.example.admin.dto.AdminPackageResponseDto;
-import org.example.admin.dto.ItemResponseDto;
+import org.example.admin.dto.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,4 +48,22 @@ public class ViewerController {
     }
 
     // 특정 아이템의 상세한 정보 조회
+    @GetMapping("/items/{itemId}")
+    public ResponseEntity<?> getItemDetail(
+            @PathVariable Long itemId
+    ) {
+        log.info("아이템 상세 정보 조회 요청: itemId={}", itemId);
+        ItemDetailResponseDto itemDetail = viewerService.getItemDetail(itemId);
+        return ResponseEntity.ok(itemDetail);
+    }
+
+    // 특정 패키지의 상세한 정보 조회
+    @GetMapping("/packages/{packageId}")
+    public ResponseEntity<?> getPackageDetail(
+            @PathVariable Long packageId
+    ) {
+        log.info("패키지 상세 정보 조회 요청: packageId={}", packageId);
+        PackageDetailResponseDto packageDetail = viewerService.getPackageDetail(packageId);
+        return ResponseEntity.ok(packageDetail);
+    }
 }

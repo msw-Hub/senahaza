@@ -97,4 +97,14 @@ public class EditorController {
         editorService.updatePackage(packageId, dto);
         return ResponseEntity.ok("패키지 수정 완료");
     }
+
+    // 패키지 삭제 - 상태값 변경을 토대로
+    @DeleteMapping("/packages/{packageId}")
+    public ResponseEntity<?> deletePackage(@PathVariable Long packageId) {
+        log.info("패키지 삭제 요청: packageId={}", packageId);
+
+        editorService.deletePackage(packageId);
+        return ResponseEntity.ok("패키지 삭제 완료");
+    }
+    
 }

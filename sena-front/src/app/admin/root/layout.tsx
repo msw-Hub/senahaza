@@ -15,6 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     { name: "승인 관리", url: "approve", path: "/admin/root/approve" },
     { name: "회원 관리", url: "users", path: "/admin/root/users" },
     { name: "패키지 관리", url: "packages", path: "/admin/root/packages" },
+    { name: "아이템 관리", url: "items", path: "/admin/root/items" },
     { name: "통계 관리", url: "stats", path: "/admin/root/stats" },
   ];
 

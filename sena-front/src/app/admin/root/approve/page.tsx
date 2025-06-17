@@ -1,7 +1,6 @@
 "use client";
 
 import axios from "axios";
-import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 interface SignupRequest {
@@ -38,8 +37,6 @@ export default function ApprovePage() {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const router = useRouter();
-
   // 가입 승인 리스트 제목
   const signupReqTitle = ["선택", "부서", "이메일", "이름", "전화번호", "요청 일시", "승인", "거절"];
 
@@ -48,11 +45,12 @@ export default function ApprovePage() {
     setIsLoading(true);
     try {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/root/signList`, { withCredentials: true });
+
       setSignupReqs(response.data);
       console.log("승인 대기 중인 사용자 목록:", response.data);
     } catch (error) {
-      // 권한이 없으므로 에러 발생시 packages 페이지로 리다이렉트
-      router.push("/admin/root/packages");
+      console.error("승인 요청 중 오류 발생", error);
+      alert("승인 요청 중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
     }
@@ -109,19 +107,48 @@ export default function ApprovePage() {
       return;
     }
 
-    try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/root/signList/approve`, { pendingAdminIds: selectedUsers }, { withCredentials: true });
+    setIsLoading(true);
+    let successCount = 0;
+    let failCount = 0;
+    const failedUsers: string[] = [];
 
-      if (response.status === 200) {
-        alert(`${selectedUsers.length}명의 사용자 승인이 완료되었습니다.`);
-        handleSignupApprove();
-        setSelectedUsers([]);
-      } else {
-        alert("일괄 승인에 실패했습니다.");
+    try {
+      // 각 사용자에 대해 개별적으로 승인 요청
+      for (const pendingAdminId of selectedUsers) {
+        try {
+          const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/root/signList/approve`, { pendingAdminIds: [pendingAdminId] }, { withCredentials: true });
+
+          if (response.status === 200) {
+            successCount++;
+          } else {
+            failCount++;
+            const userName = signupReqs.signList.find((req) => req.pendingAdminId === pendingAdminId)?.name || pendingAdminId;
+            failedUsers.push(userName);
+          }
+        } catch (error) {
+          failCount++;
+          const userName = signupReqs.signList.find((req) => req.pendingAdminId === pendingAdminId)?.name || pendingAdminId;
+          failedUsers.push(userName);
+          console.error(`사용자 ${userName} 승인 중 오류:`, error);
+        }
       }
+
+      // 결과 메시지 표시
+      if (successCount > 0 && failCount === 0) {
+        alert(`${successCount}명의 사용자 승인이 완료되었습니다.`);
+      } else if (successCount > 0 && failCount > 0) {
+        alert(`${successCount}명 승인 완료, ${failCount}명 실패\n실패한 사용자: ${failedUsers.join(", ")}`);
+      } else {
+        alert(`모든 승인 요청이 실패했습니다.\n실패한 사용자: ${failedUsers.join(", ")}`);
+      }
+
+      handleSignupApprove(); // 목록 갱신
+      setSelectedUsers([]);
     } catch (error) {
       console.error("일괄 승인 중 오류 발생", error);
       alert("일괄 승인 중 오류가 발생했습니다.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -136,19 +163,48 @@ export default function ApprovePage() {
       return;
     }
 
-    try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/root/signList/reject`, { pendingAdminIds: selectedUsers }, { withCredentials: true });
+    setIsLoading(true);
+    let successCount = 0;
+    let failCount = 0;
+    const failedUsers: string[] = [];
 
-      if (response.status === 200) {
-        alert(`${selectedUsers.length}명의 사용자 거절이 완료되었습니다.`);
-        handleSignupApprove();
-        setSelectedUsers([]);
-      } else {
-        alert("일괄 거절에 실패했습니다.");
+    try {
+      // 각 사용자에 대해 개별적으로 거절 요청
+      for (const pendingAdminId of selectedUsers) {
+        try {
+          const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/root/signList/reject`, { pendingAdminIds: [pendingAdminId] }, { withCredentials: true });
+
+          if (response.status === 200) {
+            successCount++;
+          } else {
+            failCount++;
+            const userName = signupReqs.signList.find((req) => req.pendingAdminId === pendingAdminId)?.name || pendingAdminId;
+            failedUsers.push(userName);
+          }
+        } catch (error) {
+          failCount++;
+          const userName = signupReqs.signList.find((req) => req.pendingAdminId === pendingAdminId)?.name || pendingAdminId;
+          failedUsers.push(userName);
+          console.error(`사용자 ${userName} 거절 중 오류:`, error);
+        }
       }
+
+      // 결과 메시지 표시
+      if (successCount > 0 && failCount === 0) {
+        alert(`${successCount}명의 사용자 거절이 완료되었습니다.`);
+      } else if (successCount > 0 && failCount > 0) {
+        alert(`${successCount}명 거절 완료, ${failCount}명 실패\n실패한 사용자: ${failedUsers.join(", ")}`);
+      } else {
+        alert(`모든 거절 요청이 실패했습니다.\n실패한 사용자: ${failedUsers.join(", ")}`);
+      }
+
+      handleSignupApprove(); // 목록 갱신
+      setSelectedUsers([]);
     } catch (error) {
       console.error("일괄 거절 중 오류 발생", error);
       alert("일괄 거절 중 오류가 발생했습니다.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -248,11 +304,11 @@ export default function ApprovePage() {
         {/* 일괄 처리 버튼 */}
         <div className="flex gap-2 items-center">
           <span className="text-gray-600 text-sm">{selectedUsers.length > 0 && `${selectedUsers.length}명 선택됨`}</span>
-          <button onClick={handleBulkApprove} disabled={selectedUsers.length === 0} className="px-3 py-1 bg-green-500 text-white rounded-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-600">
-            일괄 승인
+          <button onClick={handleBulkApprove} disabled={selectedUsers.length === 0 || isLoading} className="px-3 py-1 bg-green-500 text-white rounded-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-600">
+            {isLoading ? "처리 중..." : "일괄 승인"}
           </button>
-          <button onClick={handleBulkReject} disabled={selectedUsers.length === 0} className="px-3 py-1 bg-red-500 text-white rounded-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-600">
-            일괄 거절
+          <button onClick={handleBulkReject} disabled={selectedUsers.length === 0 || isLoading} className="px-3 py-1 bg-red-500 text-white rounded-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-600">
+            {isLoading ? "처리 중..." : "일괄 거절"}
           </button>
         </div>
       </div>
@@ -331,11 +387,6 @@ export default function ApprovePage() {
           총 {signupReqs.count}명의 가입 요청
           {searchTerm && ` (검색 결과: ${filteredRequests.length}명)`}
         </span>
-        {selectedUsers.length > 0 && (
-          <button onClick={() => setSelectedUsers([])} className="text-blue-600 hover:underline">
-            선택 해제
-          </button>
-        )}
       </div>
     </div>
   );

@@ -1,49 +1,70 @@
-// middleware.ts (프로젝트 루트 디렉토리에 생성)
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  // /admin 경로 접근 시에만 실행
-  if (request.nextUrl.pathname.startsWith("/admin/root")) {
+  const { pathname } = request.nextUrl;
+
+  // /admin/root/approve, /admin/root/users 경로만 검사
+  if (pathname === "/admin/root/approve" || pathname === "/admin/root/users") {
     try {
       // Spring Boot 백엔드에 토큰 검증 요청
       // 미들웨어에서는 NEXT_PUBLIC_ 없이 직접 환경변수 사용
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-      const response = await fetch(`${apiUrl}/viewer/status`, {
+      // 권한 체크용 API 요청
+      const response = await fetch(`${apiUrl}/root/signList`, {
         method: "GET",
         headers: {
-          // 클라이언트가 보낸 쿠키를 그대로 백엔드에 전달
           Cookie: request.headers.get("cookie") || "",
         },
-        // credentials 설정 (withCredentials: true와 동일)
         credentials: "include",
       });
 
-      // 200 응답이 아니면 로그인 페이지로 리다이렉트
+      // 200이 아니면 /로 리다이렉트 + 쿼리스트링으로 에러 전달
       if (!response.ok) {
-        console.log(`토큰 검증 실패: ${response.status}`);
-        return NextResponse.redirect(new URL("/", request.url));
+        const url = request.nextUrl.clone();
+        // admin/root/packages로 리다이렉트
+        url.pathname = "/admin/root/packages";
+        return NextResponse.redirect(url);
       }
 
       // 200 응답이면 페이지 접근 허용
-      console.log("토큰 검증 성공 - 관리자 페이지 접근 허용");
       return NextResponse.next();
     } catch (error) {
-      // 네트워크 오류 등 예외 발생 시 로그인 페이지로 리다이렉트
-      console.error("토큰 검증 중 오류 발생:", error);
+      // 네트워크 오류 등 예외 발생 시 /로 리다이렉트 + 쿼리스트링
+      const url = request.nextUrl.clone();
+      url.pathname = "/";
+      url.searchParams.set("error", "no-auth");
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // /admin/root/approve, /admin/root/users 외의 /admin 경로는 기존 방식 유지
+  if (pathname.startsWith("/admin/root")) {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${apiUrl}/viewer/status`, {
+        method: "GET",
+        headers: {
+          Cookie: request.headers.get("cookie") || "",
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+      return NextResponse.next();
+    } catch (error) {
       return NextResponse.redirect(new URL("/", request.url));
     }
   }
 
-  // /admin 경로가 아니면 그대로 진행
+  // 그 외 경로는 그대로 진행
   return NextResponse.next();
 }
 
 // 미들웨어가 실행될 경로 설정
 export const config = {
-  matcher: [
-    // /admin으로 시작하는 모든 경로에서 실행
-    "/admin/:path*",
-  ],
+  matcher: ["/admin/:path*"],
 };

@@ -48,4 +48,6 @@ public class ViewerController {
         AdminPackageResponseDto packageInfo = viewerService.getPackageInfo();
         return ResponseEntity.ok(packageInfo);
     }
+
+    // 특정 아이템의 상세한 정보 조회
 }

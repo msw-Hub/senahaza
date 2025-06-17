@@ -50,6 +50,7 @@ public class ViewerService {
         }
     }
 
+    // 아이템 전체 목록 반환 - 관리자 관점
     @Transactional(readOnly = true)
     public List<AdminItemResponseDto> getItemList() {
         List<ItemEntity> itemEntities = itemRepository.findByStatusNot(BaseEntity.Status.DELETED);
@@ -71,6 +72,7 @@ public class ViewerService {
                             .itemName(item.getItemName())
                             .ruby(item.getRuby())
                             .img(item.getImg())
+                            .status(item.getStatus())
                             .lastModifiedBy(latestLog != null ? latestLog.getAdmin().getName() : null)
                             .lastModifiedAt(latestLog != null ? latestLog.getUpdatedAt() : null)
                             .lastModifiedMessage(latestLog != null ? latestLog.getMessage() : null)
@@ -79,7 +81,6 @@ public class ViewerService {
                 .collect(Collectors.toList());
     }
 
-    // 관리자 기준 패키지 정보 조회
     @Transactional(readOnly = true)
     public AdminPackageResponseDto getPackageInfo() {
         log.info("1. 삭제되지 않은 패키지 조회 시작");
@@ -94,10 +95,12 @@ public class ViewerService {
                     // 최신 업데이트 로그 찾기
                     UpdateLogEntity latestLog = pkg.getUpdateLogs().stream()
                             .filter(log -> log.getUpdatedAt() != null)
-                            .max((a, b) -> a.getUpdatedAt().compareTo(b.getUpdatedAt()))
+                            .max(Comparator.comparing(UpdateLogEntity::getUpdatedAt))
                             .orElse(null);
 
+                    // DELETED가 아닌 패키지 아이템만 필터링
                     List<PackageItemDto> itemDtos = pkg.getPackageItems().stream()
+                            .filter(pi -> pi.getStatus() != BaseEntity.Status.DELETED)
                             .map(pi -> PackageItemDto.builder()
                                     .itemId(pi.getItem().getItemId())
                                     .itemName(pi.getItem().getItemName())
@@ -107,9 +110,13 @@ public class ViewerService {
                                     .build())
                             .collect(Collectors.toList());
 
-                    double totalRuby = itemDtos.stream()
-                            .mapToDouble(i -> i.getRuby() * i.getQuantity())
+                    // 총 루비 계산: ACTIVE 아이템만 대상으로 함
+                    double totalRuby = pkg.getPackageItems().stream()
+                            .filter(pi -> pi.getStatus() != BaseEntity.Status.DELETED)
+                            .filter(pi -> pi.getItem().getStatus() == BaseEntity.Status.ACTIVE)
+                            .mapToDouble(pi -> pi.getItem().getRuby() * pi.getQuantity())
                             .sum();
+
                     double totalCash = totalRuby * 7.5;
 
                     return AdminPackageDto.builder()
@@ -119,6 +126,7 @@ public class ViewerService {
                             .totalCash(totalCash)
                             .packagePrice(pkg.getPackagePrice())
                             .items(itemDtos)
+                            .status(pkg.getStatus())
                             .lastModifiedBy(latestLog != null ? latestLog.getAdmin().getName() : null)
                             .lastModifiedAt(latestLog != null ? latestLog.getUpdatedAt() : null)
                             .lastModifiedMessage(latestLog != null ? latestLog.getMessage() : null)

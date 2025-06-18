@@ -122,7 +122,7 @@ public class EditorService {
     }
 
     @Transactional
-    public void updateItem(Long itemId, String itemName, Double ruby, String message, MultipartFile file, String status) {
+    public void updateItem(Long itemId, String itemName, Double ruby, String message, MultipartFile file) {
         // 0. 현재 작업하는 관리자 정보 조회
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         AdminEntity adminEntity = adminRepository.findByEmail(email)
@@ -131,6 +131,11 @@ public class EditorService {
         // 1. 아이템 조회
         ItemEntity itemEntity = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ItemNotFoundException("존재하지 않는 아이템입니다: " + itemId));
+
+        // 이미 삭제된 상태라면 예외 처리
+        if (itemEntity.getStatus() == BaseEntity.Status.DELETED) {
+            throw new InvalidStatusException("이미 삭제된 아이템입니다: " + itemId);
+        }
 
         // 2. 이미지 업로드 (파일이 있는 경우에만)
         String imageUrl = null;
@@ -163,22 +168,6 @@ public class EditorService {
         if (imageUrl != null) {
             itemEntity.setImg(imageUrl);
         }
-        if (status != null) {
-            String cleanedStatus = status.trim().toUpperCase();
-            try {
-                BaseEntity.Status newStatus = BaseEntity.Status.valueOf(cleanedStatus);
-                if (itemEntity.getStatus() == newStatus) {
-                    throw new InvalidStatusException("이전과 같은 상태입니다: " + cleanedStatus);
-                }
-                if (newStatus == BaseEntity.Status.ACTIVE || newStatus == BaseEntity.Status.INACTIVE) {
-                    itemEntity.setStatus(newStatus);
-                } else {
-                    throw new InvalidStatusException("유효하지 않은 상태 값입니다: " + cleanedStatus);
-                }
-            } catch (IllegalArgumentException e) {
-                throw new InvalidStatusException("유효하지 않은 상태 값입니다: " + cleanedStatus);
-            }
-        }
         itemRepository.save(itemEntity);
 
         // 4. 아이템 수정 로그
@@ -191,6 +180,39 @@ public class EditorService {
         updateLogRepository.save(updateLog);
 
         log.info("아이템 수정 완료: {}", itemEntity.getItemName());
+    }
+    // 아이템 상태 변경
+    @Transactional
+    public void changeItemStatus(Long itemId, BaseEntity.Status status) {
+        // 0. 현재 작업하는 관리자 정보 조회
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        AdminEntity adminEntity = adminRepository.findByEmail(email)
+                .orElseThrow(() -> new AdminNotFoundException("관리자 정보를 찾을 수 없습니다."));
+
+        // 1. 아이템 조회
+        ItemEntity itemEntity = itemRepository.findById(itemId)
+                .orElseThrow(() -> new ItemNotFoundException("존재하지 않는 아이템입니다: " + itemId));
+
+        // 2. 상태 변경
+        if (itemEntity.getStatus() == status) {
+            throw new InvalidStatusException("이미 해당 상태입니다: " + status);
+        }
+        if (status != BaseEntity.Status.ACTIVE && status != BaseEntity.Status.INACTIVE) {
+            throw new InvalidStatusException("유효하지 않은 패키지 상태입니다: " + status);
+        }
+
+        itemEntity.setStatus(status);
+        itemRepository.save(itemEntity);
+
+        // 3. 아이템 상태 변경 로그 작성
+        UpdateLogEntity updateLog = UpdateLogEntity.builder()
+                .updatedAt(LocalDateTime.now())
+                .message("아이템 상태 변경: " + status)
+                .admin(adminEntity)
+                .item(itemEntity)
+                .build();
+        updateLogRepository.save(updateLog);
+        log.info("아이템 상태 변경 완료: itemId={}, newStatus={}", itemId, status);
     }
 
     // 기존 이미지 삭제 메소드
@@ -442,7 +464,7 @@ public class EditorService {
 
     // 패키지 상태 변경
     @Transactional
-    public void changePackageStatus(Long packageId, String status) {
+    public void changePackageStatus(Long packageId, BaseEntity.Status status) {
         // 0. 현재 작업하는 관리자 정보 조회
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         AdminEntity adminEntity = adminRepository.findByEmail(email)
@@ -453,15 +475,13 @@ public class EditorService {
                 .orElseThrow(() -> new PackageNotFoundException("존재하지 않는 패키지입니다: " + packageId));
 
         // 2. 상태 변경
-        try {
-            BaseEntity.Status newStatus = BaseEntity.Status.valueOf(status.trim().toUpperCase());
-            if (packageEntity.getStatus() == newStatus) {
-                throw new InvalidStatusException("이미 해당 상태입니다: " + newStatus);
-            }
-            packageEntity.setStatus(newStatus);
-        } catch (IllegalArgumentException e) {
-            throw new InvalidStatusException("유효하지 않은 상태 값입니다: " + status);
+        if (packageEntity.getStatus() == status) {
+            throw new InvalidStatusException("이미 해당 상태입니다: " + status);
         }
+        if (status != BaseEntity.Status.ACTIVE && status != BaseEntity.Status.INACTIVE) {
+            throw new InvalidStatusException("유효하지 않은 패키지 상태입니다: " + status);
+        }
+        packageEntity.setStatus(status);
 
         packageRepository.save(packageEntity);
 

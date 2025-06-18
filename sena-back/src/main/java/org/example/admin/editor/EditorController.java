@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.admin.dto.ItemRequestDto;
 import org.example.admin.dto.PackageCreateRequestDto;
+import org.example.admin.dto.StatusRequest;
 import org.example.exception.customException.InvalidFileException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -52,13 +53,23 @@ public class EditorController {
             @RequestParam(value = "itemName", required = false) String itemName,
             @RequestParam(value = "ruby", required = false) Double ruby,
             @RequestParam(value = "message", required = false) String message,
-            @RequestPart(value = "file", required = false) MultipartFile file,
-            @RequestParam(value = "status", required = false) String status
+            @RequestPart(value = "file", required = false) MultipartFile file
     ) {
         log.info("아이템 수정 요청: itemId={}", itemId);
 
-        editorService.updateItem(itemId, itemName, ruby, message, file, status);
+        editorService.updateItem(itemId, itemName, ruby, message, file);
         return ResponseEntity.ok("아이템 수정 완료");
+    }
+    // 아이템 상태 변경
+    @PatchMapping("/items/{itemId}/status")
+    public ResponseEntity<?> changeItemStatus(
+            @PathVariable Long itemId,
+            @RequestBody StatusRequest statusRequest
+    ) {
+        log.info("아이템 상태 변경 요청: itemId={}, status={}", itemId, statusRequest.getStatus());
+
+        editorService.changeItemStatus(itemId, statusRequest.getStatus());
+        return ResponseEntity.ok("아이템 상태 변경 완료");
     }
 
     // 아이템 삭제
@@ -111,11 +122,11 @@ public class EditorController {
     @PatchMapping("/packages/{packageId}/status")
     public ResponseEntity<?> changePackageStatus(
             @PathVariable Long packageId,
-            @RequestBody String status
+            @RequestBody StatusRequest statusRequest
     ) {
-        log.info("패키지 상태 변경 요청: packageId={}, status={}", packageId, status);
+        log.info("패키지 상태 변경 요청: packageId={}, status={}", packageId, statusRequest.getStatus());
 
-        editorService.changePackageStatus(packageId, status);
+        editorService.changePackageStatus(packageId, statusRequest.getStatus());
         return ResponseEntity.ok("패키지 상태 변경 완료");
     }
 }

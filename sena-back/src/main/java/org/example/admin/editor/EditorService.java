@@ -247,7 +247,7 @@ public class EditorService {
 
     // 패키지 등록 로직
     @Transactional
-    public void createPackage(PackageCreateRequestDto dto){
+    public void createPackage(PackageCreateRequestDto dto) {
         // 0. 현재 작업하는 관리자 정보 조회
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         AdminEntity adminEntity = adminRepository.findByEmail(email)
@@ -383,7 +383,7 @@ public class EditorService {
         }
         logMsg.append("[구성 변경] ");
 
-        if(dto.getMessage() != null) {
+        if (dto.getMessage() != null) {
             logMsg.append(dto.getMessage());
         }
 
@@ -431,5 +431,37 @@ public class EditorService {
         log.info("패키지 삭제 완료: packageId={}, packageName={}", packageId, packageEntity.getPackageName());
     }
 
+    // 패키지 상태 변경
+    @Transactional
+    public void changePackageStatus(Long packageId, String status) {
+        // 0. 현재 작업하는 관리자 정보 조회
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        AdminEntity adminEntity = adminRepository.findByEmail(email)
+                .orElseThrow(() -> new AdminNotFoundException("관리자 정보를 찾을 수 없습니다."));
 
+        // 1. 패키지 조회
+        PackageEntity packageEntity = packageRepository.findById(packageId)
+                .orElseThrow(() -> new PackageNotFoundException("존재하지 않는 패키지입니다: " + packageId));
+
+        // 2. 상태 변경
+        if(status.equals("ACTIVE") || status.equals("INACTIVE")) {
+            if (packageEntity.getStatus().name().equals(status)) {
+                throw new InvalidStatusException("이미 해당 상태입니다: " + status);
+            }
+            packageEntity.setStatus(BaseEntity.Status.valueOf(status));
+        } else {
+            throw new InvalidStatusException("유효하지 않은 상태 값입니다: " + status);
+        }
+        packageRepository.save(packageEntity);
+
+        // 3. 패키지 상태 변경 로그 작성
+        UpdateLogEntity updateLog = UpdateLogEntity.builder()
+                .updatedAt(LocalDateTime.now())
+                .message("패키지 상태 변경: " + status)
+                .admin(adminEntity)
+                .packageEntity(packageEntity)  // 연관 관계 설정 필요
+                .build();
+        updateLogRepository.save(updateLog);
+        log.info("패키지 상태 변경 완료: packageId={}, newStatus={}", packageId, status);
+    }
 }

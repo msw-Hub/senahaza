@@ -107,4 +107,15 @@ public class EditorController {
         return ResponseEntity.ok("패키지 삭제 완료");
     }
 
+    // 패키지 상태 변경
+    @PatchMapping("/packages/{packageId}/status")
+    public ResponseEntity<?> changePackageStatus(
+            @PathVariable Long packageId,
+            @RequestBody String status
+    ) {
+        log.info("패키지 상태 변경 요청: packageId={}, status={}", packageId, status);
+
+        editorService.changePackageStatus(packageId, status);
+        return ResponseEntity.ok("패키지 상태 변경 완료");
+    }
 }

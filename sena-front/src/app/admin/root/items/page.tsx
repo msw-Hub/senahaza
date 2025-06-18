@@ -11,6 +11,7 @@ interface Item {
   lastModifiedBy: string;
   lastModifiedAt: string;
   lastModifiedMessage: string;
+  status: "ACTIVE" | "INACTIVE";
 }
 
 export default function ItemManagePage() {
@@ -32,7 +33,7 @@ export default function ItemManagePage() {
   });
 
   // 아이템 리스트 테이블 헤더
-  const itemTableHeaders = ["선택", "이미지", "아이템명", "루비", "최종 수정자", "최종 수정일", "수정 메시지", "수정", "삭제"];
+  const itemTableHeaders = ["선택", "이미지", "아이템명", "루비", "최종 수정자", "최종 수정일", "수정 메시지", "수정", "상태", "삭제"];
 
   // 아이템 목록 조회
   const fetchItems = async () => {
@@ -147,6 +148,39 @@ export default function ItemManagePage() {
       alert("아이템 수정 중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // 아이템 상태 변경
+  const handleToggleStatus = async (itemId: number, currentStatus: string, itemName: string) => {
+    const newStatus = currentStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+    const statusText = newStatus === "ACTIVE" ? "활성화" : "비활성화";
+
+    if (!confirm(`"${itemName}" 아이템을 ${statusText}하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      const response = await axios.patch(
+        `${process.env.NEXT_PUBLIC_API_URL}/editor/items/${itemId}/status`,
+        { status: newStatus },
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        alert(`"${itemName}" 아이템이 ${statusText}되었습니다.`);
+        fetchItems();
+      } else {
+        alert("아이템 상태 변경에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("아이템 상태 변경 중 오류 발생", error);
+      alert("아이템 상태 변경 중 오류가 발생했습니다.");
     }
   };
 
@@ -364,7 +398,7 @@ export default function ItemManagePage() {
       </div>
 
       {/* 아이템 리스트 */}
-      <div className="w-full h-full bg-foreground border border-gray-300 rounded-sm px-4 py-2 overflow-y-auto grid grid-cols-[0.3fr_0.5fr_1fr_0.5fr_0.8fr_1fr_1.2fr_0.3fr_0.3fr] grid-rows-12">
+      <div className="w-full h-full bg-foreground border border-gray-300 rounded-sm px-4 py-2 overflow-y-auto grid grid-cols-[0.3fr_0.5fr_1fr_0.5fr_0.8fr_1fr_1.2fr_0.3fr_0.3fr_0.3fr] grid-rows-12">
         {/* 테이블 헤더 */}
         {itemTableHeaders.map((title, index) => (
           <span
@@ -428,7 +462,13 @@ export default function ItemManagePage() {
               <div onClick={() => openEditModal(item)} className="flex items-center justify-center text-blue-600 border-b border-gray-200 h-12 cursor-pointer hover:bg-blue-50" title="수정">
                 <i className="xi-pen text-lg"></i>
               </div>
-
+              {/* 상태변경 버튼 */}
+              <div
+                onClick={() => handleToggleStatus(item.itemId, item.status, item.itemName)}
+                className={`flex items-center justify-center border-b border-gray-200 h-12 cursor-pointer px-2 ${item.status === "ACTIVE" ? "text-red-600 hover:bg-red-50" : "text-green-600 hover:bg-green-50"}`}
+                title={item.status === "ACTIVE" ? "비활성화" : "활성화"}>
+                <i className={item.status === "ACTIVE" ? "xi-pause text-lg" : "xi-play text-lg"}></i>
+              </div>
               {/* 삭제 버튼 */}
               <div onClick={() => handleDeleteItem(item.itemId, item.itemName)} className="flex items-center justify-center text-red-600 border-b border-gray-200 h-12 cursor-pointer hover:bg-red-50" title="삭제">
                 <i className="xi-trash text-lg"></i>

@@ -164,10 +164,19 @@ public class EditorService {
             itemEntity.setImg(imageUrl);
         }
         if (status != null) {
-            if ((status.equals("ACTIVE") || status.equals("INACTIVE")) && !status.equals(itemEntity.getStatus().name())) {
-                itemEntity.setStatus(BaseEntity.Status.valueOf(status));
-            } else {
-                throw new InvalidStatusException("유효하지 않은 상태 값입니다 혹은 이전과 같은 상태입니다. " + status);
+            String cleanedStatus = status.trim().toUpperCase();
+            try {
+                BaseEntity.Status newStatus = BaseEntity.Status.valueOf(cleanedStatus);
+                if (itemEntity.getStatus() == newStatus) {
+                    throw new InvalidStatusException("이전과 같은 상태입니다: " + cleanedStatus);
+                }
+                if (newStatus == BaseEntity.Status.ACTIVE || newStatus == BaseEntity.Status.INACTIVE) {
+                    itemEntity.setStatus(newStatus);
+                } else {
+                    throw new InvalidStatusException("유효하지 않은 상태 값입니다: " + cleanedStatus);
+                }
+            } catch (IllegalArgumentException e) {
+                throw new InvalidStatusException("유효하지 않은 상태 값입니다: " + cleanedStatus);
             }
         }
         itemRepository.save(itemEntity);
@@ -444,14 +453,16 @@ public class EditorService {
                 .orElseThrow(() -> new PackageNotFoundException("존재하지 않는 패키지입니다: " + packageId));
 
         // 2. 상태 변경
-        if(status.equals("ACTIVE") || status.equals("INACTIVE")) {
-            if (packageEntity.getStatus().name().equals(status)) {
-                throw new InvalidStatusException("이미 해당 상태입니다: " + status);
+        try {
+            BaseEntity.Status newStatus = BaseEntity.Status.valueOf(status.trim().toUpperCase());
+            if (packageEntity.getStatus() == newStatus) {
+                throw new InvalidStatusException("이미 해당 상태입니다: " + newStatus);
             }
-            packageEntity.setStatus(BaseEntity.Status.valueOf(status));
-        } else {
+            packageEntity.setStatus(newStatus);
+        } catch (IllegalArgumentException e) {
             throw new InvalidStatusException("유효하지 않은 상태 값입니다: " + status);
         }
+
         packageRepository.save(packageEntity);
 
         // 3. 패키지 상태 변경 로그 작성

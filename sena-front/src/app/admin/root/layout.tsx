@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <div className="flex flex-col h-full">
         {sideBarMenu.map((item) => (
           <React.Fragment key={item.name}>
-            <Link href={item.path} className={`px-20 py-3 transition font-medium ${pathname === item.path ? "bg-[#f5f5f5] text-black" : "text-gray-500 hover:bg-[#f5f5f5] hover:text-black"}`}>
+            <Link href={item.path} className={`px-20 py-3 transition text-nowrap font-medium ${pathname === item.path ? "bg-[#f5f5f5] text-black" : "text-gray-500 hover:bg-[#f5f5f5] hover:text-black"}`}>
               {item.name}
             </Link>
           </React.Fragment>

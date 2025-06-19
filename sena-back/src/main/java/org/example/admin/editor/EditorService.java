@@ -193,18 +193,26 @@ public class EditorService {
         ItemEntity itemEntity = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ItemNotFoundException("존재하지 않는 아이템입니다: " + itemId));
 
-        // 2. 상태 변경
+        // 2. 상태 중복 및 유효성 검사
         if (itemEntity.getStatus() == status) {
             throw new InvalidStatusException("이미 해당 상태입니다: " + status);
         }
         if (status != BaseEntity.Status.ACTIVE && status != BaseEntity.Status.INACTIVE) {
-            throw new InvalidStatusException("유효하지 않은 패키지 상태입니다: " + status);
+            throw new InvalidStatusException("유효하지 않은 상태입니다: " + status);
         }
 
+        // 3. 아이템 상태 변경
         itemEntity.setStatus(status);
         itemRepository.save(itemEntity);
 
-        // 3. 아이템 상태 변경 로그 작성
+        // 4. 아이템이 포함된 모든 패키지 아이템도 상태 동기화
+        List<PackageItemEntity> relatedPackageItems = packageItemRepository.findByItem(itemEntity);
+        for (PackageItemEntity pi : relatedPackageItems) {
+            pi.setStatus(status);
+        }
+        packageItemRepository.saveAll(relatedPackageItems);
+
+        // 5. 상태 변경 로그 작성
         UpdateLogEntity updateLog = UpdateLogEntity.builder()
                 .updatedAt(LocalDateTime.now())
                 .message("아이템 상태 변경: " + status)
@@ -212,7 +220,8 @@ public class EditorService {
                 .item(itemEntity)
                 .build();
         updateLogRepository.save(updateLog);
-        log.info("아이템 상태 변경 완료: itemId={}, newStatus={}", itemId, status);
+
+        log.info("아이템 및 관련 패키지아이템 상태 변경 완료: itemId={}, newStatus={}", itemId, status);
     }
 
     // 기존 이미지 삭제 메소드
@@ -263,14 +272,20 @@ public class EditorService {
         itemEntity.setStatus(BaseEntity.Status.DELETED);
         itemRepository.save(itemEntity);
 
-        // 5. 삭제 로그 생성
+        // ✅ 4. 아이템이 속한 모든 PackageItemEntity 상태도 함께 DELETED 처리
+        List<PackageItemEntity> relatedPackageItems = packageItemRepository.findByItem(itemEntity);
+        for (PackageItemEntity pi : relatedPackageItems) {
+            pi.setStatus(BaseEntity.Status.DELETED);
+        }
+        packageItemRepository.saveAll(relatedPackageItems);
+
+        // 5. 삭제 로그 작성
         UpdateLogEntity updateLog = UpdateLogEntity.builder()
                 .updatedAt(LocalDateTime.now())
                 .message("아이템 삭제 처리")
                 .admin(adminEntity)
                 .item(itemEntity)
                 .build();
-
         updateLogRepository.save(updateLog);
 
         log.info("아이템 삭제 완료: itemId={}, itemName={}", itemId, itemEntity.getItemName());
@@ -308,6 +323,7 @@ public class EditorService {
                             .packageEntity(newPackage)
                             .item(item)
                             .quantity(itemDto.getQuantity())
+                            .status(BaseEntity.Status.ACTIVE) // 활성 상태로 설정
                             .build();
                 })
                 .collect(Collectors.toList());

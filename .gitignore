@@ -46,12 +46,17 @@ build/
 
 # sena-back 내부 특정 환경설정 파일 무시
 /sena-back/src/main/resources/application.yml
+/src/main/resources/application.yml
 
 # Firebase service account key
 /sena-back/config/
 /config/
 /sena-back/config/firebase-service-account.json
+/config/firebase-service-account-prod.json
+/firebase-service-account-dev.json
 /sena-back/config/senahaza-a5333-9627f6c4d3ac.json
+/config/senahaza-a5333-9627f6c4d3ac-prod.json
+/senahaza-a5333-9627f6c4d3ac-dev.json
 #-----------------------------------------------
 # frontend
 

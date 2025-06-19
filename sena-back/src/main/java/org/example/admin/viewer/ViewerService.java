@@ -90,14 +90,15 @@ public class ViewerService {
                             .orElse(null);
 
                     // DELETED가 아닌 패키지 아이템만 필터링
-                    List<PackageItemDto> itemDtos = pkg.getPackageItems().stream()
+                    List<AdminPackageItemDto> adminItemDtos = pkg.getPackageItems().stream()
                             .filter(pi -> pi.getStatus() != BaseEntity.Status.DELETED)
-                            .map(pi -> PackageItemDto.builder()
+                            .map(pi -> AdminPackageItemDto.builder()
                                     .itemId(pi.getItem().getItemId())
                                     .itemName(pi.getItem().getItemName())
                                     .ruby(pi.getItem().getRuby())
                                     .imgUrl(pi.getItem().getImg())
                                     .quantity(pi.getQuantity())
+                                    .status(pi.getStatus())
                                     .build())
                             .collect(Collectors.toList());
 
@@ -116,7 +117,7 @@ public class ViewerService {
                             .totalRuby(totalRuby)
                             .totalCash(totalCash)
                             .packagePrice(pkg.getPackagePrice())
-                            .items(itemDtos)
+                            .items(adminItemDtos)
                             .status(pkg.getStatus())
                             .lastModifiedBy(latestLog != null ? latestLog.getAdmin().getName() : null)
                             .lastModifiedAt(latestLog != null ? latestLog.getUpdatedAt() : null)

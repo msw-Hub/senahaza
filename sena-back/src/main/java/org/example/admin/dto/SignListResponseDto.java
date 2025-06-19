@@ -6,7 +6,6 @@ import lombok.Data;
 import javax.validation.Valid;
 
 @Data
-@Valid
 @Builder
 public class SignListResponseDto {
 

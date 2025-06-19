@@ -10,10 +10,10 @@ import javax.validation.constraints.NotNull;
 @Builder
 public class ItemRequestDto {
 
-    @NotBlank
+    @NotBlank (message = "아이템 이름은 필수입니다.")
     private String itemName;
 
-    @NotNull
+    @NotNull (message = "루비는 필수입니다.")
     private Double ruby;
 
     private String message;

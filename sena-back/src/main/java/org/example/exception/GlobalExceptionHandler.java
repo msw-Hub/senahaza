@@ -2,8 +2,13 @@ package org.example.exception;
 
 import org.example.exception.customException.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 import java.util.Map;
 
@@ -18,11 +23,36 @@ public class GlobalExceptionHandler {
                 "message", message
         ));
     }
-    // 예외가 지정되지 않은 경우의 기본 처리
-//    @ExceptionHandler(Exception.class)
-//    public ResponseEntity<Map<String, Object>> handleGenericException(Exception e) {
-//        return buildErrorResponse("INTERNAL_ERROR", "알 수 없는 오류가 발생했습니다.");
-//    }
+
+    private ResponseEntity<Map<String, Object>> buildBadRequestResponse(String errorCode, String message, Map<String, String> errors) {
+        return ResponseEntity.badRequest().body(Map.of(
+                "timestamp", LocalDateTime.now(),
+                "status", 400,
+                "errorCode", errorCode,
+                "message", message,
+                "errors", errors
+        ));
+    }
+
+
+    // ✅ 검증 실패 처리
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public void handleValidationError(MethodArgumentNotValidException ex) {
+        Map<String, String> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
+                .collect(Collectors.toMap(
+                        FieldError::getField,
+                        e -> e.getDefaultMessage() != null ? e.getDefaultMessage() : "잘못된 입력입니다.",
+                        (existing, replacement) -> existing
+                ));
+        throw new ValidationFailedException("입력값이 유효하지 않습니다.", fieldErrors);
+    }
+
+    // ✅ 위에서 던진 예외 처리
+    @ExceptionHandler(ValidationFailedException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationFailed(ValidationFailedException e) {
+        return buildBadRequestResponse("VALIDATION_ERROR", e.getMessage(), e.getFieldErrors());
+    }
+
 
     @ExceptionHandler(SameRoleException.class)
     public ResponseEntity<Map<String, Object>> handleSameRoleException(SameRoleException e) {

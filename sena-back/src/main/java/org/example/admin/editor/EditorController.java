@@ -12,6 +12,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.Valid;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -87,7 +89,7 @@ public class EditorController {
     // 패키지 등록
     @PostMapping("/packages")
     public ResponseEntity<?> createPackage(
-            @RequestBody PackageCreateRequestDto dto
+            @Valid @RequestBody PackageCreateRequestDto dto
     ){
         log.info("패키지 등록 요청: {}", dto);
 
@@ -99,7 +101,7 @@ public class EditorController {
     @PatchMapping("/packages/{packageId}")
     public ResponseEntity<?> updatePackage(
             @PathVariable Long packageId,
-            @RequestBody PackageCreateRequestDto dto
+            @Valid @RequestBody PackageCreateRequestDto dto
     ) {
         log.info("패키지 수정 요청: packageId={}, dto={}", packageId, dto);
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

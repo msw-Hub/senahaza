@@ -10,6 +10,8 @@ import org.example.admin.dto.SignListResponseWrapperDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -28,8 +30,8 @@ public class RootController {
     // root 권한을 가진 유저의 회원가입 승인 요청 (여러명 한번에) - 권한 VIEWER로 변경
     @PostMapping("/signList/approve")
     public ResponseEntity<?> approveSignList(
-            @RequestBody PendingRequestDto pendingRequestDto
-            ) {
+            @Valid @RequestBody PendingRequestDto pendingRequestDto
+    ) {
         log.info("root권한 유저의 회원가입 승인 요청");
         rootService.approveSignUp(pendingRequestDto);
         return ResponseEntity.ok().build();
@@ -38,7 +40,7 @@ public class RootController {
     // root 권한을 가진 유저의 회원가입 거절 요청 (여러명 한번에)
     @PostMapping("/signList/reject")
     public ResponseEntity<?> rejectSignList(
-            @RequestBody PendingRequestDto pendingRequestDto
+            @Valid @RequestBody PendingRequestDto pendingRequestDto
     ) {
         log.info("root권한 유저의 회원가입 거절 요청");
         rootService.rejectSignUp(pendingRequestDto);

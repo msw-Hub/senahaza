@@ -58,6 +58,14 @@ dependencies {
 
     // 이미지 업로드를 위한 의존성
     implementation 'com.google.firebase:firebase-admin:9.2.0'
+
+    // 구글 Analytics를 위한 의존성
+    implementation platform('com.google.cloud:libraries-bom:26.62.0')
+    implementation 'com.google.analytics:google-analytics-data'
+
+    // JSON 처리
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
 }
 
 test {

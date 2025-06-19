@@ -48,8 +48,10 @@ build/
 /sena-back/src/main/resources/application.yml
 
 # Firebase service account key
+/sena-back/config/
+/config/
 /sena-back/config/firebase-service-account.json
-
+/sena-back/config/senahaza-a5333-9627f6c4d3ac.json
 #-----------------------------------------------
 # frontend
 

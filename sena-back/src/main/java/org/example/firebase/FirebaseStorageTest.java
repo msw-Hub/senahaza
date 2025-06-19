@@ -1,8 +1,7 @@
-package org.example.fire;
+package org.example.firebase;
 
 import com.google.firebase.cloud.StorageClient;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.FileInputStream;

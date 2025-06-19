@@ -39,7 +39,7 @@ public class CommonService {
                         .itemId(item.getItemId())
                         .itemName(item.getItemName())
                         .ruby(item.getRuby())
-                        .img(item.getImg())
+                        .imgUrl(item.getImg())
                         .build())
                 .collect(Collectors.toList());
     }

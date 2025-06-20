@@ -167,31 +167,45 @@ public class AnalyticsReportService {
     }
 
     // 신규 사용자 수와 재방문자 수 조회
-    private NewVsReturningDto getNewVsReturning(LocalDate start, LocalDate end) throws IOException {
+    private NewVsReturningDto getNewVsReturning(LocalDate inputStart, LocalDate inputEnd) throws IOException {
+        LocalDate today = LocalDate.now();
+        LocalDate defaultStart = today.minusMonths(1).plusDays(1); // 1달 전 +1일
+        LocalDate endDate = today.minusDays(1);                    // 어제
+
+        // 시작일이 1달보다 더 이전이면 입력받은 시작일 사용
+        LocalDate startDate = inputStart.isBefore(defaultStart) ? inputStart : defaultStart;
+
         RunReportRequest request = RunReportRequest.newBuilder()
                 .setProperty(analyticsPropertyId)
                 .addDateRanges(DateRange.newBuilder()
-                        .setStartDate(start.toString())
-                        .setEndDate(end.toString()))
+                        .setStartDate(startDate.toString())
+                        .setEndDate(endDate.toString()))
+                .addDimensions(Dimension.newBuilder().setName("date")) // 일자별 조회
                 .addMetrics(Metric.newBuilder().setName("newUsers"))
                 .addMetrics(Metric.newBuilder().setName("totalUsers"))
                 .build();
 
         RunReportResponse response = analyticsDataClient.runReport(request);
-        NewVsReturningDto dto = new NewVsReturningDto();
-        if (!response.getRowsList().isEmpty()) {
-            Row row = response.getRows(0);
+
+        List<NewVsReturningDto.DailyUserStat> statList = new ArrayList<>();
+        for (Row row : response.getRowsList()) {
+            String date = row.getDimensionValues(0).getValue();
             int newUsers = Integer.parseInt(row.getMetricValues(0).getValue());
             int totalUsers = Integer.parseInt(row.getMetricValues(1).getValue());
             int returningUsers = totalUsers - newUsers;
-            dto.setNewUsers(newUsers);
-            dto.setReturningUsers(returningUsers);
-        } else {
-            dto.setNewUsers(0);
-            dto.setReturningUsers(0);
+
+            NewVsReturningDto.DailyUserStat stat = new NewVsReturningDto.DailyUserStat();
+            stat.setDate(date);
+            stat.setNewUsers(newUsers);
+            stat.setReturningUsers(returningUsers);
+            statList.add(stat);
         }
-        return dto;
+
+        NewVsReturningDto result = new NewVsReturningDto();
+        result.setDailyStats(statList);
+        return result;
     }
+
 
     // 시/군/구 등 지역별 활성 사용자 조회
     private List<GeoStatDto> getGeoStats(LocalDate start, LocalDate end) throws IOException {

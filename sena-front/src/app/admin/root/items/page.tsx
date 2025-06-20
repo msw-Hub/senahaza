@@ -7,7 +7,7 @@ interface Item {
   itemId: number;
   itemName: string;
   ruby: number;
-  img: string;
+  imgUrl: string;
   lastModifiedBy: string;
   lastModifiedAt: string;
   lastModifiedMessage: string;
@@ -443,7 +443,7 @@ export default function ItemManagePage() {
 
               {/* 이미지 */}
               <div className="flex items-center justify-center text-gray-700 border-b border-gray-200 h-12">
-                <img src={item.img} alt={item.itemName} className="w-8 h-8 object-cover rounded" />
+                <img src={item.imgUrl} alt={item.itemName} className="w-8 h-8 object-cover rounded" />
               </div>
 
               <span className="text-gray-700 border-b border-gray-200 h-12 flex items-center font-medium">{item.itemName}</span>

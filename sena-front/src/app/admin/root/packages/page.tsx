@@ -166,7 +166,12 @@ export default function PackageManagePage() {
         packageName: formData.packageName,
         packagePrice: Number(formData.packagePrice),
         message: formData.message,
-        items: formData.items,
+        items: [
+          ...formData.items.map((item) => ({
+            itemId: item.itemId,
+            quantity: item.quantity,
+          })),
+        ],
       };
 
       const response = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/editor/packages/${editingPackage.packageId}`, requestData, {
@@ -634,12 +639,23 @@ export default function PackageManagePage() {
                                 <img src={itemInfo?.img || itemInfo?.imgUrl} alt={itemInfo?.itemName} className="w-8 h-8 object-cover rounded" />
                                 <span className="font-medium">{itemInfo?.itemName}</span>
                                 <span className="text-gray-600 text-sm">({itemInfo?.ruby} 루비)</span>
-                              </div>
+                              </div>{" "}
                               <div className="flex items-center gap-2">
                                 <button type="button" onClick={() => handleQuantityChange(selectedItem.itemId, selectedItem.quantity - 1)} className="w-6 h-6 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300" disabled={selectedItem.quantity <= 1}>
                                   -
                                 </button>
-                                <span className="w-8 text-center">{selectedItem.quantity}</span>
+                                <input
+                                  type="number"
+                                  value={selectedItem.quantity}
+                                  onChange={(e) => {
+                                    const value = parseInt(e.target.value) || 1;
+                                    if (value >= 1) {
+                                      handleQuantityChange(selectedItem.itemId, value);
+                                    }
+                                  }}
+                                  className="w-12 h-6 text-center border border-gray-300 rounded text-sm"
+                                  min="1"
+                                />
                                 <button type="button" onClick={() => handleQuantityChange(selectedItem.itemId, selectedItem.quantity + 1)} className="w-6 h-6 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300">
                                   +
                                 </button>

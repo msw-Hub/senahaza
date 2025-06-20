@@ -70,7 +70,8 @@ public class SecurityConfig {
                 .antMatchers(
                         "/api/auth/login",
                         "/api/auth/**",
-                        "/main/**"
+                        "/main/**",
+                        "/analytics/**"
                 ).permitAll()
                 .antMatchers("/root/**").hasRole("ROOT")
                 .antMatchers("/editor/**").hasAnyRole("ROOT", "EDITOR")

@@ -54,9 +54,9 @@ build/
 /sena-back/config/firebase-service-account.json
 /config/firebase-service-account-prod.json
 /firebase-service-account-dev.json
-/sena-back/config/senahaza-a5333-9627f6c4d3ac.json
-/config/senahaza-a5333-9627f6c4d3ac-prod.json
-/senahaza-a5333-9627f6c4d3ac-dev.json
+/sena-back/config/galvanic-deck-254006-0a537c777b19.json
+/config/galvanic-deck-254006-0a537c777b19.json
+/galvanic-deck-254006-0a537c777b19.json
 #-----------------------------------------------
 # frontend
 

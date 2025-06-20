@@ -253,7 +253,7 @@ public class AnalyticsReportService {
             return dto;
         } catch (Exception e) {
             log.error("실시간 데이터 조회 실패: {}", e.getMessage(), e);
-            throw new RuntimeException("실시간 데이터 수신 실패", e);
+            throw new AnalyticsReportException("Google Analytics 실시간 데이터 조회에 문제가 발생했습니다.");
         }
     }
 

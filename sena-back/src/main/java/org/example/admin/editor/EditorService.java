@@ -402,6 +402,7 @@ public class EditorService {
                     .item(item)
                     .quantity(itemDto.getQuantity())
                     .packageEntity(pkg)
+                    .status(BaseEntity.Status.ACTIVE) // 활성 상태로 설정
                     .build();
 
             pkg.getPackageItems().add(packageItem);

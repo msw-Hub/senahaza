@@ -1,6 +1,7 @@
 package org.example.exception;
 
 import org.example.exception.customException.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -52,6 +53,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleValidationFailed(ValidationFailedException e) {
         return buildBadRequestResponse("VALIDATION_ERROR", e.getMessage(), e.getFieldErrors());
     }
+
+    // 500대 에러, 구글 애널리틱스 api 오류
+    @ExceptionHandler(AnalyticsReportException.class)
+    public ResponseEntity<Map<String, Object>> handleAnalyticsException(AnalyticsReportException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "timestamp", LocalDateTime.now(),
+                "status", 500,
+                "errorCode", "ANALYTICS_ERROR",
+                "message", "사용자 분석 데이터를 불러오는 데 실패했습니다. 관리자에게 문의하세요."
+        ));
+    }
+
 
 
     @ExceptionHandler(SameRoleException.class)

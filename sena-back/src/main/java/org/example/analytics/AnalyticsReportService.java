@@ -5,6 +5,7 @@ import com.google.api.gax.rpc.ApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.analytics.dto.*;
+import org.example.exception.customException.AnalyticsReportException;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -47,10 +48,10 @@ public class AnalyticsReportService {
             return dto;
         } catch (ApiException e) {
             log.error("Google Analytics API 호출 중 API 예외 발생. 코드: {}, 메시지: {}", e.getStatusCode().getCode(), e.getMessage(), e);
-            throw e;  // 또는 적절히 변환해서 다시 던짐
+            throw new AnalyticsReportException("Google Analytics API 호출에 실패했습니다. 잠시 후 다시 시도해주세요.");
         } catch (IOException e) {
             log.error("Google Analytics API 호출 중 IO 예외 발생: {}", e.getMessage(), e);
-            throw new RuntimeException(e);
+            throw new AnalyticsReportException("Google Analytics 데이터 수신 중 문제가 발생했습니다.");
         }
     }
 
@@ -206,7 +207,6 @@ public class AnalyticsReportService {
         return result;
     }
 
-
     // 시/군/구 등 지역별 활성 사용자 조회
     private List<GeoStatDto> getGeoStats(LocalDate start, LocalDate end) throws IOException {
         RunReportRequest request = RunReportRequest.newBuilder()
@@ -230,4 +230,161 @@ public class AnalyticsReportService {
         }
         return list;
     }
+
+
+
+    /**
+     * 실시간 개요 조회 (GA4 Realtime API 기반)
+     */
+    public RealTimeOverviewDto getRealTimeOverview() {
+        try {
+            int activeUsers = getRealTimeActiveUsers();
+            List<RealTimePageViewDto> pageViews = getRealTimePageViews();
+            List<RealTimeEventDto> events = getRealTimeEvents();
+            List<RealTimeCityDto> cities = getRealTimeCities();
+
+            RealTimeOverviewDto dto = new RealTimeOverviewDto();
+            dto.setActiveUsers(activeUsers);
+            dto.setPageViews(pageViews);
+            dto.setEvents(events);
+            dto.setRegions(cities);
+            dto.setDeviceCategories(getRealTimeDeviceCategories());
+
+            return dto;
+        } catch (Exception e) {
+            log.error("실시간 데이터 조회 실패: {}", e.getMessage(), e);
+            throw new AnalyticsReportException("Google Analytics 실시간 데이터 조회에 문제가 발생했습니다.");
+        }
+    }
+
+
+    private int getRealTimeActiveUsers() throws IOException {
+        RunRealtimeReportRequest request = RunRealtimeReportRequest.newBuilder()
+                .setProperty(analyticsPropertyId)
+                .addMetrics(Metric.newBuilder().setName("activeUsers"))
+                .build();
+
+        RunRealtimeReportResponse response = analyticsDataClient.runRealtimeReport(request);
+        if (!response.getRowsList().isEmpty()) {
+            return Integer.parseInt(response.getRows(0).getMetricValues(0).getValue());
+        }
+        return 0;
+    }
+
+    private List<RealTimePageViewDto> getRealTimePageViews() throws IOException {
+        RunRealtimeReportRequest request = RunRealtimeReportRequest.newBuilder()
+                .setProperty(analyticsPropertyId)
+                .addDimensions(Dimension.newBuilder().setName("unifiedScreenName"))
+                .addMetrics(Metric.newBuilder().setName("activeUsers"))
+                .setLimit(10)
+                .build();
+
+        RunRealtimeReportResponse response = analyticsDataClient.runRealtimeReport(request);
+        List<RealTimePageViewDto> list = new ArrayList<>();
+        for (Row row : response.getRowsList()) {
+            RealTimePageViewDto dto = new RealTimePageViewDto();
+            dto.setPageScreen(row.getDimensionValues(0).getValue());
+            dto.setActiveUsers(Integer.parseInt(row.getMetricValues(0).getValue()));
+            list.add(dto);
+        }
+        return list;
+    }
+
+    private List<RealTimeEventDto> getRealTimeEvents() throws IOException {
+        RunRealtimeReportRequest request = RunRealtimeReportRequest.newBuilder()
+                .setProperty(analyticsPropertyId)
+                .addDimensions(Dimension.newBuilder().setName("eventName"))
+                .addMetrics(Metric.newBuilder().setName("eventCount"))
+                .setLimit(10)
+                .build();
+
+        RunRealtimeReportResponse response = analyticsDataClient.runRealtimeReport(request);
+        List<RealTimeEventDto> list = new ArrayList<>();
+        for (Row row : response.getRowsList()) {
+            RealTimeEventDto dto = new RealTimeEventDto();
+            dto.setEventName(row.getDimensionValues(0).getValue());
+            dto.setEventCount(Integer.parseInt(row.getMetricValues(0).getValue()));
+            list.add(dto);
+        }
+        return list;
+    }
+
+    // 지역별 실시간 활성 사용자
+    private List<RealTimeCityDto> getRealTimeCities() throws IOException {
+        RunRealtimeReportRequest request = RunRealtimeReportRequest.newBuilder()
+                .setProperty(analyticsPropertyId)
+                .addDimensions(Dimension.newBuilder().setName("city"))
+                .addMetrics(Metric.newBuilder().setName("activeUsers"))
+                .addOrderBys(OrderBy.newBuilder()
+                        .setMetric(OrderBy.MetricOrderBy.newBuilder()
+                                .setMetricName("activeUsers"))
+                        .setDesc(true))
+                .setLimit(10)
+                .build();
+
+        RunRealtimeReportResponse response = analyticsDataClient.runRealtimeReport(request);
+        List<RealTimeCityDto> list = new ArrayList<>();
+
+        for (Row row : response.getRowsList()) {
+            RealTimeCityDto dto = new RealTimeCityDto();
+            dto.setCity(getDimensionValue(row, 0, "unknown"));
+            dto.setActiveUsers(getMetricIntValue(row, 0, 0));
+            list.add(dto);
+        }
+        return list;
+    }
+    // 안전하게 차원 값 가져오기 (없거나 예외 시 기본값 반환)
+    private String getDimensionValue(Row row, int index, String defaultValue) {
+        try {
+            if (row.getDimensionValuesCount() > index) {
+                String val = row.getDimensionValues(index).getValue();
+                if (val != null && !val.trim().isEmpty()) {
+                    return val;
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Dimension value extraction failed at index {}: {}", index, e.getMessage());
+        }
+        return defaultValue;
+    }
+
+    // 안전하게 메트릭 정수값 가져오기 (파싱 실패 시 기본값 반환)
+    private int getMetricIntValue(Row row, int index, int defaultValue) {
+        try {
+            if (row.getMetricValuesCount() > index) {
+                String val = row.getMetricValues(index).getValue();
+                if (val != null && !val.trim().isEmpty()) {
+                    return Integer.parseInt(val);
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Metric value parsing failed at index {}: {}", index, e.getMessage());
+        }
+        return defaultValue;
+    }
+
+    // deviceCategory 기준 활성 사용자 조회
+    private List<RealTimeDeviceCategoryDto> getRealTimeDeviceCategories() throws IOException {
+        RunRealtimeReportRequest request = RunRealtimeReportRequest.newBuilder()
+                .setProperty(analyticsPropertyId)
+                .addDimensions(Dimension.newBuilder().setName("deviceCategory"))
+                .addMetrics(Metric.newBuilder().setName("activeUsers"))
+                .addOrderBys(OrderBy.newBuilder()
+                        .setMetric(OrderBy.MetricOrderBy.newBuilder().setMetricName("activeUsers"))
+                        .setDesc(true))
+                .setLimit(10)
+                .build();
+
+        RunRealtimeReportResponse response = analyticsDataClient.runRealtimeReport(request);
+        List<RealTimeDeviceCategoryDto> list = new ArrayList<>();
+
+        for (Row row : response.getRowsList()) {
+            RealTimeDeviceCategoryDto dto = new RealTimeDeviceCategoryDto();
+            dto.setDeviceCategory(row.getDimensionValues(0).getValue());
+            dto.setActiveUsers(Integer.parseInt(row.getMetricValues(0).getValue()));
+            list.add(dto);
+        }
+        return list;
+    }
 }
+

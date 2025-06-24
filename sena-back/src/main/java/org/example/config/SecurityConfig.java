@@ -2,6 +2,7 @@ package org.example.config;
 
 import lombok.RequiredArgsConstructor;
 import org.example.admin.all.AdminLoginService;
+import org.example.filter.TrafficLoggingFilter;
 import org.example.jwt.JwtFilter;
 import org.example.jwt.JwtLoginFilter;
 import org.example.jwt.JwtUtil;
@@ -34,6 +35,7 @@ public class SecurityConfig {
     private final JwtUtil jwtUtil;
     private final AdminLoginService adminLoginService;
     private final RedisService redisService;
+    private final TrafficLoggingFilter trafficLoggingFilter;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
@@ -61,7 +63,7 @@ public class SecurityConfig {
         jwtLoginFilter.setFilterProcessesUrl("/api/auth/login");
 
         http
-                .cors() // ✅ CORS 설정을 활성화
+                .cors()
                 .and()
                 .csrf().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -70,19 +72,22 @@ public class SecurityConfig {
                 .antMatchers(
                         "/api/auth/login",
                         "/api/auth/**",
-                        "/main/**",
-                        "/analytics/**"
+                        "/main/**"
                 ).permitAll()
+                // "/analytics/**" 와 "/admin/traffic/**" 는 여기서 권한 체크로 변경
+                .antMatchers("/analytics/**", "/admin/traffic/**").hasAnyRole("ROOT", "EDITOR", "VIEWER")
                 .antMatchers("/root/**").hasRole("ROOT")
                 .antMatchers("/editor/**").hasAnyRole("ROOT", "EDITOR")
                 .antMatchers("/viewer/**").hasAnyRole("ROOT", "EDITOR", "VIEWER")
                 .anyRequest().authenticated()
                 .and()
-                .addFilterBefore(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class) // ✅ 여기 순서 중요!
+                .addFilterBefore(trafficLoggingFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

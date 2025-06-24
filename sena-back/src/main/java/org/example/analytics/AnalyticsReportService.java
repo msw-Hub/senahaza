@@ -168,19 +168,13 @@ public class AnalyticsReportService {
     }
 
     // 신규 사용자 수와 재방문자 수 조회
-    private NewVsReturningDto getNewVsReturning(LocalDate inputStart, LocalDate inputEnd) throws IOException {
-        LocalDate today = LocalDate.now();
-        LocalDate defaultStart = today.minusMonths(1).plusDays(1); // 1달 전 +1일
-        LocalDate endDate = today.minusDays(1);                    // 어제
-
-        // 시작일이 1달보다 더 이전이면 입력받은 시작일 사용
-        LocalDate startDate = inputStart.isBefore(defaultStart) ? inputStart : defaultStart;
+    private NewVsReturningDto getNewVsReturning(LocalDate start, LocalDate end) throws IOException {
 
         RunReportRequest request = RunReportRequest.newBuilder()
                 .setProperty(analyticsPropertyId)
                 .addDateRanges(DateRange.newBuilder()
-                        .setStartDate(startDate.toString())
-                        .setEndDate(endDate.toString()))
+                        .setStartDate(start.toString())
+                        .setEndDate(end.toString()))
                 .addDimensions(Dimension.newBuilder().setName("date")) // 일자별 조회
                 .addMetrics(Metric.newBuilder().setName("newUsers"))
                 .addMetrics(Metric.newBuilder().setName("totalUsers"))

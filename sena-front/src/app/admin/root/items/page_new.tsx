@@ -126,7 +126,8 @@ export default function ItemManagePage() {
       if (formData.file) {
         formDataToSend.append("file", formData.file);
       }
-      const response = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/editor/items/${editingItem.itemId}`, formDataToSend, {
+
+      const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/editor/items/${editingItem.itemId}`, formDataToSend, {
         withCredentials: true,
         headers: {
           "Content-Type": "multipart/form-data",

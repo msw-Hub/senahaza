@@ -26,14 +26,13 @@ export default function RootLayout({
       <head>
         <link rel="stylesheet" type="text/css" href="/XEIcon/xeicon.min.css" />
       </head>
-      <body className={`${notoSans.variable} ${notoSansKR.variable} antialiased w-dvw h-dvh`}>
-        <div className="flex flex-col h-full">
-          <header className="bg-gray-800 text-white p-4 w-screen">
-            <h1 className="text-2xl font-bold">세븐나이츠 패키지 효율 계산기</h1>
-          </header>
-          <main className="flex-1 h-full text-black bg-background">{children}</main>
-          <footer className="bg-gray-800 text-white p-4 text-center w-screen">&copy; {new Date().getFullYear()} Senahaza</footer>
-        </div>
+      <body className={`${notoSans.variable} ${notoSansKR.variable} antialiased w-dvw h-dvh flex flex-col`}>
+        <header className="bg-gray-800 text-white p-4 w-screen">
+          <h1 className="text-2xl font-bold">세븐나이츠 패키지 효율 계산기</h1>
+        </header>
+        {/* <div className="flex-1">1123</div> */}
+        <main className="flex-1 h-full text-black bg-background overflow-hidden">{children}</main>
+        {/* <footer className="bg-gray-800 text-white p-4 text-center w-screen">&copy; {new Date().getFullYear()} Senahaza</footer> */}
       </body>
     </html>
   );

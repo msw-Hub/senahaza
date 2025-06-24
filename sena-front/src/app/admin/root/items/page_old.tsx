@@ -23,7 +23,6 @@ export default function ItemManagePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
-
   // 폼 데이터
   const [formData, setFormData] = useState({
     itemName: "",
@@ -126,6 +125,7 @@ export default function ItemManagePage() {
       if (formData.file) {
         formDataToSend.append("file", formData.file);
       }
+
       const response = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/editor/items/${editingItem.itemId}`, formDataToSend, {
         withCredentials: true,
         headers: {
@@ -150,27 +150,36 @@ export default function ItemManagePage() {
     }
   };
 
-  // 상태 토글
+  // 아이템 상태 변경
   const handleToggleStatus = async (itemId: number, currentStatus: string, itemName: string) => {
     const newStatus = currentStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-    const actionText = newStatus === "ACTIVE" ? "활성화" : "비활성화";
+    const statusText = newStatus === "ACTIVE" ? "활성화" : "비활성화";
 
-    if (!confirm(`"${itemName}" 아이템을 ${actionText}하시겠습니까?`)) {
+    if (!confirm(`"${itemName}" 아이템을 ${statusText}하시겠습니까?`)) {
       return;
     }
 
     try {
-      const response = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/editor/items/${itemId}/status`, { status: newStatus }, { withCredentials: true });
+      const response = await axios.patch(
+        `${process.env.NEXT_PUBLIC_API_URL}/editor/items/${itemId}/status`,
+        { status: newStatus },
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (response.status === 200) {
-        alert(`아이템이 ${actionText}되었습니다.`);
+        alert(`"${itemName}" 아이템이 ${statusText}되었습니다.`);
         fetchItems();
       } else {
-        alert(`아이템 ${actionText}에 실패했습니다.`);
+        alert("아이템 상태 변경에 실패했습니다.");
       }
     } catch (error) {
-      console.error(`아이템 ${actionText} 중 오류 발생`, error);
-      alert(`아이템 ${actionText} 중 오류가 발생했습니다.`);
+      console.error("아이템 상태 변경 중 오류 발생", error);
+      alert("아이템 상태 변경 중 오류가 발생했습니다.");
     }
   };
 
@@ -184,7 +193,7 @@ export default function ItemManagePage() {
       const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/editor/items/${itemId}`, { withCredentials: true });
 
       if (response.status === 200) {
-        alert("아이템이 삭제되었습니다.");
+        alert(`"${itemName}" 아이템이 삭제되었습니다.`);
         fetchItems();
         setSelectedItems((prev) => prev.filter((id) => id !== itemId));
       } else {
@@ -388,90 +397,84 @@ export default function ItemManagePage() {
       </div>
 
       {/* 아이템 리스트 */}
-      <div className="w-full h-full bg-foreground border border-gray-300 rounded-sm px-4 py-2">
-        <div className="grid grid-cols-[0.3fr_0.5fr_1fr_0.5fr_0.8fr_1fr_0.3fr_0.3fr_0.3fr] overflow-x-auto">
-          {/* 테이블 헤더 */}
-          {itemTableHeaders.map((title, index) => (
-            <span
-              key={index}
-              className={"flex items-center font-bold text-gray-700 border-b border-gray-300 h-12 px-2 " + (index === 0 || index === 1 || index >= 6 ? "justify-center" : "justify-start") + (index > 1 && index < 6 ? " cursor-pointer hover:bg-gray-50" : "")}
-              onClick={() => {
-                if (index === 0) {
-                  handleSelectAll();
-                } else if (index === 2) {
-                  handleSortChange("itemName");
-                } else if (index === 3) {
-                  handleSortChange("ruby");
-                } else if (index === 4) {
-                  handleSortChange("lastModifiedBy");
-                } else if (index === 5) {
-                  handleSortChange("lastModifiedAt");
-                }
-              }}>
-              <div className="flex justify-center items-center gap-1">
-                {index === 0 && <input type="checkbox" checked={selectedItems.length === filteredItems.length && filteredItems.length > 0} onChange={handleSelectAll} className="w-4 h-4" />}
-                {index !== 0 && title}
-                {index > 1 && index < 6 && <i className={`ml-1 text-xs ${sortBy === ["", "", "itemName", "ruby", "lastModifiedBy", "lastModifiedAt", ""][index] ? (sortOrder === "asc" ? "xi-angle-up" : "xi-angle-down") : "xi-angle-up opacity-30"}`}></i>}
+      <div className="w-full h-full bg-foreground border border-gray-300 rounded-sm px-4 py-2 overflow-y-auto grid grid-cols-[0.3fr_0.5fr_1fr_0.5fr_0.8fr_1fr_1.2fr_0.3fr_0.3fr_0.3fr] grid-rows-12">
+        {/* 테이블 헤더 */}
+        {itemTableHeaders.map((title, index) => (
+          <span
+            key={index}
+            className={"flex items-center font-bold text-gray-700 border-b border-gray-300 h-12 " + (index <= 1 || index >= 7 ? "justify-center" : "justify-start") + (index > 0 && index < 7 ? " cursor-pointer hover:bg-gray-50" : "")}
+            onClick={() => {
+              if (index === 0) {
+                handleSelectAll();
+              } else if (index === 2) {
+                handleSortChange("itemName");
+              } else if (index === 3) {
+                handleSortChange("ruby");
+              } else if (index === 4) {
+                handleSortChange("lastModifiedBy");
+              } else if (index === 5) {
+                handleSortChange("lastModifiedAt");
+              }
+            }}>
+            {index === 0 && <input type="checkbox" checked={selectedItems.length === filteredItems.length && filteredItems.length > 0} onChange={handleSelectAll} className="w-4 h-4" />}
+            {index !== 0 && title}
+            {index > 0 && index < 7 && index !== 1 && index !== 6 && <i className={`ml-1 text-xs ${sortBy === ["", "", "itemName", "ruby", "lastModifiedBy", "lastModifiedAt", ""][index] ? (sortOrder === "asc" ? "xi-angle-up" : "xi-angle-down") : "xi-angle-up opacity-30"}`}></i>}
+          </span>
+        ))}
+
+        {/* 로딩 상태 */}
+        {isLoading ? (
+          <div className="col-span-9 flex items-center justify-center h-20">
+            <span className="text-gray-500">로딩 중...</span>
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="col-span-9 flex items-center justify-center h-20">
+            <span className="text-gray-500">{searchTerm ? "검색 결과가 없습니다." : "등록된 아이템이 없습니다."}</span>
+          </div>
+        ) : (
+          /* 테이블 데이터 */
+          filteredItems.map((item) => (
+            <React.Fragment key={item.itemId}>
+              {/* 체크박스 */}
+              <div className="flex items-center justify-center text-gray-700 border-b border-gray-200 h-12">
+                <input type="checkbox" checked={selectedItems.includes(item.itemId)} onChange={() => handleSelectItem(item.itemId)} className="w-4 h-4" />
               </div>
-            </span>
-          ))}
 
-          {/* 로딩 상태 */}
-          {isLoading ? (
-            <div className="col-span-9 flex items-center justify-center h-20">
-              <span className="text-gray-500">로딩 중...</span>
-            </div>
-          ) : filteredItems.length === 0 ? (
-            <div className="col-span-9 flex items-center justify-center h-20">
-              <span className="text-gray-500">{searchTerm ? "검색 결과가 없습니다." : "등록된 아이템이 없습니다."}</span>
-            </div>
-          ) : (
-            /* 테이블 데이터 */
-            filteredItems.map((item) => (
-              <React.Fragment key={item.itemId}>
-                {/* 체크박스 */}
-                <div className="flex items-center justify-center text-gray-700 border-b border-gray-200 h-16 px-2">
-                  <input type="checkbox" checked={selectedItems.includes(item.itemId)} onChange={() => handleSelectItem(item.itemId)} className="w-4 h-4" />
-                </div>
+              {/* 이미지 */}
+              <div className="flex items-center justify-center text-gray-700 border-b border-gray-200 h-12">
+                <img src={item.imgUrl} alt={item.itemName} className="w-8 h-8 object-cover rounded" />
+              </div>
 
-                {/* 이미지 */}
-                <div className="flex items-center justify-center text-gray-700 border-b border-gray-200 h-16 px-2">
-                  <img src={item.imgUrl} alt={item.itemName} className="w-8 h-8 object-cover rounded" />
-                </div>
+              <span className="text-gray-700 border-b border-gray-200 h-12 flex items-center font-medium">{item.itemName}</span>
 
-                {/* 아이템명 */}
-                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center font-medium px-2">{item.itemName}</span>
+              <span className="text-gray-700 border-b border-gray-200 h-12 flex items-center">{item.ruby.toLocaleString()}</span>
 
-                {/* 루비 */}
-                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2">{item.ruby.toLocaleString()}</span>
+              <span className="text-gray-700 border-b border-gray-200 h-12 flex items-center">{item.lastModifiedBy}</span>
 
-                {/* 최종 수정자 */}
-                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2">{item.lastModifiedBy}</span>
+              <span className="text-gray-700 border-b border-gray-200 h-12 flex items-center text-sm">{new Date(item.lastModifiedAt).toLocaleString()}</span>
 
-                {/* 최종 수정일 */}
-                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center text-sm px-2">{new Date(item.lastModifiedAt).toLocaleString()}</span>
+              <span className="text-gray-700 border-b border-gray-200 h-12 flex items-center text-sm truncate" title={item.lastModifiedMessage}>
+                {item.lastModifiedMessage}
+              </span>
 
-                {/* 수정 버튼 */}
-                <div onClick={() => openEditModal(item)} className="flex items-center justify-center text-blue-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-blue-50 px-2" title="수정">
-                  <i className="xi-pen text-lg"></i>
-                </div>
-
-                {/* 상태변경 버튼 */}
-                <div
-                  onClick={() => handleToggleStatus(item.itemId, item.status, item.itemName)}
-                  className={`flex items-center justify-center border-b border-gray-200 h-16 cursor-pointer px-2 ${item.status === "ACTIVE" ? "text-red-600 hover:bg-red-50" : "text-green-600 hover:bg-green-50"}`}
-                  title={item.status === "ACTIVE" ? "비활성화" : "활성화"}>
-                  <i className={item.status === "ACTIVE" ? "xi-pause text-lg" : "xi-play text-lg"}></i>
-                </div>
-
-                {/* 삭제 버튼 */}
-                <div onClick={() => handleDeleteItem(item.itemId, item.itemName)} className="flex items-center justify-center text-red-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-red-50 px-2" title="삭제">
-                  <i className="xi-trash text-lg"></i>
-                </div>
-              </React.Fragment>
-            ))
-          )}
-        </div>
+              {/* 수정 버튼 */}
+              <div onClick={() => openEditModal(item)} className="flex items-center justify-center text-blue-600 border-b border-gray-200 h-12 cursor-pointer hover:bg-blue-50" title="수정">
+                <i className="xi-pen text-lg"></i>
+              </div>
+              {/* 상태변경 버튼 */}
+              <div
+                onClick={() => handleToggleStatus(item.itemId, item.status, item.itemName)}
+                className={`flex items-center justify-center border-b border-gray-200 h-12 cursor-pointer px-2 ${item.status === "ACTIVE" ? "text-red-600 hover:bg-red-50" : "text-green-600 hover:bg-green-50"}`}
+                title={item.status === "ACTIVE" ? "비활성화" : "활성화"}>
+                <i className={item.status === "ACTIVE" ? "xi-pause text-lg" : "xi-play text-lg"}></i>
+              </div>
+              {/* 삭제 버튼 */}
+              <div onClick={() => handleDeleteItem(item.itemId, item.itemName)} className="flex items-center justify-center text-red-600 border-b border-gray-200 h-12 cursor-pointer hover:bg-red-50" title="삭제">
+                <i className="xi-trash text-lg"></i>
+              </div>
+            </React.Fragment>
+          ))
+        )}
       </div>
 
       {/* 하단 정보 */}
@@ -502,12 +505,6 @@ export default function ItemManagePage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">이미지 파일 {editingItem && "(수정 시 선택사항)"}</label>
                 <input type="file" accept="image/*" onChange={(e) => setFormData({ ...formData, file: e.target.files?.[0] || null })} className="w-full border border-gray-300 rounded-sm px-3 py-2" />
-                {editingItem && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="text-sm text-gray-600">현재 이미지:</span>
-                    <img src={editingItem.imgUrl} alt={editingItem.itemName} className="w-8 h-8 object-cover rounded" />
-                  </div>
-                )}
               </div>
 
               <div>

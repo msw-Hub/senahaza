@@ -328,9 +328,7 @@ export default function UsersPage() {
               <div className="flex justify-center items-center gap-1">
                 {index === 0 && <input type="checkbox" checked={selectedAdmins.length === filteredAdmins.length && filteredAdmins.length > 0} onChange={handleSelectAll} className="w-4 h-4" />}
                 {index !== 0 && title}
-                {index > 0 && index < 7 && index !== 5 && index !== 7 && (
-                  <i className={`ml-1 text-xs ${sortBy === ["", "name", "role", "dept", "email", "", "lastLoginAt", ""][index] ? (sortOrder === "asc" ? "xi-angle-up" : "xi-angle-down") : "xi-angle-up opacity-30"}`}></i>
-                )}
+                {index > 0 && index < 7 && index !== 5 && index !== 7 && <i className={`ml-1 text-xs ${sortBy === ["", "name", "role", "dept", "email", "", "lastLoginAt", ""][index] ? (sortOrder === "asc" ? "xi-angle-up" : "xi-angle-down") : "xi-angle-up opacity-30"}`}></i>}
               </div>
             </span>
           ))}
@@ -388,7 +386,10 @@ export default function UsersPage() {
                 </div>
 
                 {/* 삭제 버튼 */}
-                <div onClick={() => handleDeleteAdmin(admin.adminId, admin.name)} className={`flex items-center justify-center border-b border-gray-200 h-16 px-2 ${admin.role === "ROOT" ? "text-gray-400 cursor-not-allowed" : "text-red-600 cursor-pointer hover:bg-red-50"}`} title={admin.role === "ROOT" ? "최고관리자는 삭제할 수 없습니다" : "삭제"}>
+                <div
+                  onClick={() => handleDeleteAdmin(admin.adminId, admin.name)}
+                  className={`flex items-center justify-center border-b border-gray-200 h-16 px-2 ${admin.role === "ROOT" ? "text-gray-400 cursor-not-allowed" : "text-red-600 cursor-pointer hover:bg-red-50"}`}
+                  title={admin.role === "ROOT" ? "최고관리자는 삭제할 수 없습니다" : "삭제"}>
                   <i className="xi-trash text-lg"></i>
                 </div>
               </React.Fragment>

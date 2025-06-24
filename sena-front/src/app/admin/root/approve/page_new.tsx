@@ -278,9 +278,7 @@ export default function ApprovePage() {
               <div className="flex justify-center items-center gap-1">
                 {index === 0 && <input type="checkbox" checked={selectedUsers.length === filteredRequests.length && filteredRequests.length > 0} onChange={handleSelectAll} className="w-4 h-4" />}
                 {index !== 0 && title}
-                {index > 0 && index < 6 && index !== 4 && (
-                  <i className={`ml-1 text-xs ${sortBy === ["", "dept", "name", "email", "", "requestedAt", ""][index] ? (sortOrder === "asc" ? "xi-angle-up" : "xi-angle-down") : "xi-angle-up opacity-30"}`}></i>
-                )}
+                {index > 0 && index < 6 && index !== 4 && <i className={`ml-1 text-xs ${sortBy === ["", "dept", "name", "email", "", "requestedAt", ""][index] ? (sortOrder === "asc" ? "xi-angle-up" : "xi-angle-down") : "xi-angle-up opacity-30"}`}></i>}
               </div>
             </span>
           ))}

@@ -1,13 +1,13 @@
 package org.example.traffic;
 
 import lombok.RequiredArgsConstructor;
-import org.example.traffic.dto.TrafficLogRequestDto;
-import org.example.traffic.dto.TrafficLogResponseDto;
+import org.example.traffic.dto.*;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityManager;
+import java.util.List;
 
 @RestController
 @RequestMapping("/admin/traffic")
@@ -24,4 +24,15 @@ public class TrafficLogController {
         return ResponseEntity.ok(logs);
     }
 
+    @GetMapping("/statistics")
+    public ResponseEntity<?> getStatistics(TrafficStatsRequestDto dto) {
+        TrafficStatsResponseDto response = trafficLogService.getStatistics(dto);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/top-uris")
+    public ResponseEntity<?> getTopUriStats(TopUriStatsRequestDto requestDto) {
+        List<TopUriStatsDto> topUris = trafficLogService.getTopUriStats(requestDto);
+        return ResponseEntity.ok(topUris);
+    }
 }

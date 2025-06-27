@@ -1,113 +1,110 @@
 package org.example.traffic;
 
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.traffic.dto.*;
 import org.springframework.data.domain.*;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.criteria.Predicate;
+import javax.persistence.EntityManager;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.LinkedHashMap;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TrafficLogService {
 
     private final TrafficLogRepository trafficLogRepository;
 
+    private final EntityManager em;
+    private final JPAQueryFactory queryFactory;
+
     public void save(TrafficLogEntity entity) {
         trafficLogRepository.save(entity);
     }
 
     public Page<TrafficLogResponseDto> getTrafficLogs(TrafficLogRequestDto dto) {
-        Specification<TrafficLogEntity> spec = (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
+        QTrafficLogEntity q = QTrafficLogEntity.trafficLogEntity;
+        BooleanBuilder builder = new BooleanBuilder();
 
-            // uri 포함 검색
-            if (dto.getUri() != null && !dto.getUri().isEmpty()) {
-                predicates.add(cb.like(root.get("uri"), "%" + dto.getUri() + "%"));
+        // uri 포함 검색
+        if (dto.getUri() != null && !dto.getUri().isEmpty()) {
+            builder.and(q.uri.contains(dto.getUri()));
+        }
+
+        // 날짜 범위 필터링
+        if (dto.getStartDate() != null && dto.getEndDate() != null) {
+            LocalDateTime start = LocalDate.parse(dto.getStartDate(), DateTimeFormatter.ofPattern("yyyyMMdd")).atStartOfDay();
+            LocalDateTime end = LocalDate.parse(dto.getEndDate(), DateTimeFormatter.ofPattern("yyyyMMdd")).atTime(LocalTime.MAX);
+            builder.and(q.createdAt.between(start, end));
+        }
+
+        // HTTP 메서드
+        if (dto.getHttpMethod() != null && !dto.getHttpMethod().equalsIgnoreCase("ALL")) {
+            builder.and(q.httpMethod.eq(dto.getHttpMethod()));
+        }
+
+        // 상태 코드 필터링
+        if (dto.getStatusCode() != null && !dto.getStatusCode().equalsIgnoreCase("ALL")) {
+            switch (dto.getStatusCode()) {
+                case "2xx": builder.and(q.httpStatus.between(200, 299)); break;
+                case "4xx": builder.and(q.httpStatus.between(400, 499)); break;
+                case "5xx": builder.and(q.httpStatus.between(500, 599)); break;
             }
+        }
 
-            // 날짜 범위
-            if (dto.getStartDate() != null && dto.getEndDate() != null) {
-                LocalDateTime start = LocalDate.parse(dto.getStartDate(), DateTimeFormatter.ofPattern("yyyyMMdd")).atStartOfDay();
-                LocalDateTime end = LocalDate.parse(dto.getEndDate(), DateTimeFormatter.ofPattern("yyyyMMdd")).atTime(LocalTime.MAX);
-                predicates.add(cb.between(root.get("createdAt"), start, end));
+        // isAdmin 여부
+        if (dto.getIsAdmin() != null && !dto.getIsAdmin().equalsIgnoreCase("ALL")) {
+            builder.and(q.isAdmin.eq(Boolean.parseBoolean(dto.getIsAdmin())));
+        }
+
+        // errorStatus 필터링
+        if (dto.getErrorStatus() != null && !dto.getErrorStatus().equalsIgnoreCase("ALL")) {
+            if (dto.getErrorStatus().equalsIgnoreCase("NORMAL")) {
+                builder.and(q.httpStatus.eq(200)
+                        .and(q.businessErrorCode.isNull()
+                                .or(q.businessErrorCode.trim().eq(""))));
+            } else if (dto.getErrorStatus().equalsIgnoreCase("ERROR")) {
+                builder.and(q.httpStatus.ne(200)
+                        .or(q.businessErrorCode.isNotNull()
+                                .and(q.businessErrorCode.trim().ne(""))));
+            } else {
+                builder.and(q.businessErrorCode.eq(dto.getErrorStatus()));
             }
+        }
 
-            // HTTP 메서드
-            if (dto.getHttpMethod() != null && !dto.getHttpMethod().equalsIgnoreCase("ALL")) {
-                predicates.add(cb.equal(root.get("httpMethod"), dto.getHttpMethod()));
-            }
-
-            // 상태 코드 범위
-            if (dto.getStatusCode() != null && !dto.getStatusCode().equalsIgnoreCase("ALL")) {
-                switch (dto.getStatusCode()) {
-                    case "2xx":
-                        predicates.add(cb.between(root.get("httpStatus"), 200, 299));
-                        break;
-                    case "4xx":
-                        predicates.add(cb.between(root.get("httpStatus"), 400, 499));
-                        break;
-                    case "5xx":
-                        predicates.add(cb.between(root.get("httpStatus"), 500, 599));
-                        break;
-                }
-            }
-
-            // 관리자 여부
-            if (dto.getIsAdmin() != null && !dto.getIsAdmin().equalsIgnoreCase("ALL")) {
-                predicates.add(cb.equal(root.get("isAdmin"), Boolean.parseBoolean(dto.getIsAdmin())));
-            }
-
-            // errorStatus 필터
-            if (dto.getErrorStatus() != null && !dto.getErrorStatus().equalsIgnoreCase("ALL")) {
-                if (dto.getErrorStatus().equalsIgnoreCase("NORMAL")) {
-                    // 정상: HTTP 200이고, businessErrorCode가 null 또는 빈 문자열인 경우
-                    predicates.add(cb.and(
-                            cb.equal(root.get("httpStatus"), 200),
-                            cb.or(
-                                    cb.isNull(root.get("businessErrorCode")),
-                                    cb.equal(cb.trim(root.get("businessErrorCode")), "")
-                            )
-                    ));
-                } else if (dto.getErrorStatus().equalsIgnoreCase("ERROR")) {
-                    // 모든 에러: HTTP 200이 아니거나, businessErrorCode가 존재하는 모든 경우
-                    predicates.add(cb.or(
-                            cb.notEqual(root.get("httpStatus"), 200),
-                            cb.and(
-                                    cb.isNotNull(root.get("businessErrorCode")),
-                                    cb.notEqual(cb.trim(root.get("businessErrorCode")), "")
-                            )
-                    ));
-                } else {
-                    // 특정 커스텀 에러 코드 필터링 (예: "PACKAGE_NOT_FOUND" 등)
-                    predicates.add(cb.equal(root.get("businessErrorCode"), dto.getErrorStatus()));
-                }
-            }
-
-            // searchWord로 userId 포함 검색
-            if (dto.getSearchWord() != null && !dto.getSearchWord().isEmpty()) {
-                predicates.add(cb.like(root.get("userId"), "%" + dto.getSearchWord() + "%"));
-            }
-
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
+        // userId에 searchWord 포함
+        if (dto.getSearchWord() != null && !dto.getSearchWord().isEmpty()) {
+            builder.and(q.userId.contains(dto.getSearchWord()));
+        }
 
         Pageable pageable = PageRequest.of(dto.getPage(), dto.getSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        Page<TrafficLogEntity> page = trafficLogRepository.findAll(spec, pageable);
+        List<TrafficLogEntity> result = queryFactory.selectFrom(q)
+                .where(builder)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .orderBy(q.createdAt.desc())
+                .fetch();
 
-        return page.map(entity -> TrafficLogResponseDto.builder()
+        Long total = queryFactory.select(q.count())
+                .from(q)
+                .where(builder)
+                .fetchOne();
+
+        long totalCount = total != null ? total : 0L;
+
+        List<TrafficLogResponseDto> content = result.stream().map(entity -> TrafficLogResponseDto.builder()
                 .id(entity.getId())
                 .httpMethod(entity.getHttpMethod())
                 .uri(entity.getUri())
@@ -119,7 +116,9 @@ public class TrafficLogService {
                 .createdAt(entity.getCreatedAt())
                 .businessErrorCode(entity.getBusinessErrorCode())
                 .clientIp(maskIp(entity.getClientIp()))
-                .build());
+                .build()).collect(Collectors.toList());
+
+        return new PageImpl<>(content, pageable, totalCount);
     }
 
     private String maskIp(String ip) {
@@ -131,29 +130,39 @@ public class TrafficLogService {
     }
 
     public TrafficStatsResponseDto getStatistics(TrafficStatsRequestDto dto) {
+        QTrafficLogEntity q = QTrafficLogEntity.trafficLogEntity;
+
+        // 시작일, 종료일을 LocalDateTime으로 변환 (시작은 00:00:00, 종료는 23:59:59.999)
         LocalDateTime start = LocalDate.parse(dto.getStartDate(), DateTimeFormatter.ofPattern("yyyyMMdd")).atStartOfDay();
         LocalDateTime end = LocalDate.parse(dto.getEndDate(), DateTimeFormatter.ofPattern("yyyyMMdd")).atTime(LocalTime.MAX);
 
-        List<TrafficLogEntity> logs = trafficLogRepository.findAll((root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            predicates.add(cb.between(root.get("createdAt"), start, end));
+        // 조건 빌더 생성
+        BooleanBuilder builder = new BooleanBuilder();
 
-            if (dto.getUri() != null && !dto.getUri().isBlank()) {
-                predicates.add(cb.like(root.get("uri"), "%" + dto.getUri() + "%"));
-            }
+        // 생성일자(createdAt)가 범위 내에 있는 조건 추가
+        builder.and(q.createdAt.between(start, end));
 
-            return cb.and(predicates.toArray(new Predicate[0]));
-        });
+        // URI가 null 아니고 빈 문자열 아닐 경우, 포함 검색 조건 추가
+        if (dto.getUri() != null && !dto.getUri().isBlank()) {
+            builder.and(q.uri.contains(dto.getUri()));
+        }
 
-        long total = logs.size();
+        // 쿼리DSL을 사용해 조건에 맞는 엔티티 리스트 조회
+        List<TrafficLogEntity> logs = queryFactory.selectFrom(q)
+                .where(builder)
+                .fetch();
 
+        long total = logs.size(); // 전체 로그 개수
+
+        // HTTP 메서드별 요청 수 집계
         Map<String, Long> methodMap = logs.stream()
                 .collect(Collectors.groupingBy(TrafficLogEntity::getHttpMethod, Collectors.counting()));
 
+        // 상태 코드 그룹별 요청 수 집계 (2xx 정상, 2xx 예외, 4xx, 5xx, 기타)
         Map<String, Long> statusGroupMap = logs.stream()
                 .collect(Collectors.groupingBy(log -> {
                     int status = log.getHttpStatus();
-                    boolean hasBizError = log.getBusinessErrorCode() != null;
+                    boolean hasBizError = log.getBusinessErrorCode() != null && !log.getBusinessErrorCode().trim().isEmpty();
 
                     if (status >= 200 && status < 300) {
                         if (status == 200 && !hasBizError) return "2xx_success";
@@ -163,21 +172,25 @@ public class TrafficLogService {
                     else return "other";
                 }, Collectors.counting()));
 
+        // 평균 응답 시간(ms), 소수점 둘째 자리까지 반올림
         double avgResponse = logs.stream()
                 .mapToInt(TrafficLogEntity::getResponseTimeMs)
                 .average()
                 .orElse(0.0);
         avgResponse = Math.round(avgResponse * 100.0) / 100.0;
 
+        // 평균 DB 쿼리 실행 횟수, 소수점 둘째 자리까지 반올림
         double avgDbQuery = logs.stream()
                 .mapToInt(TrafficLogEntity::getDbQueryCount)
                 .average()
                 .orElse(0.0);
         avgDbQuery = Math.round(avgDbQuery * 100.0) / 100.0;
 
+        // 비즈니스 오류 코드 TOP 5 집계 (빈 값 제외)
         Map<String, Long> errorTopN = logs.stream()
                 .map(TrafficLogEntity::getBusinessErrorCode)
                 .filter(Objects::nonNull)
+                .filter(code -> !code.trim().isEmpty())
                 .collect(Collectors.groupingBy(e -> e, Collectors.counting()))
                 .entrySet().stream()
                 .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
@@ -189,20 +202,24 @@ public class TrafficLogService {
                         LinkedHashMap::new
                 ));
 
+        // 관리자 요청 수
         long adminCount = logs.stream().filter(TrafficLogEntity::isAdmin).count();
 
+        // 정상 요청 수 (HTTP 200, 비즈니스 오류 코드 없음)
         long successCount = logs.stream()
-                .filter(log -> log.getHttpStatus() == 200 && log.getBusinessErrorCode() == null)
+                .filter(log -> log.getHttpStatus() == 200 &&
+                        (log.getBusinessErrorCode() == null || log.getBusinessErrorCode().trim().isEmpty()))
                 .count();
 
-        long failureCount = total - successCount;
+        long failureCount = total - successCount; // 실패 요청 수
 
+        // 요청 비율 계산 (총 개수가 0일 경우 0으로 처리)
         double adminRate = total == 0 ? 0 : Math.round((adminCount * 100.0 / total) * 100.0) / 100.0;
         double successRate = total == 0 ? 0 : Math.round((successCount * 100.0 / total) * 100.0) / 100.0;
         double failureRate = total == 0 ? 0 : Math.round((failureCount * 100.0 / total) * 100.0) / 100.0;
         double userRate = total == 0 ? 0 : Math.round((100.0 - adminRate) * 100.0) / 100.0;
 
-
+        // 결과 DTO 생성 및 반환
         return TrafficStatsResponseDto.builder()
                 .totalRequestCount(total)
                 .methodCountMap(methodMap)
@@ -218,65 +235,25 @@ public class TrafficLogService {
     }
 
     public List<TopUriStatsDto> getTopUriStats(TopUriStatsRequestDto requestDto) {
-        String startDateStr = requestDto.getStartDate();
-        String endDateStr = requestDto.getEndDate();
+        LocalDateTime start = LocalDate.parse(requestDto.getStartDate(), DateTimeFormatter.ofPattern("yyyyMMdd")).atStartOfDay();
+        LocalDateTime end = LocalDate.parse(requestDto.getEndDate(), DateTimeFormatter.ofPattern("yyyyMMdd")).atTime(LocalTime.MAX);
         int topN = requestDto.getTopN();
 
-        // 시작일, 종료일 문자열을 LocalDateTime 타입으로 변환
-        LocalDateTime start = LocalDate.parse(startDateStr, DateTimeFormatter.ofPattern("yyyyMMdd")).atStartOfDay();
-        LocalDateTime end = LocalDate.parse(endDateStr, DateTimeFormatter.ofPattern("yyyyMMdd")).atTime(LocalTime.MAX);
+        List<TopUriStatsProjection> projections = trafficLogRepository.findTopUriStats(start, end, topN);
 
-        // 지정된 기간 내 모든 트래픽 로그 조회
-        List<TrafficLogEntity> logs = trafficLogRepository.findAll((root, query, cb) ->
-                cb.between(root.get("createdAt"), start, end)
-        );
+        // Projection → DTO 변환 및 소수점 2자리 반올림
 
-        // 조회된 로그를 URI 기준으로 그룹화
-        Map<String, List<TrafficLogEntity>> groupedByUri = logs.stream()
-                .collect(Collectors.groupingBy(TrafficLogEntity::getUri));
-
-        // 그룹별로 통계 계산 후 Top N 선별하여 리스트 반환
-        return groupedByUri.entrySet().stream()
-                .map(entry -> {
-                    String uri = entry.getKey();
-                    List<TrafficLogEntity> uriLogs = entry.getValue();
-
-                    // URI별 요청 수 계산
-                    long count = uriLogs.size();
-
-                    // URI별 평균 응답 시간 계산
-                    double avgResp = uriLogs.stream()
-                            .mapToInt(TrafficLogEntity::getResponseTimeMs)
-                            .average().orElse(0.0);
-
-                    // URI별 에러 요청 수 계산 (4xx,5xx 및 HTTP 200이면서 비즈니스 에러 코드 있는 경우)
-                    long errorCount = uriLogs.stream().filter(log -> {
-                        int status = log.getHttpStatus();
-                        boolean hasBizError = log.getBusinessErrorCode() != null;
-                        return (status >= 400 && status < 600) || (status == 200 && hasBizError);
-                    }).count();
-
-                    // 에러율 계산 (소수점 둘째 자리까지 반올림)
-                    double errorRate = count == 0 ? 0 : (errorCount * 100.0 / count);
-                    errorRate = Math.round(errorRate * 100.0) / 100.0;
-
-                    // 평균 응답 시간도 소수점 둘째 자리까지 반올림
-                    avgResp = Math.round(avgResp * 100.0) / 100.0;
-
-                    // DTO 생성 및 반환
-                    return TopUriStatsDto.builder()
-                            .uri(uri)
-                            .requestCount(count)
-                            .averageResponseTime(avgResp)
-                            .errorRate(errorRate)
-                            .build();
-                })
-                // 요청 수 기준 내림차순 정렬
-                .sorted((a, b) -> Long.compare(b.getRequestCount(), a.getRequestCount()))
-                // Top N 개 결과만 추출
-                .limit(topN)
+        return projections.stream()
+                .map(p -> TopUriStatsDto.builder()
+                        .uri(p.getUri())
+                        .requestCount(p.getRequestCount())
+                        .averageResponseTime(Math.round(p.getAverageResponseTime() * 100.0) / 100.0)
+                        .errorRate(Math.round(p.getErrorRate() * 100.0) / 100.0)
+                        .build()
+                )
                 .collect(Collectors.toList());
     }
+
 
 
 }

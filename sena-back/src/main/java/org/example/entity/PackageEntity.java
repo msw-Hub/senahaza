@@ -1,9 +1,6 @@
 package org.example.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import javax.persistence.*;
@@ -15,7 +12,7 @@ import java.util.List;
 @Getter
 @Setter
 @SuperBuilder
-@NoArgsConstructor
+@NoArgsConstructor(force = true)
 public class PackageEntity extends BaseEntity {
 
     @Id
@@ -30,6 +27,7 @@ public class PackageEntity extends BaseEntity {
     private Double packagePrice;    // 패키지 실제 현금가
 
     // 연관관계
+    @Builder.Default
     @OneToMany(mappedBy = "packageEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<PackageItemEntity> packageItems = new ArrayList<>();
 

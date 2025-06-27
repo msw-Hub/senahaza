@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor
+@NoArgsConstructor(force = true)
 @AllArgsConstructor
 @Table(name = "pending_admin")
 public class PendingAdminEntity {
@@ -34,6 +34,7 @@ public class PendingAdminEntity {
     @Column(nullable = false)
     private String password;
 
+    @Builder.Default
     @Column(name = "requested_at", nullable = false)
     private LocalDateTime requestedAt = LocalDateTime.now();
 

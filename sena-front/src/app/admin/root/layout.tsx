@@ -18,6 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     { name: "아이템 관리", url: "items", path: "/admin/root/items" },
     { name: "통계 관리", url: "stats", path: "/admin/root/stats" },
     { name: "실시간 통계 관리", url: "liveStats", path: "/admin/root/liveStats" },
+    { name: "로그 관리", url: "logs", path: "/admin/root/logs" },
   ];
 
   const pathname = usePathname();

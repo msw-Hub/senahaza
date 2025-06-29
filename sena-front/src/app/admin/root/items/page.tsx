@@ -1,7 +1,9 @@
 "use client";
 
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import ItemModal from "./components/ItemModal";
 
 interface Item {
   itemId: number;
@@ -22,6 +24,8 @@ export default function ItemManagePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
+
+  const router = useRouter();
 
   // 폼 데이터
   const [formData, setFormData] = useState({
@@ -300,11 +304,11 @@ export default function ItemManagePage() {
             <option value="lastModifiedBy_asc">수정자 오름차순</option>
             <option value="lastModifiedBy_desc">수정자 내림차순</option>
           </select>
-        </div>{" "}
+        </div>
         {/* 액션 버튼 */}
         <div className="flex gap-2 items-center">
           <span className="text-gray-600 text-sm">총 {items.length}개의 아이템</span>
-          <button onClick={openAddModal} className="px-3 py-1 bg-blue-500 text-white rounded-sm hover:bg-blue-600">
+          <button onClick={openAddModal} className="text-nowrap px-4 py-2 rounded-sm font-medium text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors">
             아이템 추가
           </button>
         </div>
@@ -312,7 +316,7 @@ export default function ItemManagePage() {
 
       {/* 아이템 리스트 */}
       <div className="w-full h-full bg-foreground border border-gray-300 rounded-sm px-4 py-2">
-        <div className="grid grid-cols-[0.3fr_0.5fr_1fr_0.5fr_0.8fr_1fr_0.3fr_0.3fr_0.3fr] overflow-x-auto">
+        <div className="grid grid-cols-[0.3fr_0.5fr_1fr_0.5fr_0.8fr_1fr_0.2fr_0.2fr_0.2fr] overflow-x-auto">
           {/* 테이블 헤더 */}
           {itemTableHeaders.map((title, index) => (
             <span
@@ -329,7 +333,6 @@ export default function ItemManagePage() {
                   handleSortChange("lastModifiedAt");
                 }
               }}>
-              {" "}
               <div className="flex justify-center items-center gap-1">
                 {title}
                 {index > 1 && index < 6 && <i className={`ml-1 text-xs ${sortBy === ["", "", "itemName", "ruby", "lastModifiedBy", "lastModifiedAt", ""][index] ? (sortOrder === "asc" ? "xi-angle-up" : "xi-angle-down") : "xi-angle-up opacity-30"}`}></i>}
@@ -349,40 +352,47 @@ export default function ItemManagePage() {
           ) : (
             /* 테이블 데이터 */
             filteredItems.map((item) => (
-              <React.Fragment key={item.itemId}>
-                {" "}
+              <div key={item.itemId} className="contents group">
                 {/* ID */}
-                <div className="flex items-center justify-center text-gray-700 border-b border-gray-200 h-16 px-2">
+                <div className="flex items-center justify-center text-gray-700 border-b border-gray-200 h-16 px-2 cursor-pointer group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors" onClick={() => router.push(`/admin/root/items/detail/${item.itemId}`)} title="아이템 상세 정보 보기">
                   <span className="font-medium">{item.itemId}</span>
                 </div>
                 {/* 이미지 */}
-                <div className="flex items-center justify-center text-gray-700 border-b border-gray-200 h-16 px-2">
+                <div className="flex items-center justify-center text-gray-700 border-b border-gray-200 h-16 px-2 cursor-pointer group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors" onClick={() => router.push(`/admin/root/items/detail/${item.itemId}`)} title="아이템 상세 정보 보기">
                   <img src={item.imgUrl} alt={item.itemName} className="w-8 h-8 object-cover rounded" />
                 </div>
                 {/* 아이템명 */}
-                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center font-medium px-2">{item.itemName}</span>
+                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center font-medium px-2 cursor-pointer group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors" onClick={() => router.push(`/admin/root/items/detail/${item.itemId}`)} title="아이템 상세 정보 보기">
+                  {item.itemName}
+                </span>
                 {/* 루비 */}
-                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2">{item.ruby.toLocaleString()}</span>
+                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2 cursor-pointer group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors" onClick={() => router.push(`/admin/root/items/detail/${item.itemId}`)} title="아이템 상세 정보 보기">
+                  {item.ruby.toLocaleString()}
+                </span>
                 {/* 최종 수정자 */}
-                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2">{item.lastModifiedBy}</span>
+                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2 cursor-pointer group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors" onClick={() => router.push(`/admin/root/items/detail/${item.itemId}`)} title="아이템 상세 정보 보기">
+                  {item.lastModifiedBy}
+                </span>
                 {/* 최종 수정일 */}
-                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center text-sm px-2">{new Date(item.lastModifiedAt).toLocaleString()}</span>
+                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center text-sm px-2 cursor-pointer group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors" onClick={() => router.push(`/admin/root/items/detail/${item.itemId}`)} title="아이템 상세 정보 보기">
+                  {new Date(item.lastModifiedAt).toLocaleString()}
+                </span>
                 {/* 수정 버튼 */}
-                <div onClick={() => openEditModal(item)} className="flex items-center justify-center text-blue-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-blue-50 px-2" title="수정">
+                <div onClick={() => openEditModal(item)} className="flex items-center justify-center text-blue-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-blue-50 px-2 transition-colors" title="수정">
                   <i className="xi-pen text-lg"></i>
                 </div>
                 {/* 상태변경 버튼 */}
                 <div
                   onClick={() => handleToggleStatus(item.itemId, item.status, item.itemName)}
-                  className={`flex items-center justify-center border-b border-gray-200 h-16 cursor-pointer px-2 ${item.status === "ACTIVE" ? "text-red-600 hover:bg-red-50" : "text-green-600 hover:bg-green-50"}`}
+                  className={`flex items-center justify-center border-b border-gray-200 h-16 cursor-pointer px-2 transition-colors ${item.status === "ACTIVE" ? "text-red-600 hover:bg-red-50" : "text-green-600 hover:bg-green-50"}`}
                   title={item.status === "ACTIVE" ? "비활성화" : "활성화"}>
                   <i className={item.status === "ACTIVE" ? "xi-pause text-lg" : "xi-play text-lg"}></i>
                 </div>
                 {/* 삭제 버튼 */}
-                <div onClick={() => handleDeleteItem(item.itemId, item.itemName)} className="flex items-center justify-center text-red-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-red-50 px-2" title="삭제">
+                <div onClick={() => handleDeleteItem(item.itemId, item.itemName)} className="flex items-center justify-center text-red-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-red-50 px-2 transition-colors" title="삭제">
                   <i className="xi-trash text-lg"></i>
                 </div>
-              </React.Fragment>
+              </div>
             ))
           )}
         </div>
@@ -397,50 +407,7 @@ export default function ItemManagePage() {
       </div>
 
       {/* 모달 */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 max-w-[90vw]">
-            <h2 className="text-xl font-bold mb-4">{editingItem ? "아이템 수정" : "아이템 추가"}</h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">아이템명</label>
-                <input type="text" value={formData.itemName} onChange={(e) => setFormData({ ...formData, itemName: e.target.value })} className="w-full border border-gray-300 rounded-sm px-3 py-2" placeholder="아이템명을 입력하세요" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">루비</label>
-                <input type="number" value={formData.ruby} onChange={(e) => setFormData({ ...formData, ruby: e.target.value })} className="w-full border border-gray-300 rounded-sm px-3 py-2" placeholder="루비 값을 입력하세요" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">이미지 파일 {editingItem && "(수정 시 선택사항)"}</label>
-                <input type="file" accept="image/*" onChange={(e) => setFormData({ ...formData, file: e.target.files?.[0] || null })} className="w-full border border-gray-300 rounded-sm px-3 py-2" />
-                {editingItem && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="text-sm text-gray-600">현재 이미지:</span>
-                    <img src={editingItem.imgUrl} alt={editingItem.itemName} className="w-8 h-8 object-cover rounded" />
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">수정 메시지</label>
-                <textarea value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} className="w-full border border-gray-300 rounded-sm px-3 py-2 h-20 resize-none" placeholder="수정 메시지를 입력하세요" />
-              </div>
-            </div>
-
-            <div className="flex gap-2 mt-6">
-              <button onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border border-gray-300 rounded-sm hover:bg-gray-50">
-                취소
-              </button>
-              <button onClick={editingItem ? handleEditItem : handleAddItem} disabled={isLoading} className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-sm hover:bg-blue-600 disabled:opacity-50">
-                {isLoading ? "처리 중..." : editingItem ? "수정" : "추가"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ItemModal showModal={showModal} editingItem={editingItem} formData={formData} isLoading={isLoading} onClose={() => setShowModal(false)} onSubmit={editingItem ? handleEditItem : handleAddItem} onFormDataChange={(data) => setFormData({ ...formData, ...data })} />
     </div>
   );
 }

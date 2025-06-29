@@ -1,7 +1,9 @@
 "use client";
 
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import PackageModal from "./components/PackageModal";
 
 interface Item {
   itemId: number;
@@ -49,6 +51,8 @@ export default function PackageManagePage() {
   const [showModal, setShowModal] = useState(false);
   const [editingPackage, setEditingPackage] = useState<Package | null>(null);
 
+  const router = useRouter();
+
   // 폼 데이터
   const [formData, setFormData] = useState<PackageFormData>({
     packageName: "",
@@ -58,7 +62,7 @@ export default function PackageManagePage() {
   });
 
   // 패키지 리스트 테이블 헤더
-  const packageTableHeaders = ["ID", "패키지명", "패키지 가격", "총 루비", "아이템 구성", "최종 수정자", "최종 수정일", "수정", "상태", "삭제"];
+  const packageTableHeaders = ["ID", "패키지명", "패키지 가격", "총 루비", "최종 수정자", "최종 수정일", "수정 메시지", "수정", "상태", "삭제"];
 
   // 패키지 목록 조회
   const fetchPackages = async () => {
@@ -337,6 +341,14 @@ export default function PackageManagePage() {
           aValue = a.lastModifiedBy.toLowerCase();
           bValue = b.lastModifiedBy.toLowerCase();
           break;
+        case "lastModifiedAt":
+          aValue = new Date(a.lastModifiedAt);
+          bValue = new Date(b.lastModifiedAt);
+          break;
+        case "lastModifiedMessage":
+          aValue = a.lastModifiedMessage.toLowerCase();
+          bValue = b.lastModifiedMessage.toLowerCase();
+          break;
         case "status":
           aValue = a.status;
           bValue = b.status;
@@ -404,7 +416,7 @@ export default function PackageManagePage() {
         {/* 액션 버튼 */}
         <div className="flex gap-2 items-center">
           <span className="text-gray-600 text-sm">총 {packages.length}개의 패키지</span>
-          <button onClick={openAddModal} className="px-3 py-1 bg-blue-500 text-white rounded-sm hover:bg-blue-600">
+          <button onClick={openAddModal} className="text-nowrap px-4 py-2 rounded-sm font-medium text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors">
             패키지 추가
           </button>
         </div>
@@ -417,7 +429,7 @@ export default function PackageManagePage() {
           {packageTableHeaders.map((title, index) => (
             <span
               key={index}
-              className={"flex items-center font-bold text-gray-700 border-b border-gray-300 h-12 px-2 " + (index === 0 || index === 4 || index >= 7 ? "justify-center" : "justify-start") + (index > 0 && index < 7 && index !== 4 ? " cursor-pointer hover:bg-gray-50" : "")}
+              className={"flex items-center font-bold text-gray-700 border-b border-gray-300 h-12 px-2 " + (index === 0 || index >= 7 ? "justify-center" : "justify-start") + (index > 0 && index < 7 ? " cursor-pointer hover:bg-gray-50" : "")}
               onClick={() => {
                 if (index === 1) {
                   handleSortChange("packageName");
@@ -425,18 +437,18 @@ export default function PackageManagePage() {
                   handleSortChange("packagePrice");
                 } else if (index === 3) {
                   handleSortChange("totalRuby");
-                } else if (index === 5) {
+                } else if (index === 4) {
                   handleSortChange("lastModifiedBy");
-                } else if (index === 6) {
+                } else if (index === 5) {
                   handleSortChange("lastModifiedAt");
+                } else if (index === 6) {
+                  handleSortChange("lastModifiedMessage");
                 }
               }}>
               {" "}
               <div className="flex justify-center items-center gap-1">
                 {index !== 0 && title}
-                {index > 0 && index < 7 && index !== 4 && index !== 8 && (
-                  <i className={`ml-1 text-xs ${sortBy === ["", "packageName", "packagePrice", "totalRuby", "", "lastModifiedBy", "lastModifiedAt", ""][index] ? (sortOrder === "asc" ? "xi-angle-up" : "xi-angle-down") : "xi-angle-up opacity-30"}`}></i>
-                )}
+                {index > 0 && index < 7 && <i className={`ml-1 text-xs ${sortBy === ["", "packageName", "packagePrice", "totalRuby", "lastModifiedBy", "lastModifiedAt", "lastModifiedMessage", ""][index] ? (sortOrder === "asc" ? "xi-angle-up" : "xi-angle-down") : "xi-angle-up opacity-30"}`}></i>}
                 {index === 0 && title}
               </div>
             </span>
@@ -454,54 +466,57 @@ export default function PackageManagePage() {
           ) : (
             /* 테이블 데이터 */
             filteredPackages.map((pkg) => (
-              <React.Fragment key={pkg.packageId}>
-                {" "}
+              <div key={pkg.packageId} className="contents group">
                 {/* ID */}
-                <div className="flex items-center justify-center text-gray-700 border-b border-gray-200 h-16 px-2 font-mono text-sm">{pkg.packageId}</div>
-                {/* 패키지명 */}
-                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center font-medium px-2">{pkg.packageName}</span>
-                {/* 패키지 가격 */}
-                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2">{pkg.packagePrice.toLocaleString()}원</span>
-                {/* 총 루비 */}
-                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2">{pkg.totalRuby.toLocaleString()}</span>
-                {/* 아이템 구성 */}
-                <div className="text-gray-700 border-b border-gray-200 h-16 flex justify-center items-center px-2">
-                  <div className="grid grid-cols-2 gap-1 max-h-14 overflow-y-auto">
-                    {pkg.items.map((item) => (
-                      <div key={item.itemId} className="flex items-center gap-1 bg-gray-100 rounded px-2 py-1 text-xs">
-                        <img src={item.imgUrl} alt={item.itemName} className="w-4 h-4 object-cover rounded" />
-                        <span>{item.itemName}</span>
-                        <span className="text-blue-600 font-medium">x{item.quantity}</span>
-                      </div>
-                    ))}
-                  </div>
+                <div
+                  className="flex items-center justify-center text-gray-700 border-b border-gray-200 h-16 px-2 font-mono text-sm cursor-pointer group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors"
+                  onClick={() => router.push(`/admin/root/packages/detail/${pkg.packageId}`)}
+                  title="패키지 상세 보기">
+                  {pkg.packageId}
                 </div>
-                {/* 상태 */}
-                {/* <span className={`border-b border-gray-200 h-16 flex items-center px-2 font-medium ${pkg.status === "ACTIVE" ? "text-green-600" : "text-red-600"}`}>{pkg.status === "ACTIVE" ? "활성" : "비활성"}</span> */}
+                {/* 패키지명 */}
+                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center font-medium px-2 cursor-pointer group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors" onClick={() => router.push(`/admin/root/packages/detail/${pkg.packageId}`)} title="패키지 상세 보기">
+                  {pkg.packageName}
+                </span>
+                {/* 패키지 가격 */}
+                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2 cursor-pointer group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors" onClick={() => router.push(`/admin/root/packages/detail/${pkg.packageId}`)} title="패키지 상세 보기">
+                  {pkg.packagePrice.toLocaleString()}원
+                </span>
+                {/* 총 루비 */}
+                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2 cursor-pointer group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors" onClick={() => router.push(`/admin/root/packages/detail/${pkg.packageId}`)} title="패키지 상세 보기">
+                  {pkg.totalRuby.toLocaleString()}
+                </span>
                 {/* 최종 수정자 */}
-                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2">{pkg.lastModifiedBy}</span>
+                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2 cursor-pointer group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors" onClick={() => router.push(`/admin/root/packages/detail/${pkg.packageId}`)} title="패키지 상세 보기">
+                  {pkg.lastModifiedBy}
+                </span>
                 {/* 최종 수정일 */}
-                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center text-sm px-2">{new Date(pkg.lastModifiedAt).toLocaleString()}</span>
+                <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center text-sm px-2 cursor-pointer group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors" onClick={() => router.push(`/admin/root/packages/detail/${pkg.packageId}`)} title="패키지 상세 보기">
+                  {new Date(pkg.lastModifiedAt).toLocaleString()}
+                </span>
                 {/* 수정 메시지 */}
-                {/* <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center text-sm truncate px-2" title={pkg.lastModifiedMessage}>
-                  {pkg.lastModifiedMessage}
-                </span> */}
+                <span
+                  className="text-gray-700 border-b border-gray-200 h-16 flex items-center text-sm px-2 cursor-pointer group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors truncate"
+                  onClick={() => router.push(`/admin/root/packages/detail/${pkg.packageId}`)}
+                  title={pkg.lastModifiedMessage || "메시지 없음"}>
+                  {pkg.lastModifiedMessage || "메시지 없음"}
+                </span>
                 {/* 수정 버튼 */}
-                <div onClick={() => openEditModal(pkg)} className="flex items-center justify-center text-blue-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-blue-50 px-2" title="수정">
+                <div onClick={() => openEditModal(pkg)} className="flex items-center justify-center text-blue-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-blue-50 px-2 transition-colors" title="수정">
                   <i className="xi-pen text-lg"></i>
                 </div>
                 {/* 상태변경 버튼 */}
                 <div
                   onClick={() => handleToggleStatus(pkg.packageId, pkg.status, pkg.packageName)}
-                  className={`flex items-center justify-center border-b border-gray-200 h-16 cursor-pointer px-2 ${pkg.status === "ACTIVE" ? "text-red-600 hover:bg-red-50" : "text-green-600 hover:bg-green-50"}`}
+                  className={`flex items-center justify-center border-b border-gray-200 h-16 cursor-pointer px-2 transition-colors ${pkg.status === "ACTIVE" ? "text-red-600 hover:bg-red-50" : "text-green-600 hover:bg-green-50"}`}
                   title={pkg.status === "ACTIVE" ? "비활성화" : "활성화"}>
                   <i className={pkg.status === "ACTIVE" ? "xi-pause text-lg" : "xi-play text-lg"}></i>
                 </div>
                 {/* 삭제 버튼 */}
-                <div onClick={() => handleDeletePackage(pkg.packageId, pkg.packageName)} className="flex items-center justify-center text-red-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-red-50 px-2" title="삭제">
+                <div onClick={() => handleDeletePackage(pkg.packageId, pkg.packageName)} className="flex items-center justify-center text-red-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-red-50 px-2 transition-colors" title="삭제">
                   <i className="xi-trash text-lg"></i>
                 </div>
-              </React.Fragment>
+              </div>
             ))
           )}
         </div>
@@ -516,133 +531,19 @@ export default function PackageManagePage() {
       </div>
 
       {/* 모달 */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-[800px] max-w-[90vw] max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">{editingPackage ? "패키지 수정" : "패키지 추가"}</h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">패키지명</label>
-                <input type="text" value={formData.packageName} onChange={(e) => setFormData({ ...formData, packageName: e.target.value })} className="w-full border border-gray-300 rounded-sm px-3 py-2" placeholder="패키지명을 입력하세요" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">패키지 가격</label>
-                <input type="number" value={formData.packagePrice} onChange={(e) => setFormData({ ...formData, packagePrice: e.target.value })} className="w-full border border-gray-300 rounded-sm px-3 py-2" placeholder="패키지 가격을 입력하세요" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">아이템 구성</label>
-                <div className="border border-gray-300 rounded-sm p-3 max-h-60 overflow-y-auto">
-                  {/* 선택된 아이템 목록 */}
-                  {formData.items.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="font-medium text-gray-700 mb-2">선택된 아이템 ({formData.items.length}개)</h4>
-                      <div className="space-y-2">
-                        {formData.items.map((selectedItem) => {
-                          const itemInfo = items.find((item) => item.itemId === selectedItem.itemId);
-                          return (
-                            <div key={selectedItem.itemId} className="flex items-center justify-between bg-blue-50 rounded p-2">
-                              <div className="flex items-center gap-2">
-                                <img src={itemInfo?.img || itemInfo?.imgUrl} alt={itemInfo?.itemName} className="w-8 h-8 object-cover rounded" />
-                                <span className="font-medium">{itemInfo?.itemName}</span>
-                                <span className="text-gray-600 text-sm">({itemInfo?.ruby} 루비)</span>
-                              </div>{" "}
-                              <div className="flex items-center gap-2">
-                                <button type="button" onClick={() => handleQuantityChange(selectedItem.itemId, selectedItem.quantity - 1)} className="w-6 h-6 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300" disabled={selectedItem.quantity <= 1}>
-                                  -
-                                </button>
-                                <input
-                                  type="number"
-                                  value={selectedItem.quantity}
-                                  onChange={(e) => {
-                                    const value = parseInt(e.target.value) || 1;
-                                    if (value >= 1) {
-                                      handleQuantityChange(selectedItem.itemId, value);
-                                    }
-                                  }}
-                                  className="w-12 h-6 text-center border border-gray-300 rounded text-sm"
-                                  min="1"
-                                />
-                                <button type="button" onClick={() => handleQuantityChange(selectedItem.itemId, selectedItem.quantity + 1)} className="w-6 h-6 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300">
-                                  +
-                                </button>
-                                <button type="button" onClick={() => handleRemoveItem(selectedItem.itemId)} className="ml-2 text-red-600 hover:text-red-800">
-                                  <i className="xi-trash"></i>
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 아이템 추가 목록 */}
-                  <div>
-                    <h4 className="font-medium text-gray-700 mb-2">아이템 추가</h4>
-                    <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
-                      {items
-                        .filter((item) => !formData.items.some((selectedItem) => selectedItem.itemId === item.itemId))
-                        .map((item) => (
-                          <div key={item.itemId} className="flex items-center justify-between border border-gray-200 rounded p-2 hover:bg-gray-50">
-                            <div className="flex items-center gap-2">
-                              <img src={item.img || item.imgUrl} alt={item.itemName} className="w-6 h-6 object-cover rounded" />
-                              <span>{item.itemName}</span>
-                              <span className="text-gray-600 text-sm">({item.ruby} 루비)</span>
-                            </div>
-                            <button type="button" onClick={() => handleAddItem(item.itemId)} className="px-2 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
-                              추가
-                            </button>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">수정 메시지</label>
-                <textarea value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} className="w-full border border-gray-300 rounded-sm px-3 py-2 h-20 resize-none" placeholder="수정 메시지를 입력하세요" />
-              </div>
-
-              {/* 예상 총 루비 계산 */}
-              {formData.items.length > 0 && (
-                <div className="bg-gray-50 rounded p-3">
-                  <h4 className="font-medium text-gray-700 mb-2">패키지 정보</h4>
-                  <div className="space-y-1 text-sm">
-                    <div>
-                      <span className="text-gray-600">총 아이템 개수: </span>
-                      <span className="font-medium">{formData.items.reduce((sum, item) => sum + item.quantity, 0)}개</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">예상 총 루비: </span>
-                      <span className="font-medium text-blue-600">
-                        {formData.items
-                          .reduce((sum, selectedItem) => {
-                            const itemInfo = items.find((item) => item.itemId === selectedItem.itemId);
-                            return sum + (itemInfo?.ruby || 0) * selectedItem.quantity;
-                          }, 0)
-                          .toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-2 mt-6">
-              <button onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border border-gray-300 rounded-sm hover:bg-gray-50">
-                취소
-              </button>
-              <button onClick={editingPackage ? handleEditPackage : handleAddPackage} disabled={isLoading} className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-sm hover:bg-blue-600 disabled:opacity-50">
-                {isLoading ? "처리 중..." : editingPackage ? "수정" : "추가"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <PackageModal
+        showModal={showModal}
+        editingPackage={editingPackage}
+        formData={formData}
+        items={items}
+        isLoading={isLoading}
+        onClose={() => setShowModal(false)}
+        onSubmit={editingPackage ? handleEditPackage : handleAddPackage}
+        onFormDataChange={(data) => setFormData({ ...formData, ...data })}
+        onAddItem={handleAddItem}
+        onRemoveItem={handleRemoveItem}
+        onQuantityChange={handleQuantityChange}
+      />
     </div>
   );
 }

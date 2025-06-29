@@ -88,6 +88,17 @@ public class TrafficLoggingFilter extends OncePerRequestFilter {
         if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getRemoteAddr();
         }
+
+        // 다중 IP가 들어오는 경우 첫 번째 것만 사용 (ex: "1.2.3.4, 5.6.7.8")
+        if (ip != null && ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+
+        // IPv6 형식 중 IPv4를 포함한 "::ffff:192.168.0.1" 형태 처리
+        if (ip != null && ip.contains(":") && ip.contains(".")) {
+            ip = ip.substring(ip.lastIndexOf(':') + 1);
+        }
+
         return ip;
     }
 }

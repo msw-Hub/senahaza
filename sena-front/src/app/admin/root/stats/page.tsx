@@ -253,16 +253,16 @@ export default function StatsPage() {
 
           {/* 차트 섹션 */}
           <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {" "}
             {/* 신규 vs 재방문 사용자 차트 */}
             <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">신규 vs 재방문 사용자</h3>
               {newVsReturningChartData && (
                 <div className="h-80">
-                  <Bar data={newVsReturningChartData} options={chartOptions} />
+                  <Line data={newVsReturningChartData} options={chartOptions} />
                 </div>
               )}
             </div>
-
             {/* 트래픽 소스 차트 */}
             <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">트래픽 소스</h3>

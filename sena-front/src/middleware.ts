@@ -20,20 +20,20 @@ export async function middleware(request: NextRequest) {
         credentials: "include",
       });
 
-      // 200이 아니면 /로 리다이렉트 + 쿼리스트링으로 에러 전달
+      // 200이 아니면 /admin/login으로 리다이렉트
       if (!response.ok) {
         const url = request.nextUrl.clone();
-        // admin/root/packages로 리다이렉트
-        url.pathname = "/admin/root/packages";
+        // admin/login으로 리다이렉트
+        url.pathname = "/admin/login";
         return NextResponse.redirect(url);
       }
 
       // 200 응답이면 페이지 접근 허용
       return NextResponse.next();
     } catch (error) {
-      // 네트워크 오류 등 예외 발생 시 /로 리다이렉트 + 쿼리스트링
+      // 네트워크 오류 등 예외 발생 시 /admin/login으로 리다이렉트
       const url = request.nextUrl.clone();
-      url.pathname = "/";
+      url.pathname = "/admin/login";
       url.searchParams.set("error", "no-auth");
       return NextResponse.redirect(url);
     }
@@ -52,11 +52,11 @@ export async function middleware(request: NextRequest) {
       });
 
       if (!response.ok) {
-        return NextResponse.redirect(new URL("/", request.url));
+        return NextResponse.redirect(new URL("/admin/login", request.url));
       }
       return NextResponse.next();
     } catch (error) {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/admin/login", request.url));
     }
   }
 

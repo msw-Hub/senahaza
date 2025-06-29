@@ -111,49 +111,124 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <form className="bg-white p-8 rounded shadow-md w-full max-w-sm space-y-6" onSubmit={handleSignup}>
-        <h2 className="text-2xl font-bold text-center text-gray-800">관리자 회원가입</h2>
+    <div className="h-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full">
         <div>
-          <label htmlFor="name" className="block text-gray-700 mb-1">
-            이름
-          </label>
-          <input type="text" id="name" name="name" value={signupForm.name} onChange={handleChange} className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-black" placeholder="이름을 입력하세요" required />
+          <h2 className="text-center text-3xl font-extrabold text-gray-900">관리자 회원가입</h2>
+          <p className="mt-2 text-center text-sm text-gray-600">새로운 관리자 계정을 생성하세요</p>
         </div>
-        <div>
-          <label htmlFor="dept" className="block text-gray-700 mb-1">
-            부서
-          </label>
-          <input type="text" id="dept" name="dept" value={signupForm.dept} onChange={handleChange} className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-black" placeholder="부서를 입력하세요" required />
-        </div>
-        <div>
-          <label htmlFor="email" className="block text-gray-700 mb-1">
-            이메일
-          </label>
-          <input type="email" id="email" name="email" value={signupForm.email} onChange={handleChange} className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-black" placeholder="이메일을 입력하세요" required />
-        </div>
-        <div>
-          <label htmlFor="password" className="block text-gray-700 mb-1">
-            비밀번호
-          </label>
-          <input type="password" id="password" name="password" value={signupForm.password} onChange={handleChange} className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-black" placeholder="비밀번호를 입력하세요" required />
-        </div>
-        <div>
-          <label htmlFor="passwordConfirm" className="block text-gray-700 mb-1">
-            비밀번호 확인
-          </label>
-          <input type="password" id="passwordConfirm" name="passwordConfirm" value={signupForm.passwordConfirm} onChange={handleChange} className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-black" placeholder="비밀번호를 다시 입력하세요" required />
-        </div>
-        <div>
-          <label htmlFor="tel" className="block text-gray-700 mb-1">
-            전화번호
-          </label>
-          <input type="tel" id="tel" name="tel" value={signupForm.tel} onChange={handleChange} className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-black" placeholder="전화번호를 입력하세요" required />
-        </div>
-        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
-          회원가입
-        </button>
-      </form>
+
+        <form className="mt-8 space-y-6 bg-white p-8 rounded-xl shadow-lg" onSubmit={handleSignup}>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  이름
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={signupForm.name}
+                  onChange={handleChange}
+                  className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  placeholder="홍길동"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="dept" className="block text-sm font-medium text-gray-700 mb-2">
+                  부서
+                </label>
+                <input
+                  type="text"
+                  id="dept"
+                  name="dept"
+                  value={signupForm.dept}
+                  onChange={handleChange}
+                  className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  placeholder="개발팀"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  이메일 주소
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={signupForm.email}
+                  onChange={handleChange}
+                  className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  placeholder="admin@example.com"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="tel" className="block text-sm font-medium text-gray-700 mb-2">
+                  전화번호
+                </label>
+                <input
+                  type="tel"
+                  id="tel"
+                  name="tel"
+                  value={signupForm.tel}
+                  onChange={handleChange}
+                  className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  placeholder="010-1234-5678"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                  비밀번호
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={signupForm.password}
+                  onChange={handleChange}
+                  className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  placeholder="영문, 숫자, 특수문자 포함 8-20자"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="passwordConfirm" className="block text-sm font-medium text-gray-700 mb-2">
+                  비밀번호 확인
+                </label>
+                <input
+                  type="password"
+                  id="passwordConfirm"
+                  name="passwordConfirm"
+                  value={signupForm.passwordConfirm}
+                  onChange={handleChange}
+                  className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  placeholder="비밀번호를 다시 입력하세요"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform ">
+            <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+              <svg className="h-5 w-5 text-blue-500 group-hover:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+            </span>
+            회원가입
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

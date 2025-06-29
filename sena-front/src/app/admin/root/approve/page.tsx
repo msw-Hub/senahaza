@@ -22,15 +22,12 @@ export default function ApprovePage() {
     count: 0,
     signList: [],
   });
-
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("requestedAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-
   // 가입 승인 리스트 테이블 헤더
-  const signupReqHeaders = ["선택", "부서", "이름", "이메일", "전화번호", "요청 일시", "승인", "거절"];
+  const signupReqHeaders = ["ID", "부서", "이름", "이메일", "전화번호", "요청 일시", "승인", "거절"];
 
   // 승인 대기 중인 사용자 목록을 조회하는 API 호출
   const fetchSignupRequests = async () => {
@@ -51,11 +48,9 @@ export default function ApprovePage() {
   const handleApprove = async (pendingAdminId: string, userName?: string) => {
     try {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/root/signList/approve`, { pendingAdminIds: [pendingAdminId] }, { withCredentials: true });
-
       if (response.status === 200) {
         alert(`${userName ? `"${userName}"` : "사용자"} 승인이 완료되었습니다.`);
         fetchSignupRequests();
-        setSelectedUsers((prev) => prev.filter((id) => id !== pendingAdminId));
       } else {
         alert("사용자 승인에 실패했습니다.");
       }
@@ -73,11 +68,9 @@ export default function ApprovePage() {
 
     try {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/root/signList/reject`, { pendingAdminIds: [pendingAdminId] }, { withCredentials: true });
-
       if (response.status === 200) {
         alert(`${userName ? `"${userName}"` : "사용자"} 거절이 완료되었습니다.`);
         fetchSignupRequests();
-        setSelectedUsers((prev) => prev.filter((id) => id !== pendingAdminId));
       } else {
         alert("사용자 거절에 실패했습니다.");
       }
@@ -85,80 +78,6 @@ export default function ApprovePage() {
       console.error("사용자 거절 중 오류 발생", error);
       alert("사용자 거절 중 오류가 발생했습니다.");
     }
-  };
-
-  // 일괄 승인
-  const handleBulkApprove = async () => {
-    if (selectedUsers.length === 0) {
-      alert("승인할 사용자를 선택해주세요.");
-      return;
-    }
-
-    if (!confirm(`선택된 ${selectedUsers.length}명의 사용자를 승인하시겠습니까?`)) {
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/root/signList/approve`, { pendingAdminIds: selectedUsers }, { withCredentials: true });
-
-      if (response.status === 200) {
-        alert(`${selectedUsers.length}명의 사용자가 승인되었습니다.`);
-        fetchSignupRequests();
-        setSelectedUsers([]);
-      } else {
-        alert("일괄 승인에 실패했습니다.");
-      }
-    } catch (error) {
-      console.error("일괄 승인 중 오류 발생", error);
-      alert("일괄 승인 중 오류가 발생했습니다.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 일괄 거절
-  const handleBulkReject = async () => {
-    if (selectedUsers.length === 0) {
-      alert("거절할 사용자를 선택해주세요.");
-      return;
-    }
-
-    if (!confirm(`선택된 ${selectedUsers.length}명의 사용자를 거절하시겠습니까?`)) {
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/root/signList/reject`, { pendingAdminIds: selectedUsers }, { withCredentials: true });
-
-      if (response.status === 200) {
-        alert(`${selectedUsers.length}명의 사용자가 거절되었습니다.`);
-        fetchSignupRequests();
-        setSelectedUsers([]);
-      } else {
-        alert("일괄 거절에 실패했습니다.");
-      }
-    } catch (error) {
-      console.error("일괄 거절 중 오류 발생", error);
-      alert("일괄 거절 중 오류가 발생했습니다.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 전체 선택/해제
-  const handleSelectAll = () => {
-    if (selectedUsers.length === filteredRequests.length) {
-      setSelectedUsers([]);
-    } else {
-      setSelectedUsers(filteredRequests.map((req) => req.pendingAdminId));
-    }
-  };
-
-  // 개별 선택/해제
-  const handleSelectUser = (pendingAdminId: string) => {
-    setSelectedUsers((prev) => (prev.includes(pendingAdminId) ? prev.filter((id) => id !== pendingAdminId) : [...prev, pendingAdminId]));
   };
 
   // 검색 및 정렬 기능
@@ -240,18 +159,9 @@ export default function ApprovePage() {
             <option value="dept_asc">부서 오름차순</option>
             <option value="dept_desc">부서 내림차순</option>
           </select>
-        </div>
-
+        </div>{" "}
         {/* 액션 버튼 */}
-        <div className="flex gap-2 items-center">
-          <span className="text-gray-600 text-sm">{selectedUsers.length > 0 && `${selectedUsers.length}명 선택됨`}</span>
-          <button onClick={handleBulkApprove} disabled={selectedUsers.length === 0 || isLoading} className="px-3 py-1 bg-green-500 text-white rounded-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-600">
-            {isLoading ? "처리 중..." : "일괄 승인"}
-          </button>
-          <button onClick={handleBulkReject} disabled={selectedUsers.length === 0 || isLoading} className="px-3 py-1 bg-red-500 text-white rounded-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-600">
-            {isLoading ? "처리 중..." : "일괄 거절"}
-          </button>
-        </div>
+        <div className="flex gap-2 items-center"></div>
       </div>
 
       {/* 승인 요청 리스트 */}
@@ -263,9 +173,7 @@ export default function ApprovePage() {
               key={index}
               className={"flex items-center font-bold text-gray-700 border-b border-gray-300 h-12 px-2 " + (index === 0 || index >= 6 ? "justify-center" : "justify-start") + (index > 0 && index < 6 ? " cursor-pointer hover:bg-gray-50" : "")}
               onClick={() => {
-                if (index === 0) {
-                  handleSelectAll();
-                } else if (index === 1) {
+                if (index === 1) {
                   handleSortChange("dept");
                 } else if (index === 2) {
                   handleSortChange("name");
@@ -276,11 +184,8 @@ export default function ApprovePage() {
                 }
               }}>
               <div className="flex justify-center items-center gap-1">
-                {index === 0 && <input type="checkbox" checked={selectedUsers.length === filteredRequests.length && filteredRequests.length > 0} onChange={handleSelectAll} className="w-4 h-4" />}
-                {index !== 0 && title}
-                {index > 0 && index < 6 && index !== 4 && (
-                  <i className={`ml-1 text-xs ${sortBy === ["", "dept", "name", "email", "", "requestedAt", ""][index] ? (sortOrder === "asc" ? "xi-angle-up" : "xi-angle-down") : "xi-angle-up opacity-30"}`}></i>
-                )}
+                {title}
+                {index > 0 && index < 6 && index !== 4 && <i className={`ml-1 text-xs ${sortBy === ["", "dept", "name", "email", "", "requestedAt", ""][index] ? (sortOrder === "asc" ? "xi-angle-up" : "xi-angle-down") : "xi-angle-up opacity-30"}`}></i>}
               </div>
             </span>
           ))}
@@ -298,31 +203,25 @@ export default function ApprovePage() {
             /* 테이블 데이터 */
             filteredRequests.map((req) => (
               <React.Fragment key={req.pendingAdminId}>
-                {/* 체크박스 */}
+                {" "}
+                {/* ID */}
                 <div className="flex items-center justify-center text-gray-700 border-b border-gray-200 h-16 px-2">
-                  <input type="checkbox" checked={selectedUsers.includes(req.pendingAdminId)} onChange={() => handleSelectUser(req.pendingAdminId)} className="w-4 h-4" />
+                  <span className="font-medium">{req.pendingAdminId}</span>
                 </div>
-
                 {/* 부서 */}
                 <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2">{req.dept}</span>
-
                 {/* 이름 */}
                 <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center font-medium px-2">{req.name}</span>
-
                 {/* 이메일 */}
                 <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2">{req.email}</span>
-
                 {/* 전화번호 */}
                 <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2">{req.tel}</span>
-
                 {/* 요청 일시 */}
                 <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center text-sm px-2">{new Date(req.requestedAt).toLocaleString()}</span>
-
                 {/* 승인 버튼 */}
                 <div onClick={() => handleApprove(req.pendingAdminId, req.name)} className="flex items-center justify-center text-green-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-green-50 px-2" title="승인">
                   <i className="xi-check text-lg"></i>
                 </div>
-
                 {/* 거절 버튼 */}
                 <div onClick={() => handleReject(req.pendingAdminId, req.name)} className="flex items-center justify-center text-red-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-red-50 px-2" title="거절">
                   <i className="xi-close text-lg"></i>

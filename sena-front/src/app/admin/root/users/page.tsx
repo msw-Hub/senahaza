@@ -31,18 +31,15 @@ export default function UsersPage() {
     totalPages: 1,
     currentPage: 1,
   });
-
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedAdmins, setSelectedAdmins] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
-
   // 관리자 목록 테이블 헤더
-  const adminListHeaders = ["선택", "이름", "권한", "부서", "이메일", "전화번호", "최근 로그인", "권한 변경", "삭제"];
+  const adminListHeaders = ["ID", "이름", "권한", "부서", "이메일", "전화번호", "최근 로그인", "권한 변경", "삭제"];
 
   // 관리자 목록을 조회하는 API 호출
   const fetchAdminList = async (page: number = 1, sort: string = "") => {
@@ -89,11 +86,9 @@ export default function UsersPage() {
 
     try {
       const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/root/admins/${adminId}`, { withCredentials: true });
-
       if (response.status === 200) {
         alert("관리자가 삭제되었습니다.");
         fetchAdminList(currentPage, sortBy);
-        setSelectedAdmins((prev) => prev.filter((id) => id !== adminId));
       } else {
         alert("관리자 삭제에 실패했습니다.");
       }
@@ -101,75 +96,6 @@ export default function UsersPage() {
       console.error("관리자 삭제 중 오류 발생", error);
       alert("관리자 삭제 중 오류가 발생했습니다.");
     }
-  };
-
-  // 일괄 삭제
-  const handleBulkDelete = async () => {
-    if (selectedAdmins.length === 0) {
-      alert("삭제할 관리자를 선택해주세요.");
-      return;
-    }
-
-    if (!confirm(`선택된 ${selectedAdmins.length}명의 관리자를 삭제하시겠습니까?`)) {
-      return;
-    }
-
-    setIsLoading(true);
-    let successCount = 0;
-    let failCount = 0;
-    const failedAdmins: string[] = [];
-
-    try {
-      for (const adminId of selectedAdmins) {
-        try {
-          const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/root/admins/${adminId}`, { withCredentials: true });
-
-          if (response.status === 200) {
-            successCount++;
-          } else {
-            failCount++;
-            const adminName = adminData.adminList.find((admin) => admin.adminId === adminId)?.name || `ID: ${adminId}`;
-            failedAdmins.push(adminName);
-          }
-        } catch (error) {
-          failCount++;
-          const adminName = adminData.adminList.find((admin) => admin.adminId === adminId)?.name || `ID: ${adminId}`;
-          failedAdmins.push(adminName);
-          console.error(`관리자 ${adminName} 삭제 중 오류:`, error);
-        }
-      }
-
-      // 결과 메시지 표시
-      if (successCount > 0 && failCount === 0) {
-        alert(`${successCount}명의 관리자가 삭제되었습니다.`);
-      } else if (successCount > 0 && failCount > 0) {
-        alert(`${successCount}명 삭제 완료, ${failCount}명 실패\n실패한 관리자: ${failedAdmins.join(", ")}`);
-      } else {
-        alert(`모든 삭제 요청이 실패했습니다.\n실패한 관리자: ${failedAdmins.join(", ")}`);
-      }
-
-      fetchAdminList(currentPage, sortBy);
-      setSelectedAdmins([]);
-    } catch (error) {
-      console.error("일괄 삭제 중 오류 발생", error);
-      alert("일괄 삭제 중 오류가 발생했습니다.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 전체 선택/해제
-  const handleSelectAll = () => {
-    if (selectedAdmins.length === filteredAdmins.length) {
-      setSelectedAdmins([]);
-    } else {
-      setSelectedAdmins(filteredAdmins.map((admin) => admin.adminId));
-    }
-  };
-
-  // 개별 선택/해제
-  const handleSelectAdmin = (adminId: number) => {
-    setSelectedAdmins((prev) => (prev.includes(adminId) ? prev.filter((id) => id !== adminId) : [...prev, adminId]));
   };
 
   // 검색 및 정렬 기능
@@ -291,14 +217,10 @@ export default function UsersPage() {
             <option value="role_asc">권한순</option>
             <option value="role_desc">권한 역순</option>
           </select>
-        </div>
-
+        </div>{" "}
         {/* 액션 버튼 */}
         <div className="flex gap-2 items-center">
-          <span className="text-gray-600 text-sm">{selectedAdmins.length > 0 && `${selectedAdmins.length}명 선택됨`}</span>
-          <button onClick={handleBulkDelete} disabled={selectedAdmins.length === 0 || isLoading} className="px-3 py-1 bg-red-500 text-white rounded-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-600">
-            {isLoading ? "처리 중..." : "일괄 삭제"}
-          </button>
+          <span className="text-gray-600 text-sm">총 {adminData.count}명의 관리자</span>
         </div>
       </div>
 
@@ -311,9 +233,7 @@ export default function UsersPage() {
               key={index}
               className={"flex items-center font-bold text-gray-700 border-b border-gray-300 h-12 px-2 " + (index === 0 || index >= 7 ? "justify-center" : "justify-start") + (index > 0 && index < 7 ? " cursor-pointer hover:bg-gray-50" : "")}
               onClick={() => {
-                if (index === 0) {
-                  handleSelectAll();
-                } else if (index === 1) {
+                if (index === 1) {
                   handleSortChange("name");
                 } else if (index === 2) {
                   handleSortChange("role");
@@ -325,12 +245,11 @@ export default function UsersPage() {
                   handleSortChange("lastLoginAt");
                 }
               }}>
+              {" "}
               <div className="flex justify-center items-center gap-1">
-                {index === 0 && <input type="checkbox" checked={selectedAdmins.length === filteredAdmins.length && filteredAdmins.length > 0} onChange={handleSelectAll} className="w-4 h-4" />}
                 {index !== 0 && title}
-                {index > 0 && index < 7 && index !== 5 && index !== 7 && (
-                  <i className={`ml-1 text-xs ${sortBy === ["", "name", "role", "dept", "email", "", "lastLoginAt", ""][index] ? (sortOrder === "asc" ? "xi-angle-up" : "xi-angle-down") : "xi-angle-up opacity-30"}`}></i>
-                )}
+                {index > 0 && index < 7 && index !== 5 && index !== 7 && <i className={`ml-1 text-xs ${sortBy === ["", "name", "role", "dept", "email", "", "lastLoginAt", ""][index] ? (sortOrder === "asc" ? "xi-angle-up" : "xi-angle-down") : "xi-angle-up opacity-30"}`}></i>}
+                {index === 0 && title}
               </div>
             </span>
           ))}
@@ -348,31 +267,23 @@ export default function UsersPage() {
             /* 테이블 데이터 */
             filteredAdmins.map((admin) => (
               <React.Fragment key={admin.adminId}>
-                {/* 체크박스 */}
-                <div className="flex items-center justify-center text-gray-700 border-b border-gray-200 h-16 px-2">
-                  <input type="checkbox" checked={selectedAdmins.includes(admin.adminId)} onChange={() => handleSelectAdmin(admin.adminId)} className="w-4 h-4" />
-                </div>
-
+                {" "}
+                {/* ID */}
+                <div className="flex items-center justify-center text-gray-700 border-b border-gray-200 h-16 px-2 font-mono text-sm">{admin.adminId}</div>
                 {/* 이름 */}
                 <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center font-medium px-2">{admin.name}</span>
-
                 {/* 권한 */}
                 <div className="border-b border-gray-200 h-16 flex items-center px-2">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleStyle(admin.role)}`}>{getRoleText(admin.role)}</span>
                 </div>
-
                 {/* 부서 */}
                 <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2">{admin.dept}</span>
-
                 {/* 이메일 */}
                 <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2">{admin.email}</span>
-
                 {/* 전화번호 */}
                 <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2">{admin.tel}</span>
-
                 {/* 최근 로그인 */}
                 <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center text-sm px-2">{admin.lastLoginAt ? new Date(admin.lastLoginAt).toLocaleString() : "로그인 기록 없음"}</span>
-
                 {/* 권한 변경 */}
                 <div className="border-b border-gray-200 h-16 flex items-center justify-center px-2">
                   <select
@@ -386,9 +297,11 @@ export default function UsersPage() {
                     <option value="ROOT">최고관리자</option>
                   </select>
                 </div>
-
                 {/* 삭제 버튼 */}
-                <div onClick={() => handleDeleteAdmin(admin.adminId, admin.name)} className={`flex items-center justify-center border-b border-gray-200 h-16 px-2 ${admin.role === "ROOT" ? "text-gray-400 cursor-not-allowed" : "text-red-600 cursor-pointer hover:bg-red-50"}`} title={admin.role === "ROOT" ? "최고관리자는 삭제할 수 없습니다" : "삭제"}>
+                <div
+                  onClick={() => handleDeleteAdmin(admin.adminId, admin.name)}
+                  className={`flex items-center justify-center border-b border-gray-200 h-16 px-2 ${admin.role === "ROOT" ? "text-gray-400 cursor-not-allowed" : "text-red-600 cursor-pointer hover:bg-red-50"}`}
+                  title={admin.role === "ROOT" ? "최고관리자는 삭제할 수 없습니다" : "삭제"}>
                   <i className="xi-trash text-lg"></i>
                 </div>
               </React.Fragment>

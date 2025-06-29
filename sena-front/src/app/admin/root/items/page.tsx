@@ -19,7 +19,6 @@ export default function ItemManagePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("lastModifiedAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
@@ -31,9 +30,8 @@ export default function ItemManagePage() {
     message: "",
     file: null as File | null,
   });
-
   // 아이템 리스트 테이블 헤더
-  const itemTableHeaders = ["선택", "이미지", "아이템명", "루비", "최종 수정자", "최종 수정일", "수정", "상태", "삭제"];
+  const itemTableHeaders = ["ID", "이미지", "아이템명", "루비", "최종 수정자", "최종 수정일", "수정", "상태", "삭제"];
 
   // 아이템 목록 조회
   const fetchItems = async () => {
@@ -182,72 +180,15 @@ export default function ItemManagePage() {
 
     try {
       const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/editor/items/${itemId}`, { withCredentials: true });
-
       if (response.status === 200) {
         alert("아이템이 삭제되었습니다.");
         fetchItems();
-        setSelectedItems((prev) => prev.filter((id) => id !== itemId));
       } else {
         alert("아이템 삭제에 실패했습니다.");
       }
     } catch (error) {
       console.error("아이템 삭제 중 오류 발생", error);
       alert("아이템 삭제 중 오류가 발생했습니다.");
-    }
-  };
-
-  // 일괄 삭제
-  const handleBulkDelete = async () => {
-    if (selectedItems.length === 0) {
-      alert("삭제할 아이템을 선택해주세요.");
-      return;
-    }
-
-    if (!confirm(`선택된 ${selectedItems.length}개의 아이템을 삭제하시겠습니까?`)) {
-      return;
-    }
-
-    setIsLoading(true);
-    let successCount = 0;
-    let failCount = 0;
-    const failedItems: string[] = [];
-
-    try {
-      for (const itemId of selectedItems) {
-        try {
-          const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/editor/items/${itemId}`, { withCredentials: true });
-
-          if (response.status === 200) {
-            successCount++;
-          } else {
-            failCount++;
-            const itemName = items.find((item) => item.itemId === itemId)?.itemName || `ID: ${itemId}`;
-            failedItems.push(itemName);
-          }
-        } catch (error) {
-          failCount++;
-          const itemName = items.find((item) => item.itemId === itemId)?.itemName || `ID: ${itemId}`;
-          failedItems.push(itemName);
-          console.error(`아이템 ${itemName} 삭제 중 오류:`, error);
-        }
-      }
-
-      // 결과 메시지 표시
-      if (successCount > 0 && failCount === 0) {
-        alert(`${successCount}개의 아이템이 삭제되었습니다.`);
-      } else if (successCount > 0 && failCount > 0) {
-        alert(`${successCount}개 삭제 완료, ${failCount}개 실패\n실패한 아이템: ${failedItems.join(", ")}`);
-      } else {
-        alert(`모든 삭제 요청이 실패했습니다.\n실패한 아이템: ${failedItems.join(", ")}`);
-      }
-
-      fetchItems();
-      setSelectedItems([]);
-    } catch (error) {
-      console.error("일괄 삭제 중 오류 발생", error);
-      alert("일괄 삭제 중 오류가 발생했습니다.");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -278,20 +219,6 @@ export default function ItemManagePage() {
     setEditingItem(null);
     resetForm();
     setShowModal(true);
-  };
-
-  // 전체 선택/해제
-  const handleSelectAll = () => {
-    if (selectedItems.length === filteredItems.length) {
-      setSelectedItems([]);
-    } else {
-      setSelectedItems(filteredItems.map((item) => item.itemId));
-    }
-  };
-
-  // 개별 선택/해제
-  const handleSelectItem = (itemId: number) => {
-    setSelectedItems((prev) => (prev.includes(itemId) ? prev.filter((id) => id !== itemId) : [...prev, itemId]));
   };
 
   // 검색 및 정렬 기능
@@ -373,16 +300,12 @@ export default function ItemManagePage() {
             <option value="lastModifiedBy_asc">수정자 오름차순</option>
             <option value="lastModifiedBy_desc">수정자 내림차순</option>
           </select>
-        </div>
-
+        </div>{" "}
         {/* 액션 버튼 */}
         <div className="flex gap-2 items-center">
-          <span className="text-gray-600 text-sm">{selectedItems.length > 0 && `${selectedItems.length}개 선택됨`}</span>
+          <span className="text-gray-600 text-sm">총 {items.length}개의 아이템</span>
           <button onClick={openAddModal} className="px-3 py-1 bg-blue-500 text-white rounded-sm hover:bg-blue-600">
             아이템 추가
-          </button>
-          <button onClick={handleBulkDelete} disabled={selectedItems.length === 0 || isLoading} className="px-3 py-1 bg-red-500 text-white rounded-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-600">
-            {isLoading ? "처리 중..." : "일괄 삭제"}
           </button>
         </div>
       </div>
@@ -396,9 +319,7 @@ export default function ItemManagePage() {
               key={index}
               className={"flex items-center font-bold text-gray-700 border-b border-gray-300 h-12 px-2 " + (index === 0 || index === 1 || index >= 6 ? "justify-center" : "justify-start") + (index > 1 && index < 6 ? " cursor-pointer hover:bg-gray-50" : "")}
               onClick={() => {
-                if (index === 0) {
-                  handleSelectAll();
-                } else if (index === 2) {
+                if (index === 2) {
                   handleSortChange("itemName");
                 } else if (index === 3) {
                   handleSortChange("ruby");
@@ -408,9 +329,9 @@ export default function ItemManagePage() {
                   handleSortChange("lastModifiedAt");
                 }
               }}>
+              {" "}
               <div className="flex justify-center items-center gap-1">
-                {index === 0 && <input type="checkbox" checked={selectedItems.length === filteredItems.length && filteredItems.length > 0} onChange={handleSelectAll} className="w-4 h-4" />}
-                {index !== 0 && title}
+                {title}
                 {index > 1 && index < 6 && <i className={`ml-1 text-xs ${sortBy === ["", "", "itemName", "ruby", "lastModifiedBy", "lastModifiedAt", ""][index] ? (sortOrder === "asc" ? "xi-angle-up" : "xi-angle-down") : "xi-angle-up opacity-30"}`}></i>}
               </div>
             </span>
@@ -429,33 +350,27 @@ export default function ItemManagePage() {
             /* 테이블 데이터 */
             filteredItems.map((item) => (
               <React.Fragment key={item.itemId}>
-                {/* 체크박스 */}
+                {" "}
+                {/* ID */}
                 <div className="flex items-center justify-center text-gray-700 border-b border-gray-200 h-16 px-2">
-                  <input type="checkbox" checked={selectedItems.includes(item.itemId)} onChange={() => handleSelectItem(item.itemId)} className="w-4 h-4" />
+                  <span className="font-medium">{item.itemId}</span>
                 </div>
-
                 {/* 이미지 */}
                 <div className="flex items-center justify-center text-gray-700 border-b border-gray-200 h-16 px-2">
                   <img src={item.imgUrl} alt={item.itemName} className="w-8 h-8 object-cover rounded" />
                 </div>
-
                 {/* 아이템명 */}
                 <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center font-medium px-2">{item.itemName}</span>
-
                 {/* 루비 */}
                 <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2">{item.ruby.toLocaleString()}</span>
-
                 {/* 최종 수정자 */}
                 <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center px-2">{item.lastModifiedBy}</span>
-
                 {/* 최종 수정일 */}
                 <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center text-sm px-2">{new Date(item.lastModifiedAt).toLocaleString()}</span>
-
                 {/* 수정 버튼 */}
                 <div onClick={() => openEditModal(item)} className="flex items-center justify-center text-blue-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-blue-50 px-2" title="수정">
                   <i className="xi-pen text-lg"></i>
                 </div>
-
                 {/* 상태변경 버튼 */}
                 <div
                   onClick={() => handleToggleStatus(item.itemId, item.status, item.itemName)}
@@ -463,7 +378,6 @@ export default function ItemManagePage() {
                   title={item.status === "ACTIVE" ? "비활성화" : "활성화"}>
                   <i className={item.status === "ACTIVE" ? "xi-pause text-lg" : "xi-play text-lg"}></i>
                 </div>
-
                 {/* 삭제 버튼 */}
                 <div onClick={() => handleDeleteItem(item.itemId, item.itemName)} className="flex items-center justify-center text-red-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-red-50 px-2" title="삭제">
                   <i className="xi-trash text-lg"></i>

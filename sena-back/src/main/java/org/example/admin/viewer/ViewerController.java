@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -75,11 +76,11 @@ public class ViewerController {
         return ResponseEntity.ok().body("로그아웃되었습니다.");
     }
 
-    // 관리자 이름 반환
+    // 관리자 이름과 권한 반환
     @GetMapping("/admin/name")
-    public ResponseEntity<String> getMyAdminName() {
+    public ResponseEntity<?> getMyAdminName() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        String adminName = viewerService.getAdminNameByEmail(email);
-        return ResponseEntity.ok(adminName);
+        Map<String, String> viewerInfo = viewerService.getAdminInfo(email);
+        return ResponseEntity.ok(viewerInfo);
     }
 }

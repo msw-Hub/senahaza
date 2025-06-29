@@ -285,10 +285,14 @@ public class ViewerService {
         deleteCookie.setMaxAge(0);
         response.addCookie(deleteCookie);
     }
-    // 관리자 이름 조회 - 이메일로
-    public String getAdminNameByEmail(String email) {
+    // 관리자 이름과 권한 조회 - 이메일로
+    public Map<String, String> getAdminInfo(String email) {
         AdminEntity admin = adminRepository.findByEmail(email)
-                .orElseThrow(() -> new AdminNotFoundException("관리자를 찾을 수 없습니다."));
-        return admin.getName();
+                .orElseThrow(() -> new AdminNotFoundException("해당 이메일의 관리자가 존재하지 않습니다."));
+
+        Map<String, String> adminInfo = new HashMap<>();
+        adminInfo.put("name", admin.getName());
+        adminInfo.put("role", admin.getRole().name());
+        return adminInfo;
     }
 }

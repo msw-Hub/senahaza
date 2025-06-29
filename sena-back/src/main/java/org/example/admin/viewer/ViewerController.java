@@ -5,11 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.admin.dto.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 @Slf4j
@@ -65,5 +64,14 @@ public class ViewerController {
         log.info("패키지 상세 정보 조회 요청: packageId={}", packageId);
         PackageDetailResponseDto packageDetail = viewerService.getPackageDetail(packageId);
         return ResponseEntity.ok(packageDetail);
+    }
+
+    // 로그아웃
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        log.info("로그아웃 요청");
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        viewerService.logout(email, request, response);
+        return ResponseEntity.ok().body("로그아웃되었습니다.");
     }
 }

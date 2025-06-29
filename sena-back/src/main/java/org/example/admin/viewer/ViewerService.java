@@ -8,11 +8,17 @@ import org.example.admin.repository.AdminRepository;
 import org.example.common.dto.PackageItemDto;
 import org.example.entity.*;
 import org.example.exception.customException.*;
+import org.example.jwt.RedisService;
+import org.example.jwt.TokenBlacklistService;
 import org.example.repository.ItemRepository;
 import org.example.repository.PackageRepository;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -26,6 +32,7 @@ public class ViewerService {
     private final AdminRepository adminRepository;
     private final ItemRepository itemRepository;
     private final PackageRepository packageRepository;
+    private final TokenBlacklistService tokenBlacklistService;
 
     public void checkStatus(String email) {
         // 이메일로 해당 관리자 계정 조회
@@ -260,6 +267,23 @@ public class ViewerService {
                 .updateLogList(updateLogs)
                 .status(pkg.getStatus())
                 .build();
+    }
+
+    // 로그아웃 처리
+    public void logout(String email, HttpServletRequest request, HttpServletResponse response) {
+        // 이메일로 해당 관리자 계정 조회
+        AdminEntity admin = adminRepository.findByEmail(email)
+                .orElseThrow(() -> new AdminNotFoundException("해당 이메일의 관리자가 존재하지 않습니다."));
+        // 활성 통큰 블랙리스트 처리
+        tokenBlacklistService.blacklistAllActiveTokens(email);
+
+        // 쿠키 삭제 처리
+        Cookie deleteCookie = new Cookie("token", null);
+        deleteCookie.setHttpOnly(true);
+        deleteCookie.setSecure(true);
+        deleteCookie.setPath("/");
+        deleteCookie.setMaxAge(0);
+        response.addCookie(deleteCookie);
     }
 
 }

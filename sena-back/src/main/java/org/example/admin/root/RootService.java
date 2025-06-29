@@ -8,8 +8,10 @@ import org.example.admin.entity.AdminEntity;
 import org.example.admin.entity.PendingAdminEntity;
 import org.example.admin.repository.AdminRepository;
 import org.example.admin.repository.PendingAdminRepository;
+import org.example.admin.viewer.ViewerService;
 import org.example.exception.customException.*;
 import org.example.jwt.RedisService;
+import org.example.jwt.TokenBlacklistService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -27,10 +29,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RootService {
 
-    private final PasswordEncoder passwordEncoder;
     private final AdminRepository adminRepository;
     private final PendingAdminRepository pendingAdminRepository;
-    private final RedisService redisService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     // root 권한을 가진 유저의 회원가입 목록 요청
     public SignListResponseWrapperDto getSignList() {
@@ -154,7 +155,7 @@ public class RootService {
         adminRepository.save(admin);
 
         // 활성 토큰 블랙리스트 처리
-        blacklistAllActiveTokens(admin.getEmail());
+        tokenBlacklistService.blacklistAllActiveTokens(admin.getEmail());
 
         log.info("관리자 권한 변경 완료 및 활성 토큰 블랙리스트 처리: {} -> {}", admin.getName(), role);
     }
@@ -171,29 +172,9 @@ public class RootService {
         log.info("관리자 삭제 완료: {}", admin.getName());
 
         // 활성 토큰 블랙리스트 처리
-        blacklistAllActiveTokens(email);
+        tokenBlacklistService.blacklistAllActiveTokens(email);
 
         log.info("관리자 삭제 후 활성 토큰 블랙리스트 처리 완료: {}", email);
-    }
-
-
-    public void blacklistAllActiveTokens(String email) {
-        Set<String> activeJtis = redisService.getUserActiveTokens(email);
-        if (activeJtis == null || activeJtis.isEmpty()) {
-            return;
-        }
-
-        for (String jti : activeJtis) {
-            Long expirationMillis = redisService.getExpirationMillis("jti:" + jti);
-            if (expirationMillis == null || expirationMillis <= 0) {
-                expirationMillis = 3600 * 1000L; // 기본 1시간
-            }
-
-            redisService.deleteActiveToken(jti);
-            redisService.blacklistToken(jti, expirationMillis);
-        }
-
-        redisService.deleteUserActiveTokens(email); // 최종 정리
     }
 
 }

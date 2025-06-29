@@ -77,7 +77,7 @@ public class ViewerController {
     }
 
     // 관리자 이름과 권한 반환
-    @GetMapping("/admin/name")
+    @GetMapping("/admin/info")
     public ResponseEntity<?> getMyAdminName() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Map<String, String> viewerInfo = viewerService.getAdminInfo(email);

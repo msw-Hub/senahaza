@@ -75,7 +75,9 @@ public class SecurityConfig {
                         "/main/**"
                 ).permitAll()
                 // "/analytics/**" 와 "/admin/traffic/**" 는 여기서 권한 체크로 변경
-                .antMatchers("/analytics/**", "/admin/traffic/**").hasAnyRole("ROOT", "EDITOR", "VIEWER")
+                .antMatchers("/admin/traffic/top-uris").hasRole("ROOT")
+                .antMatchers("/admin/traffic/**").hasAnyRole("ROOT", "EDITOR", "VIEWER")
+                .antMatchers("/analytics/**").hasAnyRole("ROOT", "EDITOR", "VIEWER")
                 .antMatchers("/root/**").hasRole("ROOT")
                 .antMatchers("/editor/**").hasAnyRole("ROOT", "EDITOR")
                 .antMatchers("/viewer/**").hasAnyRole("ROOT", "EDITOR", "VIEWER")

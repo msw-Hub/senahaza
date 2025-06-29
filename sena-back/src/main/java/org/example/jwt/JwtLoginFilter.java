@@ -99,7 +99,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json; charset=UTF-8"); // 🔥 인코딩 명시!
         response.setCharacterEncoding("UTF-8");                     // 🔥 인코딩 명시!
-        response.getWriter().write("{\"error\": \"Authentication failed: " + "이메일 또는 비밀번호가 올바르지 않습니다" + "\"}");
+        response.getWriter().write("{\"error\": \"이메일 또는 비밀번호가 올바르지 않습니다" + "\"}");
     }
 
 }

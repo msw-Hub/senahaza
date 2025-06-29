@@ -35,7 +35,7 @@ export default function ItemManagePage() {
     file: null as File | null,
   });
   // 아이템 리스트 테이블 헤더
-  const itemTableHeaders = ["ID", "이미지", "아이템명", "루비", "최종 수정자", "최종 수정일", "수정", "상태", "삭제"];
+  const itemTableHeaders = ["ID", "이미지", "아이템명", "루비", "최종 수정자", "최종 수정일", "상태", "수정", "삭제"];
 
   // 아이템 목록 조회
   const fetchItems = async () => {
@@ -377,19 +377,19 @@ export default function ItemManagePage() {
                 <span className="text-gray-700 border-b border-gray-200 h-16 flex items-center text-sm px-2 cursor-pointer group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors" onClick={() => router.push(`/admin/root/items/detail/${item.itemId}`)} title="아이템 상세 정보 보기">
                   {new Date(item.lastModifiedAt).toLocaleString()}
                 </span>
-                {/* 수정 버튼 */}
-                <div onClick={() => openEditModal(item)} className="flex items-center justify-center text-blue-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-blue-50 px-2 transition-colors" title="수정">
-                  <i className="xi-pen text-lg"></i>
-                </div>
                 {/* 상태변경 버튼 */}
                 <div
                   onClick={() => handleToggleStatus(item.itemId, item.status, item.itemName)}
-                  className={`flex items-center justify-center border-b border-gray-200 h-16 cursor-pointer px-2 transition-colors ${item.status === "ACTIVE" ? "text-red-600 hover:bg-red-50" : "text-green-600 hover:bg-green-50"}`}
+                  className={`relative z-10 flex items-center justify-center border-b border-gray-200 h-16 cursor-pointer px-2 transition-colors ${item.status === "ACTIVE" ? "text-green-600 hover:bg-red-50" : "text-red-600 hover:bg-green-50"}`}
                   title={item.status === "ACTIVE" ? "비활성화" : "활성화"}>
-                  <i className={item.status === "ACTIVE" ? "xi-pause text-lg" : "xi-play text-lg"}></i>
+                  <i className={item.status === "ACTIVE" ? "xi-toggle-on xi-2x" : "xi-toggle-off xi-2x"}></i>
+                </div>
+                {/* 수정 버튼 */}
+                <div onClick={() => openEditModal(item)} className="relative z-10 flex items-center justify-center text-blue-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-blue-50 px-2 transition-colors" title="수정">
+                  <i className="xi-pen text-lg"></i>
                 </div>
                 {/* 삭제 버튼 */}
-                <div onClick={() => handleDeleteItem(item.itemId, item.itemName)} className="flex items-center justify-center text-red-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-red-50 px-2 transition-colors" title="삭제">
+                <div onClick={() => handleDeleteItem(item.itemId, item.itemName)} className="relative z-10 flex items-center justify-center text-red-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-red-50 px-2 transition-colors" title="삭제">
                   <i className="xi-trash text-lg"></i>
                 </div>
               </div>

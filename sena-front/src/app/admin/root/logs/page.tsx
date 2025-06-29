@@ -107,14 +107,93 @@ export default function LogsPage() {
     topN: 10,
   });
 
+  // 날짜 유효성 검증 오류 상태
+  const [dateValidationErrors, setDateValidationErrors] = useState({
+    logs: "",
+    statistics: "",
+    topUris: "",
+  });
+
   // 오늘 날짜를 yyyymmdd 형식으로 가져오기
   const getTodayString = () => {
     const today = new Date();
     return today.toISOString().slice(0, 10).replace(/-/g, "");
   };
 
+  // 날짜 유효성 검증
+  const validateDates = (startDate: string, endDate: string, tabType: "logs" | "statistics" | "topUris") => {
+    if (!startDate || !endDate) {
+      // 날짜가 비어있으면 오류 초기화
+      setDateValidationErrors((prev) => ({ ...prev, [tabType]: "" }));
+      return true;
+    }
+
+    // yyyymmdd 형식을 yyyy-mm-dd로 변환하여 Date 객체 생성
+    const formatDate = (dateStr: string) => {
+      if (dateStr.length === 8) {
+        return `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`;
+      }
+      return dateStr;
+    };
+
+    const start = new Date(formatDate(startDate));
+    const end = new Date(formatDate(endDate));
+
+    if (start > end) {
+      setDateValidationErrors((prev) => ({
+        ...prev,
+        [tabType]: "시작일이 종료일보다 뒤에 있습니다. 날짜를 다시 확인해주세요.",
+      }));
+      return false;
+    }
+
+    // 유효한 경우 오류 초기화
+    setDateValidationErrors((prev) => ({ ...prev, [tabType]: "" }));
+    return true;
+  };
+
+  // 로그 필터 날짜 변경 핸들러
+  const handleLogsDateChange = (field: "startDate" | "endDate", value: string) => {
+    const newFilters = { ...filters, [field]: formatDateForAPI(value), page: 0 };
+    setFilters(newFilters);
+
+    // 두 날짜가 모두 있으면 유효성 검증
+    if (newFilters.startDate && newFilters.endDate) {
+      validateDates(newFilters.startDate, newFilters.endDate, "logs");
+    }
+  };
+
+  // 통계 필터 날짜 변경 핸들러
+  const handleStatsDateChange = (field: "startDate" | "endDate", value: string) => {
+    const newFilters = { ...statsFilters, [field]: formatDateForAPI(value) };
+    setStatsFilters(newFilters);
+
+    // 두 날짜가 모두 있으면 유효성 검증
+    if (newFilters.startDate && newFilters.endDate) {
+      validateDates(newFilters.startDate, newFilters.endDate, "statistics");
+    }
+  };
+
+  // Top URIs 필터 날짜 변경 핸들러
+  const handleTopUrisDateChange = (field: "startDate" | "endDate", value: string) => {
+    const newFilters = { ...topUrisFilters, [field]: formatDateForAPI(value) };
+    setTopUrisFilters(newFilters);
+
+    // 두 날짜가 모두 있으면 유효성 검증
+    if (newFilters.startDate && newFilters.endDate) {
+      validateDates(newFilters.startDate, newFilters.endDate, "topUris");
+    }
+  };
+
   // 로그 조회
   const fetchLogs = async () => {
+    // 로그 탭에서 날짜가 모두 입력된 경우에만 유효성 검증
+    if (filters.startDate && filters.endDate) {
+      if (!validateDates(filters.startDate, filters.endDate, "logs")) {
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
@@ -157,6 +236,11 @@ export default function LogsPage() {
       return;
     }
 
+    // 날짜 유효성 검증
+    if (!validateDates(statsFilters.startDate, statsFilters.endDate, "statistics")) {
+      return;
+    }
+
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
@@ -181,6 +265,11 @@ export default function LogsPage() {
   const fetchTopUris = async () => {
     if (!topUrisFilters.startDate || !topUrisFilters.endDate) {
       alert("시작일과 종료일을 입력해주세요.");
+      return;
+    }
+
+    // 날짜 유효성 검증
+    if (!validateDates(topUrisFilters.startDate, topUrisFilters.endDate, "topUris")) {
       return;
     }
 
@@ -227,6 +316,35 @@ export default function LogsPage() {
       page: 0,
       size: 30,
     });
+
+    // 로그 탭의 날짜 유효성 검증 오류 초기화
+    setDateValidationErrors((prev) => ({ ...prev, logs: "" }));
+  };
+
+  // 통계 필터 초기화
+  const resetStatsFilters = () => {
+    setStatsFilters({
+      startDate: "",
+      endDate: "",
+      uri: "",
+    });
+    setStatistics(null);
+
+    // 통계 탭의 날짜 유효성 검증 오류 초기화
+    setDateValidationErrors((prev) => ({ ...prev, statistics: "" }));
+  };
+
+  // Top URIs 필터 초기화
+  const resetTopUrisFilters = () => {
+    setTopUrisFilters({
+      startDate: "",
+      endDate: "",
+      topN: 10,
+    });
+    setTopUris([]);
+
+    // Top URIs 탭의 날짜 유효성 검증 오류 초기화
+    setDateValidationErrors((prev) => ({ ...prev, topUris: "" }));
   };
 
   // 날짜 형식 변환 (YYYY-MM-DD -> YYYYMMDD)
@@ -282,6 +400,13 @@ export default function LogsPage() {
       startDate: today,
       endDate: today,
     }));
+
+    // 초기 로드 시 모든 탭의 날짜 유효성 검증 오류 초기화
+    setDateValidationErrors({
+      logs: "",
+      statistics: "",
+      topUris: "",
+    });
   }, []);
 
   return (
@@ -316,14 +441,21 @@ export default function LogsPage() {
               {/* 시작일 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">시작일</label>
-                <input type="date" className="w-full border border-gray-300 rounded-sm px-3 py-1" value={formatDateForInput(filters.startDate)} onChange={(e) => setFilters((prev) => ({ ...prev, startDate: formatDateForAPI(e.target.value), page: 0 }))} />
+                <input type="date" className="w-full border border-gray-300 rounded-sm px-3 py-1" value={formatDateForInput(filters.startDate)} onChange={(e) => handleLogsDateChange("startDate", e.target.value)} />
               </div>
 
               {/* 종료일 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">종료일</label>
-                <input type="date" className="w-full border border-gray-300 rounded-sm px-3 py-1" value={formatDateForInput(filters.endDate)} onChange={(e) => setFilters((prev) => ({ ...prev, endDate: formatDateForAPI(e.target.value), page: 0 }))} />
+                <input type="date" className="w-full border border-gray-300 rounded-sm px-3 py-1" value={formatDateForInput(filters.endDate)} onChange={(e) => handleLogsDateChange("endDate", e.target.value)} />
               </div>
+
+              {/* 날짜 유효성 검증 오류 메시지 */}
+              {dateValidationErrors.logs && (
+                <div className="col-span-full">
+                  <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2">{dateValidationErrors.logs}</div>
+                </div>
+              )}
 
               {/* HTTP 메서드 */}
               <div>
@@ -390,59 +522,69 @@ export default function LogsPage() {
           {/* 로그 리스트 */}
           <div className="w-full bg-foreground border border-gray-300 rounded-sm">
             {/* 헤더 */}
-            <div className="grid grid-cols-[0.5fr_0.5fr_2fr_1fr_0.5fr_1fr_0.8fr_0.8fr_0.8fr_1.2fr] border-b border-gray-300 font-bold text-gray-700 h-12">
-              <div className="flex items-center justify-center px-2">ID</div>
-              <div className="flex items-center justify-center px-2">메서드</div>
-              <div className="flex items-center justify-start px-2">URI</div>
-              <div className="flex items-center justify-center px-2">IP</div>
-              <div className="flex items-center justify-center px-2">상태</div>
-              <div className="flex items-center justify-center px-2">응답시간</div>
-              <div className="flex items-center justify-center px-2">DB쿼리</div>
-              <div className="flex items-center justify-center px-2">관리자</div>
-              <div className="flex items-center justify-center px-2">사용자</div>
-              <div className="flex items-center justify-center px-2">생성일시</div>
-            </div>
+            <div className="grid grid-cols-[0.5fr_0.5fr_1fr_1fr_1fr_0.5fr_1fr_0.8fr_0.8fr_0.8fr_1.2fr]   font-bold text-gray-700  ">
+              <div className="flex items-center justify-center px-2 h-12 bg-gray-50 border-b border-gray-300">ID</div>
+              <div className="flex items-center justify-center px-2 h-12 bg-gray-50 border-b border-gray-300">메서드</div>
+              <div className="flex items-center justify-start px-2 h-12 bg-gray-50 border-b border-gray-300">URI</div>
+              <div className="flex items-center justify-center px-2 h-12 bg-gray-50 border-b border-gray-300">에러코드</div>
+              <div className="flex items-center justify-center px-2 h-12 bg-gray-50 border-b border-gray-300">IP</div>
+              <div className="flex items-center justify-center px-2 h-12 bg-gray-50 border-b border-gray-300">상태</div>
+              <div className="flex items-center justify-center px-2 h-12 bg-gray-50 border-b border-gray-300">응답시간</div>
+              <div className="flex items-center justify-center px-2 h-12 bg-gray-50 border-b border-gray-300">DB쿼리</div>
+              <div className="flex items-center justify-center px-2 h-12 bg-gray-50 border-b border-gray-300">관리자</div>
+              <div className="flex items-center justify-center px-2 h-12 bg-gray-50 border-b border-gray-300">사용자</div>
+              <div className="flex items-center justify-center px-2 h-12 bg-gray-50 border-b border-gray-300">생성일시</div>
 
-            {/* 데이터 */}
-            {isLoading ? (
-              <div className="col-span-10 flex items-center justify-center h-20">
-                <span className="text-gray-500">로딩 중...</span>
-              </div>
-            ) : logs.length === 0 ? (
-              <div className="col-span-10 flex items-center justify-center h-20">
-                <span className="text-gray-500">조회된 로그가 없습니다.</span>
-              </div>
-            ) : (
-              <div className="grid grid-cols-[0.5fr_0.5fr_2fr_1fr_0.5fr_1fr_0.8fr_0.8fr_0.8fr_1.2fr]">
-                {logs.map((log) => (
-                  <React.Fragment key={log.id}>
-                    <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors">{log.id}</div>
-                    <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${getMethodColor(log.httpMethod)}`}>{log.httpMethod}</span>
-                    </div>
-                    <div className="flex items-center justify-start px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors font-mono text-sm">
-                      <span className="truncate" title={log.uri + (log.queryString ? `?${log.queryString}` : "")}>
-                        {log.uri}
-                        {log.queryString && `?${log.queryString}`}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors font-mono text-sm">{log.clientIp}</div>
-                    <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors">
-                      <span className={`font-medium ${getStatusColor(log.httpStatus)}`}>{log.httpStatus}</span>
-                    </div>
-                    <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors">
-                      <span className={log.responseTimeMs > 1000 ? "text-red-600 font-medium" : ""}>{log.responseTimeMs}ms</span>
-                    </div>
-                    <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors">{log.dbQueryCount}</div>
-                    <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors">
-                      <span className={`px-2 py-1 rounded text-xs ${log.isAdmin ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-800"}`}>{log.isAdmin ? "관리자" : "사용자"}</span>
-                    </div>
-                    <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors text-sm">{log.userId}</div>
-                    <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors text-sm">{new Date(log.createdAt).toLocaleString()}</div>
-                  </React.Fragment>
-                ))}
-              </div>
-            )}
+              {/* 데이터 */}
+              {isLoading ? (
+                <div className="col-span-11 flex items-center justify-center h-20">
+                  <span className="text-gray-500">로딩 중...</span>
+                </div>
+              ) : logs.length === 0 ? (
+                <div className="col-span-11 flex items-center justify-center h-20">
+                  <span className="text-gray-500">조회된 로그가 없습니다.</span>
+                </div>
+              ) : (
+                <>
+                  {logs.map((log) => (
+                    <React.Fragment key={log.id}>
+                      <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors">{log.id}</div>
+                      <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${getMethodColor(log.httpMethod)}`}>{log.httpMethod}</span>
+                      </div>
+                      <div className="flex items-center justify-start px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors font-mono text-sm">
+                        <span className="truncate" title={log.uri + (log.queryString ? `?${log.queryString}` : "")}>
+                          {log.uri}
+                          {log.queryString && `?${log.queryString}`}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors text-sm">
+                        {log.businessErrorCode ? (
+                          <span className="px-2 py-1 rounded text-xs bg-red-100 text-red-800 font-medium" title={log.businessErrorCode}>
+                            {log.businessErrorCode.length > 10 ? `${log.businessErrorCode.substring(0, 10)}...` : log.businessErrorCode}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors font-mono text-sm">{log.clientIp}</div>
+                      <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors">
+                        <span className={`font-medium ${getStatusColor(log.httpStatus)}`}>{log.httpStatus}</span>
+                      </div>
+                      <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors">
+                        <span className={log.responseTimeMs > 1000 ? "text-red-600 font-medium" : ""}>{log.responseTimeMs}ms</span>
+                      </div>
+                      <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors">{log.dbQueryCount}</div>
+                      <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors">
+                        <span className={`px-2 py-1 rounded text-xs ${log.isAdmin ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-800"}`}>{log.isAdmin ? "관리자" : "사용자"}</span>
+                      </div>
+                      <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors text-sm">{log.userId}</div>
+                      <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 hover:bg-blue-50 transition-colors text-sm">{new Date(log.createdAt).toLocaleString()}</div>
+                    </React.Fragment>
+                  ))}
+                </>
+              )}
+            </div>
           </div>
 
           {/* 페이지네이션 */}
@@ -475,20 +617,28 @@ export default function LogsPage() {
       {activeTab === "statistics" && (
         <>
           {/* 통계 필터 */}
-          <div className="flex gap-4 items-center w-full">
-            <div className="flex gap-2 items-center">
-              <label className="text-gray-700 font-medium">기간:</label>
-              <input type="date" value={formatDateForInput(statsFilters.startDate)} onChange={(e) => setStatsFilters((prev) => ({ ...prev, startDate: formatDateForAPI(e.target.value) }))} className="border border-gray-300 rounded-sm px-3 py-2" />
-              <span className="text-gray-500">~</span>
-              <input type="date" value={formatDateForInput(statsFilters.endDate)} onChange={(e) => setStatsFilters((prev) => ({ ...prev, endDate: formatDateForAPI(e.target.value) }))} className="border border-gray-300 rounded-sm px-3 py-2" />
+          <div className="space-y-3">
+            <div className="flex gap-4 items-center w-full">
+              <div className="flex gap-2 items-center">
+                <label className="text-gray-700 font-medium">기간:</label>
+                <input type="date" value={formatDateForInput(statsFilters.startDate)} onChange={(e) => handleStatsDateChange("startDate", e.target.value)} className="border border-gray-300 rounded-sm px-3 py-2" />
+                <span className="text-gray-500">~</span>
+                <input type="date" value={formatDateForInput(statsFilters.endDate)} onChange={(e) => handleStatsDateChange("endDate", e.target.value)} className="border border-gray-300 rounded-sm px-3 py-2" />
+              </div>
+              <div className="flex gap-2 items-center">
+                <label className="text-gray-700 font-medium">URI:</label>
+                <input type="text" placeholder="특정 URI 포함 검색" value={statsFilters.uri} onChange={(e) => setStatsFilters((prev) => ({ ...prev, uri: e.target.value }))} className="border border-gray-300 rounded-sm px-3 py-2" />
+              </div>
+              <button onClick={fetchStatistics} disabled={isLoading} className="px-4 py-2 bg-blue-500 text-white rounded-sm hover:bg-blue-600 disabled:opacity-50">
+                {isLoading ? "조회 중..." : "조회"}
+              </button>
+              <button onClick={resetStatsFilters} className="px-4 py-2 bg-gray-500 text-white rounded-sm hover:bg-gray-600">
+                초기화
+              </button>
             </div>
-            <div className="flex gap-2 items-center">
-              <label className="text-gray-700 font-medium">URI:</label>
-              <input type="text" placeholder="특정 URI 포함 검색" value={statsFilters.uri} onChange={(e) => setStatsFilters((prev) => ({ ...prev, uri: e.target.value }))} className="border border-gray-300 rounded-sm px-3 py-2" />
-            </div>
-            <button onClick={fetchStatistics} disabled={isLoading} className="px-4 py-2 bg-blue-500 text-white rounded-sm hover:bg-blue-600 disabled:opacity-50">
-              {isLoading ? "조회 중..." : "조회"}
-            </button>
+
+            {/* 날짜 유효성 검증 오류 메시지 */}
+            {dateValidationErrors.statistics && <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2">{dateValidationErrors.statistics}</div>}
           </div>
 
           {isLoading ? (
@@ -605,21 +755,26 @@ export default function LogsPage() {
                 <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">사용자 비율</h3>
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                        <span className="text-sm text-gray-600">관리자</span>
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                          <span className="text-sm text-gray-600">관리자</span>
+                        </div>
+                        <span className="text-lg font-semibold text-red-600">{statistics.adminRequestRate.toFixed(1)}%</span>
                       </div>
-                      <span className="text-lg font-semibold text-red-600">{statistics.adminRequestRate.toFixed(1)}%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                        <span className="text-sm text-gray-600">일반 사용자</span>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-red-500 h-2 rounded-full" style={{ width: `${statistics.adminRequestRate}%` }}></div>
                       </div>
-                      <span className="text-lg font-semibold text-blue-600">{statistics.userRequestRate.toFixed(1)}%</span>
                     </div>
-                    <div className="mt-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                          <span className="text-sm text-gray-600">일반 사용자</span>
+                        </div>
+                        <span className="text-lg font-semibold text-blue-600">{statistics.userRequestRate.toFixed(1)}%</span>
+                      </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${statistics.userRequestRate}%` }}></div>
                       </div>
@@ -665,25 +820,34 @@ export default function LogsPage() {
       {activeTab === "topUris" && (
         <>
           {/* Top URIs 필터 */}
-          <div className="flex gap-4 items-center w-full">
-            <div className="flex gap-2 items-center">
-              <label className="text-gray-700 font-medium">기간:</label>
-              <input type="date" value={formatDateForInput(topUrisFilters.startDate)} onChange={(e) => setTopUrisFilters((prev) => ({ ...prev, startDate: formatDateForAPI(e.target.value) }))} className="border border-gray-300 rounded-sm px-3 py-2" />
-              <span className="text-gray-500">~</span>
-              <input type="date" value={formatDateForInput(topUrisFilters.endDate)} onChange={(e) => setTopUrisFilters((prev) => ({ ...prev, endDate: formatDateForAPI(e.target.value) }))} className="border border-gray-300 rounded-sm px-3 py-2" />
+          {/* Top URIs 필터 */}
+          <div className="space-y-3">
+            <div className="flex gap-4 items-center w-full">
+              <div className="flex gap-2 items-center">
+                <label className="text-gray-700 font-medium">기간:</label>
+                <input type="date" value={formatDateForInput(topUrisFilters.startDate)} onChange={(e) => handleTopUrisDateChange("startDate", e.target.value)} className="border border-gray-300 rounded-sm px-3 py-2" />
+                <span className="text-gray-500">~</span>
+                <input type="date" value={formatDateForInput(topUrisFilters.endDate)} onChange={(e) => handleTopUrisDateChange("endDate", e.target.value)} className="border border-gray-300 rounded-sm px-3 py-2" />
+              </div>
+              <div className="flex gap-2 items-center">
+                <label className="text-gray-700 font-medium">조회 개수:</label>
+                <select value={topUrisFilters.topN} onChange={(e) => setTopUrisFilters((prev) => ({ ...prev, topN: parseInt(e.target.value) }))} className="border border-gray-300 rounded-sm px-3 py-2">
+                  <option value={5}>Top 5</option>
+                  <option value={10}>Top 10</option>
+                  <option value={20}>Top 20</option>
+                  <option value={50}>Top 50</option>
+                </select>
+              </div>
+              <button onClick={fetchTopUris} disabled={isLoading} className="px-4 py-2 bg-blue-500 text-white rounded-sm hover:bg-blue-600 disabled:opacity-50">
+                {isLoading ? "조회 중..." : "조회"}
+              </button>
+              <button onClick={resetTopUrisFilters} className="px-4 py-2 bg-gray-500 text-white rounded-sm hover:bg-gray-600">
+                초기화
+              </button>
             </div>
-            <div className="flex gap-2 items-center">
-              <label className="text-gray-700 font-medium">조회 개수:</label>
-              <select value={topUrisFilters.topN} onChange={(e) => setTopUrisFilters((prev) => ({ ...prev, topN: parseInt(e.target.value) }))} className="border border-gray-300 rounded-sm px-3 py-2">
-                <option value={5}>Top 5</option>
-                <option value={10}>Top 10</option>
-                <option value={20}>Top 20</option>
-                <option value={50}>Top 50</option>
-              </select>
-            </div>
-            <button onClick={fetchTopUris} disabled={isLoading} className="px-4 py-2 bg-blue-500 text-white rounded-sm hover:bg-blue-600 disabled:opacity-50">
-              {isLoading ? "조회 중..." : "조회"}
-            </button>
+
+            {/* 날짜 유효성 검증 오류 메시지 */}
+            {dateValidationErrors.topUris && <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2">{dateValidationErrors.topUris}</div>}
           </div>
 
           {/* Top URIs 결과 */}
@@ -708,8 +872,7 @@ export default function LogsPage() {
                   <React.Fragment key={uri.uri}>
                     <div className="flex items-center justify-center px-2 h-16 border-b border-gray-200 group-hover:bg-blue-50 transition-colors">
                       <div className="flex items-center gap-2">
-                        {index < 3 && <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold ${index === 0 ? "bg-yellow-500" : index === 1 ? "bg-gray-400" : "bg-amber-600"}`}>{index + 1}</div>}
-                        {index >= 3 && <span className="text-gray-600 font-medium">{index + 1}</span>}
+                        <span className="text-gray-600 font-medium">{index + 1}</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-start px-2 h-16 border-b border-gray-200 group-hover:bg-blue-50 transition-colors">

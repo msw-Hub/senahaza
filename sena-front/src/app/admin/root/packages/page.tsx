@@ -62,7 +62,7 @@ export default function PackageManagePage() {
   });
 
   // 패키지 리스트 테이블 헤더
-  const packageTableHeaders = ["ID", "패키지명", "패키지 가격", "총 루비", "최종 수정자", "최종 수정일", "수정 메시지", "수정", "상태", "삭제"];
+  const packageTableHeaders = ["ID", "패키지명", "패키지 가격", "총 루비", "최종 수정자", "최종 수정일", "수정 메시지", "상태", "수정", "삭제"];
 
   // 패키지 목록 조회
   const fetchPackages = async () => {
@@ -412,7 +412,7 @@ export default function PackageManagePage() {
             <option value="lastModifiedBy_asc">수정자 오름차순</option>
             <option value="lastModifiedBy_desc">수정자 내림차순</option>
           </select>
-        </div>{" "}
+        </div>
         {/* 액션 버튼 */}
         <div className="flex gap-2 items-center">
           <span className="text-gray-600 text-sm">총 {packages.length}개의 패키지</span>
@@ -501,19 +501,19 @@ export default function PackageManagePage() {
                   title={pkg.lastModifiedMessage || "메시지 없음"}>
                   {pkg.lastModifiedMessage || "메시지 없음"}
                 </span>
-                {/* 수정 버튼 */}
-                <div onClick={() => openEditModal(pkg)} className="flex items-center justify-center text-blue-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-blue-50 px-2 transition-colors" title="수정">
-                  <i className="xi-pen text-lg"></i>
-                </div>
                 {/* 상태변경 버튼 */}
                 <div
                   onClick={() => handleToggleStatus(pkg.packageId, pkg.status, pkg.packageName)}
-                  className={`flex items-center justify-center border-b border-gray-200 h-16 cursor-pointer px-2 transition-colors ${pkg.status === "ACTIVE" ? "text-red-600 hover:bg-red-50" : "text-green-600 hover:bg-green-50"}`}
+                  className={`relative z-10 flex items-center justify-center border-b border-gray-200 h-16 cursor-pointer px-2 transition-colors ${pkg.status === "ACTIVE" ? "text-green-600 hover:bg-red-50" : "text-red-600 hover:bg-green-50"}`}
                   title={pkg.status === "ACTIVE" ? "비활성화" : "활성화"}>
-                  <i className={pkg.status === "ACTIVE" ? "xi-pause text-lg" : "xi-play text-lg"}></i>
+                  <i className={pkg.status === "ACTIVE" ? "xi-toggle-on xi-2x" : "xi-toggle-off xi-2x"}></i>
+                </div>
+                {/* 수정 버튼 */}
+                <div onClick={() => openEditModal(pkg)} className="relative z-10 flex items-center justify-center text-blue-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-blue-50 px-2 transition-colors" title="수정">
+                  <i className="xi-pen text-lg"></i>
                 </div>
                 {/* 삭제 버튼 */}
-                <div onClick={() => handleDeletePackage(pkg.packageId, pkg.packageName)} className="flex items-center justify-center text-red-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-red-50 px-2 transition-colors" title="삭제">
+                <div onClick={() => handleDeletePackage(pkg.packageId, pkg.packageName)} className="relative z-10 flex items-center justify-center text-red-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-red-50 px-2 transition-colors" title="삭제">
                   <i className="xi-trash text-lg"></i>
                 </div>
               </div>

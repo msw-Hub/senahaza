@@ -74,4 +74,12 @@ public class ViewerController {
         viewerService.logout(email, request, response);
         return ResponseEntity.ok().body("로그아웃되었습니다.");
     }
+
+    // 관리자 이름 반환
+    @GetMapping("/admin/name")
+    public ResponseEntity<String> getMyAdminName() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String adminName = viewerService.getAdminNameByEmail(email);
+        return ResponseEntity.ok(adminName);
+    }
 }

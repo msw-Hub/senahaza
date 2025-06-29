@@ -285,5 +285,10 @@ public class ViewerService {
         deleteCookie.setMaxAge(0);
         response.addCookie(deleteCookie);
     }
-
+    // 관리자 이름 조회 - 이메일로
+    public String getAdminNameByEmail(String email) {
+        AdminEntity admin = adminRepository.findByEmail(email)
+                .orElseThrow(() -> new AdminNotFoundException("관리자를 찾을 수 없습니다."));
+        return admin.getName();
+    }
 }

@@ -16,6 +16,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -89,15 +90,23 @@ public class TrafficLoggingFilter extends OncePerRequestFilter {
             ip = request.getRemoteAddr();
         }
 
-        // 다중 IP가 들어오는 경우 첫 번째 것만 사용 (ex: "1.2.3.4, 5.6.7.8")
+        // 다중 IP가 들어올 경우 첫 번째 IP만 사용
         if (ip != null && ip.contains(",")) {
             ip = ip.split(",")[0].trim();
         }
 
-        // IPv6 형식 중 IPv4를 포함한 "::ffff:192.168.0.1" 형태 처리
-        if (ip != null && ip.contains(":") && ip.contains(".")) {
-            ip = ip.substring(ip.lastIndexOf(':') + 1);
-        }
+        try {
+            InetAddress inet = InetAddress.getByName(ip);
+            if (inet.isLoopbackAddress()) {
+                return "127.0.0.1"; // IPv6 루프백 포함해서 강제 변환
+            }
+
+            // "::ffff:192.168.0.1" 같은 IPv4-mapped IPv6 처리
+            byte[] addr = inet.getAddress();
+            if (addr.length == 4) {
+                return inet.getHostAddress(); // IPv4 정상 반환
+            }
+        } catch (Exception ignored) {}
 
         return ip;
     }

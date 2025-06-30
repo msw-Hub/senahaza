@@ -8,20 +8,16 @@ import org.example.admin.entity.AdminEntity;
 import org.example.admin.entity.PendingAdminEntity;
 import org.example.admin.repository.AdminRepository;
 import org.example.admin.repository.PendingAdminRepository;
-import org.example.admin.viewer.ViewerService;
 import org.example.exception.customException.*;
-import org.example.jwt.RedisService;
 import org.example.jwt.TokenBlacklistService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.PropertyReferenceException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j

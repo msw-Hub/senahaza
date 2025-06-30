@@ -2,11 +2,13 @@ package org.example.config;
 
 import lombok.RequiredArgsConstructor;
 import org.example.admin.all.AdminLoginService;
+import org.example.filter.IpRateLimitingFilter;
 import org.example.filter.TrafficLoggingFilter;
 import org.example.jwt.JwtFilter;
 import org.example.jwt.JwtLoginFilter;
 import org.example.jwt.JwtUtil;
-import org.example.jwt.RedisService;
+import org.example.redis.RedisIpRateLimitService;
+import org.example.redis.RedisService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -36,6 +38,8 @@ public class SecurityConfig {
     private final AdminLoginService adminLoginService;
     private final RedisService redisService;
     private final TrafficLoggingFilter trafficLoggingFilter;
+    private final RedisIpRateLimitService redisIpRateLimitService;
+    private final IpRateLimitingFilter ipRateLimitingFilter;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
@@ -83,6 +87,7 @@ public class SecurityConfig {
                 .antMatchers("/viewer/**").hasAnyRole("ROOT", "EDITOR", "VIEWER")
                 .anyRequest().authenticated()
                 .and()
+                .addFilterBefore(ipRateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(trafficLoggingFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

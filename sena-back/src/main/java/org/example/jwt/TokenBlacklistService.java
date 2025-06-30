@@ -1,10 +1,9 @@
 package org.example.jwt;
 
 import lombok.RequiredArgsConstructor;
+import org.example.redis.RedisService;
 import org.springframework.stereotype.Service;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
-import java.time.Duration;
 import java.util.Set;
 
 @Service

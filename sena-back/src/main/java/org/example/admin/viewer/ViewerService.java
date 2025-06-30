@@ -5,14 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.admin.dto.*;
 import org.example.admin.entity.AdminEntity;
 import org.example.admin.repository.AdminRepository;
-import org.example.common.dto.PackageItemDto;
 import org.example.entity.*;
 import org.example.exception.customException.*;
-import org.example.jwt.RedisService;
 import org.example.jwt.TokenBlacklistService;
 import org.example.repository.ItemRepository;
 import org.example.repository.PackageRepository;
-import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

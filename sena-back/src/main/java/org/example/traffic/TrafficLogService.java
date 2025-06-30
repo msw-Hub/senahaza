@@ -1,23 +1,28 @@
 package org.example.traffic;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.entity.BlockedIpEntity;
+import org.example.entity.QBlockedIpEntity;
+import org.example.redis.RedisIpRateLimitService;
+import org.example.repository.BlockedIpRepository;
 import org.example.traffic.dto.*;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.LinkedHashMap;
 
 @Slf4j
 @Service
@@ -25,6 +30,8 @@ import java.util.LinkedHashMap;
 public class TrafficLogService {
 
     private final TrafficLogRepository trafficLogRepository;
+    private final BlockedIpRepository blockedIpRepository;
+    private final RedisIpRateLimitService redisIpRateLimitService;
 
     private final EntityManager em;
     private final JPAQueryFactory queryFactory;
@@ -254,6 +261,102 @@ public class TrafficLogService {
                 .collect(Collectors.toList());
     }
 
+    // 차단 목록 - 현재 혹은 전체
+    public Page<BlockedIpDto> findBlockedIps(BlockedIpSearchRequestDto dto) {
+        if (Boolean.TRUE.equals(dto.getActive())) {
+            return findActiveBlockedIps(dto);
+        } else {
+            return findAllBlockedIps(dto);
+        }
+    }
 
+    private Page<BlockedIpDto> findAllBlockedIps(BlockedIpSearchRequestDto dto) {
+        BooleanBuilder builder = buildFilterCondition(dto);
+        Pageable pageable = buildPageable(dto.getPage(), dto.getSize());
+        return queryBlockedIps(builder, pageable);
+    }
+
+    private Page<BlockedIpDto> findActiveBlockedIps(BlockedIpSearchRequestDto dto) {
+        BooleanBuilder builder = buildActiveCondition();
+        Pageable pageable = buildPageable(dto.getPage(), dto.getSize());
+        return queryBlockedIps(builder, pageable);
+    }
+
+    private BooleanBuilder buildFilterCondition(BlockedIpSearchRequestDto dto) {
+        QBlockedIpEntity blockedIp = QBlockedIpEntity.blockedIpEntity;
+        BooleanBuilder builder = new BooleanBuilder();
+
+        if (dto.getIp() != null && !dto.getIp().isEmpty()) {
+            builder.and(blockedIp.ip.containsIgnoreCase(dto.getIp()));
+        }
+        if (dto.getFrom() != null) {
+            builder.and(blockedIp.blockedAt.goe(dto.getFrom()));
+        }
+        if (dto.getTo() != null) {
+            builder.and(blockedIp.blockedAt.loe(dto.getTo()));
+        }
+
+        return builder;
+    }
+
+    private BooleanBuilder buildActiveCondition() {
+        QBlockedIpEntity blockedIp = QBlockedIpEntity.blockedIpEntity;
+        LocalDateTime now = LocalDateTime.now();
+
+        return new BooleanBuilder()
+                .and(blockedIp.unblockAt.isNull().or(blockedIp.unblockAt.gt(now)));
+    }
+
+    private Pageable buildPageable(int page, int size) {
+        return PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "blockedAt"));
+    }
+
+    private Page<BlockedIpDto> queryBlockedIps(BooleanBuilder builder, Pageable pageable) {
+        QBlockedIpEntity blockedIp = QBlockedIpEntity.blockedIpEntity;
+
+        long total = Optional.ofNullable(
+                queryFactory.select(blockedIp.count())
+                        .from(blockedIp)
+                        .where(builder)
+                        .fetchOne()
+        ).orElse(0L);
+
+        List<BlockedIpDto> content = queryFactory.selectFrom(blockedIp)
+                .where(builder)
+                .orderBy(blockedIp.blockedAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch()
+                .stream()
+                .map(e -> BlockedIpDto.builder()
+                        .id(e.getId())
+                        .ip(e.getIp())
+                        .reason(e.getReason())
+                        .blockedAt(e.getBlockedAt())
+                        .unblockAt(e.getUnblockAt())
+                        .build())
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(content, pageable, total);
+    }
+
+    // IP 차단 해제
+    @Transactional
+    public void unblockById(Long id) {
+        // 1. 차단 이력 조회
+        BlockedIpEntity entity = blockedIpRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 차단 기록이 존재하지 않습니다."));
+
+        String ip = entity.getIp();
+
+        // 2. DB에서 삭제
+        blockedIpRepository.delete(entity);
+
+        // 3. Redis에서 해당 IP 차단 키 제거
+        redisIpRateLimitService.delete("blocked_ip:" + ip);
+
+        // 4. 요청 카운트 키도 초기화
+        redisIpRateLimitService.delete("req_count:" + ip);
+    }
 
 }

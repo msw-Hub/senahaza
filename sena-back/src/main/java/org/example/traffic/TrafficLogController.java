@@ -38,4 +38,16 @@ public class TrafficLogController {
         List<TopUriStatsDto> topUris = trafficLogService.getTopUriStats(requestDto);
         return ResponseEntity.ok(topUris);
     }
+
+    @GetMapping("/blocked-ips")
+    public ResponseEntity<Page<BlockedIpDto>> getBlockedIps(BlockedIpSearchRequestDto requestDto) {
+        Page<BlockedIpDto> result = trafficLogService.findBlockedIps(requestDto);
+        return ResponseEntity.ok(result);
+    }
+
+    @DeleteMapping("/blocked-ips/{id}")
+    public ResponseEntity<Void> unblockIp(@PathVariable Long id) {
+        trafficLogService.unblockById(id);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -6,7 +6,6 @@ import org.example.repository.BlockedIpRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor

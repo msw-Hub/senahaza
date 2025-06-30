@@ -289,11 +289,17 @@ public class TrafficLogService {
         if (dto.getIp() != null && !dto.getIp().isEmpty()) {
             builder.and(blockedIp.ip.containsIgnoreCase(dto.getIp()));
         }
-        if (dto.getFrom() != null) {
-            builder.and(blockedIp.blockedAt.goe(dto.getFrom()));
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+        if (dto.getFrom() != null && !dto.getFrom().isEmpty()) {
+            LocalDateTime from = LocalDate.parse(dto.getFrom(), formatter).atStartOfDay();
+            builder.and(blockedIp.blockedAt.goe(from));
         }
-        if (dto.getTo() != null) {
-            builder.and(blockedIp.blockedAt.loe(dto.getTo()));
+
+        if (dto.getTo() != null && !dto.getTo().isEmpty()) {
+            LocalDateTime to = LocalDate.parse(dto.getTo(), formatter).atTime(LocalTime.MAX);
+            builder.and(blockedIp.blockedAt.loe(to));
         }
 
         return builder;

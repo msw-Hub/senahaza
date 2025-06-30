@@ -46,7 +46,7 @@ public class TrafficLogController {
     }
 
     @DeleteMapping("/blocked-ips/{id}")
-    public ResponseEntity<Void> unblockIp(@PathVariable Long id) {
+    public ResponseEntity<?> unblockIp(@PathVariable Long id) {
         trafficLogService.unblockById(id);
         return ResponseEntity.noContent().build();
     }

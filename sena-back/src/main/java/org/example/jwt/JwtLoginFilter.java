@@ -79,13 +79,29 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         log.info("JWT 토큰 생성: {}", tokenInfo.getToken());
 
 
-        Cookie cookie = new Cookie("token", tokenInfo.getToken());
-        cookie.setHttpOnly(true);         // JS에서 접근 불가 (보안)
-        cookie.setSecure(true);           // HTTPS 환경에서만 전송
-        cookie.setPath("/");              // 전체 경로에 적용
-        cookie.setMaxAge((int)(tokenInfo.getExpirationMs() / 1000));  // 만료시간 초단위로 설정
+//        Cookie cookie = new Cookie("token", tokenInfo.getToken());
+//        cookie.setHttpOnly(true);         // JS에서 접근 불가 (보안)
+//        cookie.setSecure(true);           // HTTPS 환경에서만 전송
+//        cookie.setPath("/");              // 전체 경로에 적용
+//        cookie.setMaxAge((int)(tokenInfo.getExpirationMs() / 1000));  // 만료시간 초단위로 설정
+//
+//        response.addCookie(cookie);
+//
+//        response.setContentType("application/json");
+//        response.setCharacterEncoding("UTF-8");
+//        response.getWriter().write("{\"message\":\"로그인 성공\"}");
 
-        response.addCookie(cookie);
+        String token = tokenInfo.getToken();
+        int maxAge = (int)(tokenInfo.getExpirationMs() / 1000);
+
+        // ✅ SameSite=None, Secure, Domain 수동 설정
+        String cookieHeader = String.format(
+                "token=%s; Max-Age=%d; Path=/; Domain=.example.com; HttpOnly; Secure; SameSite=None",
+                token,
+                maxAge
+        );
+
+        response.addHeader("Set-Cookie", cookieHeader);
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");

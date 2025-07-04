@@ -35,7 +35,9 @@ jobs:
           utcOffset: "+09:00"
 
       - name: Set artifact name
-        run: echo "artifact=$(ls ./build/libs | grep '.jar$')" >> $GITHUB_ENV
+        run: |
+          ARTIFACT_NAME=$(ls ./build/libs | grep '.jar$')
+          printf "artifact=%s\n" "$ARTIFACT_NAME" >> $GITHUB_ENV
         working-directory: sena-back
 
       - name: Deploy to Elastic Beanstalk

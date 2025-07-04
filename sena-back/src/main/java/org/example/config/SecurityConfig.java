@@ -71,44 +71,33 @@ public class SecurityConfig {
         );
         jwtLoginFilter.setFilterProcessesUrl("/api/auth/login");
 
-//        http
-//                .cors()
-//                .and()
-//                .csrf().disable()
-//                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//                .and()
-//                .authorizeRequests()
-//                .antMatchers(
-//                        "/api/auth/login",
-//                        "/api/auth/**",
-//                        "/main/**",
-//                        "/"
-//                ).permitAll()
-//                // "/analytics/**" 와 "/admin/traffic/**" 는 여기서 권한 체크로 변경
-//                .antMatchers("/admin/traffic/top-uris").hasRole("ROOT")
-//                .antMatchers("/admin/traffic/**").hasAnyRole("ROOT", "EDITOR", "VIEWER")
-//                .antMatchers("/analytics/**").hasAnyRole("ROOT", "EDITOR", "VIEWER")
-//                .antMatchers("/root/**").hasRole("ROOT")
-//                .antMatchers("/editor/**").hasAnyRole("ROOT", "EDITOR")
-//                .antMatchers("/viewer/**").hasAnyRole("ROOT", "EDITOR", "VIEWER")
-//                .anyRequest().authenticated()
-//                .and()
-//                .addFilterBefore(ipRateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
-//                .addFilterBefore(trafficLoggingFilter, UsernamePasswordAuthenticationFilter.class)
-//                .addFilterBefore(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class)
-//                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         http
+                .cors()
+                .and()
+                .csrf().disable()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
                 .authorizeRequests()
                 .antMatchers(
-                        "/favicon.ico",
-                        "/error",
-                        "/css/**",
-                        "/js/**",
-                        "/images/**",
-                        "/webjars/**",
-                        "/fonts/**",
-                        "/**"
-                ).permitAll();
+                        "/api/auth/login",
+                        "/api/auth/**",
+                        "/main/**",
+                        "/"
+                ).permitAll()
+                // "/analytics/**" 와 "/admin/traffic/**" 는 여기서 권한 체크로 변경
+                .antMatchers("/admin/traffic/top-uris").hasRole("ROOT")
+                .antMatchers("/admin/traffic/**").hasAnyRole("ROOT", "EDITOR", "VIEWER")
+                .antMatchers("/analytics/**").hasAnyRole("ROOT", "EDITOR", "VIEWER")
+                .antMatchers("/root/**").hasRole("ROOT")
+                .antMatchers("/editor/**").hasAnyRole("ROOT", "EDITOR")
+                .antMatchers("/viewer/**").hasAnyRole("ROOT", "EDITOR", "VIEWER")
+                .anyRequest().authenticated()
+                .and()
+                .addFilterBefore(ipRateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(trafficLoggingFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
 
         return http.build();
     }

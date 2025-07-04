@@ -98,8 +98,6 @@ public class SecurityConfig {
 //                .addFilterBefore(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class)
 //                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         http
-                .cors().and()
-                .csrf().disable()
                 .authorizeRequests()
                 .antMatchers(
                         "/favicon.ico",
@@ -108,9 +106,9 @@ public class SecurityConfig {
                         "/js/**",
                         "/images/**",
                         "/webjars/**",
-                        "/fonts/**"
-                ).permitAll()
-                .anyRequest().permitAll();
+                        "/fonts/**",
+                        "/**"
+                ).permitAll();
 
         return http.build();
     }

@@ -101,7 +101,15 @@ public class SecurityConfig {
                 .cors().and()
                 .csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/error").permitAll()
+                .antMatchers(
+                        "/favicon.ico",
+                        "/error",
+                        "/css/**",
+                        "/js/**",
+                        "/images/**",
+                        "/webjars/**",
+                        "/fonts/**"
+                ).permitAll()
                 .anyRequest().permitAll();
 
         return http.build();

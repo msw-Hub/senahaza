@@ -45,3 +45,6 @@ jwt:
 analytics:
   google:
     property-id: ${GOOGLE_ANALYTICS_PROPERTY_ID}
+
+server:
+  port: ${PORT:8080}

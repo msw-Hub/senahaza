@@ -72,6 +72,8 @@ dependencies {
     // db 로깅을 위한 의존성
     implementation 'net.ttddyy:datasource-proxy:1.7'
 
+    // aws sdk v1 의존성
+    implementation 'com.amazonaws:aws-java-sdk-ssm:1.12.603'
 }
 
 sourceSets {

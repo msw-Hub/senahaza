@@ -45,8 +45,8 @@ build/
 /*.iml
 
 # sena-back 내부 특정 환경설정 파일 무시
-/sena-back/src/main/resources/application.yml
-/src/main/resources/application.yml
+#/sena-back/src/main/resources/application.yml
+#/src/main/resources/application.yml
 
 # Firebase service account key
 /sena-back/config/

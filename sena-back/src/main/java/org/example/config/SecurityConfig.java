@@ -76,7 +76,8 @@ public class SecurityConfig {
                 .antMatchers(
                         "/api/auth/login",
                         "/api/auth/**",
-                        "/main/**"
+                        "/main/**",
+                        "/"
                 ).permitAll()
                 // "/analytics/**" 와 "/admin/traffic/**" 는 여기서 권한 체크로 변경
                 .antMatchers("/admin/traffic/top-uris").hasRole("ROOT")

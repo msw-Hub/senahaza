@@ -35,9 +35,7 @@ jobs:
           utcOffset: "+09:00"
 
       - name: Set artifact name
-        run: |
-          ARTIFACT_NAME=$(ls ./build/libs | grep '.jar$')
-          printf "artifact=%s\n" "$ARTIFACT_NAME" >> $GITHUB_ENV
+        run: echo "artifact=sena-back-1.0.0.jar" >> $GITHUB_ENV
         working-directory: sena-back
 
       - name: Deploy to Elastic Beanstalk
@@ -49,4 +47,4 @@ jobs:
           environment_name: ${{ secrets.ENVIRONMENT_NAME }}
           version_label: github-action-${{ steps.current-time.outputs.formattedTime }}
           region: ${{ secrets.AWS_REGION }}
-          deployment_package: ./back-end/build/libs/${{ env.artifact }}
+          deployment_package: ./sena-back/build/libs/${{ env.artifact }}

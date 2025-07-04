@@ -32,7 +32,7 @@ import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+//@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
@@ -101,7 +101,8 @@ public class SecurityConfig {
                 .cors().and()
                 .csrf().disable()
                 .authorizeRequests()
-                .anyRequest().permitAll();  // 모든 요청 허용, 인증 안함
+                .antMatchers("/error").permitAll()
+                .anyRequest().permitAll();
 
         return http.build();
     }

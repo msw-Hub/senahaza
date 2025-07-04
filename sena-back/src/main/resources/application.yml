@@ -51,3 +51,6 @@ server:
 
 cors:
   allowed-origins: ${ALLOWED_ORIGINS:http://localhost:3000}
+
+jwt:
+  cookie-domain: ${JWT_COOKIE_DOMAIN:localhost}

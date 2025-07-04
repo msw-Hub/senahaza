@@ -29,8 +29,8 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     private final AdminLoginService adminLoginService;
     private final RedisService redisService;
 
-    @Value("${cors.allowed-origins}")
-    private String allowedOrigins;
+    @Value("${jwt.cookie-domain}")
+    private String cookieDomain;
 
     // 로그인 요청 시 실행되는 메서드
     @Override
@@ -103,7 +103,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
                 "token=%s; Max-Age=%d; Path=/; Domain=%s; HttpOnly; Secure; SameSite=None",
                 token,
                 maxAge,
-                allowedOrigins
+                cookieDomain
         );
 
         response.addHeader("Set-Cookie", cookieHeader);

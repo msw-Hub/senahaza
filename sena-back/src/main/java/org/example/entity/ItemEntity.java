@@ -1,16 +1,18 @@
 package org.example.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import javax.persistence.*;
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "item")
 @Getter
 @Setter
+@SuperBuilder  // @Builder 대신 @SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ItemEntity extends BaseEntity {
 
     @Id
@@ -22,15 +24,15 @@ public class ItemEntity extends BaseEntity {
     private String itemName;
 
     @Column(name = "ruby", nullable = false)
-    private Long ruby;
+    private Double ruby;
 
     @Column(name = "img")
     private String img;
 
     // 연관관계
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PackageItemEntity> packageItems = new ArrayList<>();
+    private List<PackageItemEntity> packageItems;
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<UpdateLogEntity> updateLogs = new ArrayList<>();
+    private List<UpdateLogEntity> updateLogs;
 }

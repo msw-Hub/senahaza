@@ -1,7 +1,9 @@
-package org.example.entity;
+package org.example.admin.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+import org.example.entity.BaseEntity;
+import org.example.entity.UpdateLogEntity;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -12,6 +14,9 @@ import java.util.List;
 @Table(name = "admin")
 @Getter
 @Setter
+@SuperBuilder  // @Builder 대신 @SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AdminEntity extends BaseEntity {
 
     @Id
@@ -43,9 +48,15 @@ public class AdminEntity extends BaseEntity {
 
     // 연관관계
     @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<UpdateLogEntity> updateLogs = new ArrayList<>();
+    private List<UpdateLogEntity> updateLogs;
 
     public enum Role {
-        ROOT, EDITOR, VIEWER
+        ROOT, EDITOR, VIEWER;
+        // 스프링 시큐리티 권한 반환용
+
+        public List<org.springframework.security.core.GrantedAuthority> getAuthorities() {
+            return List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + this.name()));
+        }
+
     }
 }

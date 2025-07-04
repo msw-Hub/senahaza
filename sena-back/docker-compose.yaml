@@ -16,3 +16,10 @@ services:
       - "${MYSQL_PORT}:3306"
     volumes:
       - ./mysql-data:/var/lib/mysql
+
+  redis:
+    image: redis:latest
+    container_name: sena-redis
+    ports:
+      - "6379:6379"
+    restart: always

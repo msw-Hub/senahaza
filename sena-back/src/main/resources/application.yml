@@ -1,0 +1,47 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+  security:
+    user:
+      name: disabled
+      password: disabled
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+    ssl: true
+  servlet:
+    multipart:
+      enabled: true
+
+logging:
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} : %msg%n"
+  file:
+    encoding: UTF-8
+  encoding:
+    charset: UTF-8
+  level:
+    org.example.analytics: DEBUG
+    com.google.analytics: DEBUG
+    com.google.api: DEBUG
+    org.example: DEBUG
+    org.example.traffic: DEBUG
+
+jwt:
+  secret: ${JWT_SECRET}
+
+analytics:
+  google:
+    property-id: ${GOOGLE_ANALYTICS_PROPERTY_ID}

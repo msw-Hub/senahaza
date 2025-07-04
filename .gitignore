@@ -26,7 +26,11 @@ replay_pid*
 # Gradle
 sena-back/.gradle/
 build/
+!gradlew
+!gradlew.bat
 !gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
 
 # 백엔드 환경변수 파일 무시
 /sena-back/.env
@@ -41,8 +45,18 @@ build/
 /*.iml
 
 # sena-back 내부 특정 환경설정 파일 무시
-/sena-back/src/main/resources/application.yml
+#/sena-back/src/main/resources/application.yml
+#/src/main/resources/application.yml
 
+# Firebase service account key
+/sena-back/config/
+/config/
+/sena-back/config/firebase-service-account.json
+/config/firebase-service-account-prod.json
+/firebase-service-account-dev.json
+/sena-back/config/galvanic-deck-254006-0a537c777b19.json
+/config/galvanic-deck-254006-0a537c777b19.json
+/galvanic-deck-254006-0a537c777b19.json
 #-----------------------------------------------
 # frontend
 

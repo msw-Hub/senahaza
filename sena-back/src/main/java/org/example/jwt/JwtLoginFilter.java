@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.admin.all.AdminLoginService;
 import org.example.redis.RedisService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -27,6 +28,9 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     private final JwtUtil jwtUtil;
     private final AdminLoginService adminLoginService;
     private final RedisService redisService;
+
+    @Value("${cors.allowed-origins}")
+    private String allowedOrigins;
 
     // 로그인 요청 시 실행되는 메서드
     @Override
@@ -96,9 +100,10 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
 
         // ✅ SameSite=None, Secure, Domain 수동 설정
         String cookieHeader = String.format(
-                "token=%s; Max-Age=%d; Path=/; Domain=.example.com; HttpOnly; Secure; SameSite=None",
+                "token=%s; Max-Age=%d; Path=/; Domain=%s; HttpOnly; Secure; SameSite=None",
                 token,
-                maxAge
+                maxAge,
+                allowedOrigins
         );
 
         response.addHeader("Set-Cookie", cookieHeader);

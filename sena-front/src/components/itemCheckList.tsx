@@ -12,20 +12,18 @@ interface Item {
 }
 
 export default function ItemCheckList() {
-  const [itemList, setItemList] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [editingPrice, setEditingPrice] = useState<string>("");
 
   // Zustand store 사용
-  const { allItems, checkedItems, setAllItems, toggleItem, checkAllItems, uncheckAllItems, getCheckedItems, getTotalRuby, getTotalCash, isItemChecked, getItemRuby, setCustomPrice, resetCustomPrice, resetAllCustomPrices, customPrices } = useItemCheckStore();
+  const { allItems, checkedItems, setAllItems, toggleItem, checkAllItems, uncheckAllItems, isItemChecked, getItemRuby, setCustomPrice, resetCustomPrice, resetAllCustomPrices, customPrices } = useItemCheckStore();
 
   const getItemCheckList = async () => {
     setIsLoading(true);
     try {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/main/items`);
       const items: Item[] = response.data;
-      setItemList(items);
       setAllItems(items); // Zustand store에 아이템 목록 저장
       console.log("아이템 목록:", items);
     } catch (error) {

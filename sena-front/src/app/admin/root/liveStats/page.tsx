@@ -11,11 +11,9 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend,
 // Google Maps 타입 정의
 declare global {
   interface Window {
-    google: any;
+    google: typeof google;
   }
 }
-
-const google = typeof window !== "undefined" ? window.google : null;
 
 interface LiveStatsData {
   activeUsers: number;

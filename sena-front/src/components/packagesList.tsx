@@ -3,7 +3,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useItemCheckStore } from "@/store/itemCheckList";
-import ItemCheckList from "./itemCheckList";
 
 interface Item {
   imgUrl: string; // 아이템 이미지 URL
@@ -285,7 +284,7 @@ export default function Packages() {
               {getAllPackages().map((pkg, index) => {
                 // 체크된 아이템만 계산
                 const packageValue = calculatePackageValue(pkg);
-                const { checkedItems, totalRuby, totalCash, hasCheckedItems } = packageValue;
+                const { checkedItems, totalCash, hasCheckedItems } = packageValue;
                 const isCustom = pkg.isCustom;
 
                 return (
@@ -390,7 +389,7 @@ export default function Packages() {
             <div className="flex-1 p-4 overflow-y-auto min-h-0">
               {(() => {
                 const packageValue = calculatePackageValue(selectedPackage);
-                const { checkedItems, totalRuby, totalCash, hasCheckedItems } = packageValue;
+                const { checkedItems, totalCash, hasCheckedItems } = packageValue;
 
                 return (
                   <div className="space-y-4">

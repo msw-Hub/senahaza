@@ -53,8 +53,9 @@ export default function UsersPage() {
 
       setAdminData(response.data);
       console.log("관리자 목록:", response.data);
-    } catch (error) {
+    } catch (err) {
       // 권한이 없으므로 에러 발생시 packages 페이지로 리다이렉트
+      console.error("관리자 목록 조회 실패:", err);
       router.push("/admin/root/packages");
     } finally {
       setIsLoading(false);

@@ -52,7 +52,7 @@ export default function LoginPage() {
         console.error("로그인 실패", response.data);
         alert("로그인에 실패했습니다.");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("로그인 에러", error);
       alert("로그인 중 오류가 발생했습니다.");
     }

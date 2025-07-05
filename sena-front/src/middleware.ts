@@ -30,8 +30,9 @@ export async function middleware(request: NextRequest) {
 
       // 200 응답이면 페이지 접근 허용
       return NextResponse.next();
-    } catch (error) {
+    } catch (err) {
       // 네트워크 오류 등 예외 발생 시 /admin/login으로 리다이렉트
+      console.error("인증 확인 중 오류:", err);
       const url = request.nextUrl.clone();
       url.pathname = "/admin/login";
       url.searchParams.set("error", "no-auth");
@@ -55,7 +56,8 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/admin/login", request.url));
       }
       return NextResponse.next();
-    } catch (error) {
+    } catch (err) {
+      console.error("ROOT 권한 확인 중 오류:", err);
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
   }

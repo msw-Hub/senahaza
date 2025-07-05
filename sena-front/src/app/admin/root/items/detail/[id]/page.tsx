@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import ItemModal from "../../components/ItemModal";
 
 interface Logmessage {

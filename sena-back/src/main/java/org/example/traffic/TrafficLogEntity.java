@@ -22,7 +22,7 @@ public class TrafficLogEntity {
     @Column(name = "uri", nullable = false)
     private String uri;
 
-    @Column(name = "query_string")
+    @Column(name = "query_string", length = 1000)
     private String queryString;
 
     @Column(name = "client_ip", nullable = false, length = 45)

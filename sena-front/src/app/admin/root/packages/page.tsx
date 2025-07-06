@@ -381,7 +381,7 @@ export default function PackageManagePage() {
   }, []);
 
   return (
-    <div className="w-full h-full flex flex-col justify-start items-start gap-4">
+    <div className="w-full h-full flex flex-col justify-start items-start gap-4 overflow-y-scroll">
       <h1 className="text-black font-bold text-xl">패키지 관리</h1>
 
       {/* 검색창 */}

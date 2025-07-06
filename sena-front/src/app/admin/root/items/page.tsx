@@ -277,7 +277,7 @@ export default function ItemManagePage() {
   }, []);
 
   return (
-    <div className="w-full h-full flex flex-col justify-start items-start gap-4">
+    <div className="w-full h-full flex flex-col justify-start items-start gap-4 overflow-y-scroll">
       <h1 className="text-black font-bold text-xl">아이템 관리</h1>
 
       {/* 검색창 */}

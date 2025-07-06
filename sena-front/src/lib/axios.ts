@@ -117,7 +117,7 @@ export const handleApiError = (error: unknown) => {
       };
     };
   }
-  
+
   const typedError = error as ApiError;
   if (typedError.userMessage) {
     alert(typedError.userMessage);

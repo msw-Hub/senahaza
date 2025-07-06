@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 
 interface Item {
   itemId: number;
@@ -53,6 +53,8 @@ interface PackageModalProps {
 }
 
 export default function PackageModal({ showModal, editingPackage, formData, items, isLoading, onClose, onSubmit, onFormDataChange, onAddItem, onRemoveItem, onQuantityChange }: PackageModalProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+
   if (!showModal) return null;
 
   // 예상 총 루비 계산
@@ -62,6 +64,12 @@ export default function PackageModal({ showModal, editingPackage, formData, item
       return sum + (itemInfo?.ruby || 0) * selectedItem.quantity;
     }, 0);
   };
+
+  // 사용 가능한 아이템 필터링 (선택되지 않은 아이템만)
+  const availableItems = items.filter((item) => !formData.items.some((selectedItem) => selectedItem.itemId === item.itemId));
+
+  // 검색어로 아이템 필터링
+  const filteredItems = availableItems.filter((item) => item.itemName.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -166,10 +174,30 @@ export default function PackageModal({ showModal, editingPackage, formData, item
                 <i className="xi-plus-circle mr-2 text-green-600"></i>
                 아이템 추가
               </h4>
+
+              {/* 검색 입력 */}
+              <div className="mb-4">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i className="xi-search text-gray-400"></i>
+                  </div>
+                  <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="아이템명으로 검색..." />
+                  {searchTerm && (
+                    <button type="button" onClick={() => setSearchTerm("")} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                      <i className="xi-close text-sm"></i>
+                    </button>
+                  )}
+                </div>
+                {searchTerm && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    "{searchTerm}" 검색 결과: {filteredItems.length}개
+                  </p>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto">
-                {items
-                  .filter((item) => !formData.items.some((selectedItem) => selectedItem.itemId === item.itemId))
-                  .map((item) => (
+                {filteredItems.length > 0 ? (
+                  filteredItems.map((item) => (
                     <div key={item.itemId} className="flex items-center justify-between border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors">
                       <div className="flex items-center gap-3">
                         <img src={item.img || item.imgUrl} alt={item.itemName} className="w-8 h-8 object-cover rounded-lg" />
@@ -183,7 +211,10 @@ export default function PackageModal({ showModal, editingPackage, formData, item
                         추가
                       </button>
                     </div>
-                  ))}
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-8 text-gray-500">{searchTerm ? `"${searchTerm}"에 대한 검색 결과가 없습니다.` : "추가할 수 있는 아이템이 없습니다."}</div>
+                )}
               </div>
             </div>
           </div>

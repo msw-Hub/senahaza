@@ -277,7 +277,7 @@ export default function ItemManagePage() {
   }, []);
 
   return (
-    <div className="w-full h-full flex flex-col justify-start items-start gap-4 overflow-y-scroll">
+    <div className="w-full h-full flex flex-col justify-start items-start gap-4">
       <h1 className="text-black font-bold text-xl">아이템 관리</h1>
 
       {/* 검색창 */}
@@ -321,7 +321,7 @@ export default function ItemManagePage() {
       </div>
 
       {/* 아이템 리스트 */}
-      <div className="w-full h-full bg-foreground border border-gray-300 rounded-sm px-4 py-2">
+      <div className="w-full h-full bg-foreground border border-gray-300 rounded-sm px-4 py-2 overflow-y-scroll">
         <div className={`grid ${canEdit ? "grid-cols-[0.3fr_0.5fr_1fr_0.5fr_0.8fr_1fr_0.2fr_0.2fr_0.2fr]" : "grid-cols-[0.3fr_0.5fr_1fr_0.5fr_0.8fr_1fr_0.2fr]"} overflow-x-auto`}>
           {/* 테이블 헤더 */}
           {itemTableHeaders.map((title, index) => (

@@ -58,7 +58,14 @@ apiClient.interceptors.response.use(
   (error) => {
     // 에러 응답 처리
     if (error.response) {
-      const { data } = error.response;
+      const { data, status } = error.response;
+
+      // HTTP 403 Forbidden 상태 코드 처리
+      if (status === 403) {
+        alert("접근 권한이 없습니다.");
+        console.error("Access denied (403):", error.response);
+        return Promise.reject(error);
+      }
 
       // 서버에서 온 에러 코드 확인 (code 또는 errorCode 둘 다 지원)
       const errorCode = data?.code || data?.errorCode;

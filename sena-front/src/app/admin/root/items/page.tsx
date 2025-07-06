@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import ItemModal from "./components/ItemModal";
 import { TableLoading } from "@/components/LoadingSpinner";
+import { useRoleStore } from "@/store/role";
 
 interface Item {
   itemId: number;
@@ -27,6 +28,10 @@ export default function ItemManagePage() {
   const [editingItem, setEditingItem] = useState<Item | null>(null);
 
   const router = useRouter();
+  const { role } = useRoleStore();
+
+  // 편집 권한 확인 (EDITOR 또는 ROOT만 가능)
+  const canEdit = role === "EDITOR" || role === "ROOT";
 
   // 폼 데이터
   const [formData, setFormData] = useState({
@@ -36,7 +41,7 @@ export default function ItemManagePage() {
     file: null as File | null,
   });
   // 아이템 리스트 테이블 헤더
-  const itemTableHeaders = ["ID", "이미지", "아이템명", "루비", "최종 수정자", "최종 수정일", "상태", "수정", "삭제"];
+  const itemTableHeaders = canEdit ? ["ID", "이미지", "아이템명", "루비", "최종 수정자", "최종 수정일", "상태", "수정", "삭제"] : ["ID", "이미지", "아이템명", "루비", "최종 수정자", "최종 수정일", "상태"];
 
   // 아이템 목록 조회
   const fetchItems = async () => {
@@ -307,20 +312,24 @@ export default function ItemManagePage() {
         {/* 액션 버튼 */}
         <div className="flex gap-2 items-center">
           <span className="text-gray-600 text-sm">총 {items.length}개의 아이템</span>
-          <button onClick={openAddModal} className="text-nowrap px-4 py-2 rounded-sm font-medium text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors">
-            아이템 추가
-          </button>
+          {canEdit && (
+            <button onClick={openAddModal} className="text-nowrap px-4 py-2 rounded-sm font-medium text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors">
+              아이템 추가
+            </button>
+          )}
         </div>
       </div>
 
       {/* 아이템 리스트 */}
       <div className="w-full h-full bg-foreground border border-gray-300 rounded-sm px-4 py-2">
-        <div className="grid grid-cols-[0.3fr_0.5fr_1fr_0.5fr_0.8fr_1fr_0.2fr_0.2fr_0.2fr] overflow-x-auto">
+        <div className={`grid ${canEdit ? "grid-cols-[0.3fr_0.5fr_1fr_0.5fr_0.8fr_1fr_0.2fr_0.2fr_0.2fr]" : "grid-cols-[0.3fr_0.5fr_1fr_0.5fr_0.8fr_1fr_0.2fr]"} overflow-x-auto`}>
           {/* 테이블 헤더 */}
           {itemTableHeaders.map((title, index) => (
             <span
               key={index}
-              className={"flex items-center font-bold text-gray-700 border-b border-gray-300 h-12 px-2 " + (index === 0 || index === 1 || index >= 6 ? "justify-center" : "justify-start") + (index > 1 && index < 6 ? " cursor-pointer hover:bg-gray-50" : "")}
+              className={
+                "flex items-center font-bold text-gray-700 border-b border-gray-300 h-12 px-2 " + (index === 0 || index === 1 || (canEdit ? index >= 6 : index >= 5) ? "justify-center" : "justify-start") + (index > 1 && (canEdit ? index < 6 : index < 5) ? " cursor-pointer hover:bg-gray-50" : "")
+              }
               onClick={() => {
                 if (index === 2) {
                   handleSortChange("itemName");
@@ -384,13 +393,17 @@ export default function ItemManagePage() {
                   <i className={item.status === "ACTIVE" ? "xi-toggle-on xi-2x" : "xi-toggle-off xi-2x"}></i>
                 </div>
                 {/* 수정 버튼 */}
-                <div onClick={() => openEditModal(item)} className="relative z-10 flex items-center justify-center text-blue-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-blue-50 px-2 transition-colors" title="수정">
-                  <i className="xi-pen text-lg"></i>
-                </div>
+                {canEdit && (
+                  <div onClick={() => openEditModal(item)} className="relative z-10 flex items-center justify-center text-blue-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-blue-50 px-2 transition-colors" title="수정">
+                    <i className="xi-pen text-lg"></i>
+                  </div>
+                )}
                 {/* 삭제 버튼 */}
-                <div onClick={() => handleDeleteItem(item.itemId, item.itemName)} className="relative z-10 flex items-center justify-center text-red-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-red-50 px-2 transition-colors" title="삭제">
-                  <i className="xi-trash text-lg"></i>
-                </div>
+                {canEdit && (
+                  <div onClick={() => handleDeleteItem(item.itemId, item.itemName)} className="relative z-10 flex items-center justify-center text-red-600 border-b border-gray-200 h-16 cursor-pointer hover:bg-red-50 px-2 transition-colors" title="삭제">
+                    <i className="xi-trash text-lg"></i>
+                  </div>
+                )}
               </div>
             ))
           )}

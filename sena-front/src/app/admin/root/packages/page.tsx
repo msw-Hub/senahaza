@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import PackageModal from "./components/PackageModal";
 import { TableLoading } from "@/components/LoadingSpinner";
+import { useRoleStore } from "@/store/role";
 
 interface Item {
   itemId: number;
@@ -53,6 +54,10 @@ export default function PackageManagePage() {
   const [editingPackage, setEditingPackage] = useState<Package | null>(null);
 
   const router = useRouter();
+  const { role } = useRoleStore();
+
+  // 편집 권한 확인 (EDITOR 또는 ROOT만 가능)
+  const canEdit = role === "EDITOR" || role === "ROOT";
 
   // 폼 데이터
   const [formData, setFormData] = useState<PackageFormData>({
@@ -63,7 +68,7 @@ export default function PackageManagePage() {
   });
 
   // 패키지 리스트 테이블 헤더
-  const packageTableHeaders = ["ID", "패키지명", "패키지 가격", "총 루비", "최종 수정자", "최종 수정일", "수정 메시지", "상태", "수정", "삭제"];
+  const packageTableHeaders = canEdit ? ["ID", "패키지명", "패키지 가격", "총 루비", "최종 수정자", "최종 수정일", "수정 메시지", "상태", "수정", "삭제"] : ["ID", "패키지명", "패키지 가격", "총 루비", "최종 수정자", "최종 수정일", "수정 메시지", "상태"];
 
   // 패키지 목록 조회
   const fetchPackages = async () => {
@@ -414,20 +419,22 @@ export default function PackageManagePage() {
         {/* 액션 버튼 */}
         <div className="flex gap-2 items-center">
           <span className="text-gray-600 text-sm">총 {packages.length}개의 패키지</span>
-          <button onClick={openAddModal} className="text-nowrap px-4 py-2 rounded-sm font-medium text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors">
-            패키지 추가
-          </button>
+          {canEdit && (
+            <button onClick={openAddModal} className="text-nowrap px-4 py-2 rounded-sm font-medium text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors">
+              패키지 추가
+            </button>
+          )}
         </div>
       </div>
 
       {/* 패키지 리스트 */}
       <div className="w-full h-full bg-foreground border border-gray-300 rounded-sm px-4 py-2 ">
-        <div className="grid grid-cols-[0.3fr_1.3fr_0.6fr_0.4fr_1fr_0.6fr_1fr_0.2fr_0.2fr_0.2fr] overflow-x-auto">
+        <div className={`grid ${canEdit ? "grid-cols-[0.3fr_1.3fr_0.6fr_0.4fr_1fr_0.6fr_1fr_0.2fr_0.2fr_0.2fr]" : "grid-cols-[0.3fr_1.3fr_0.6fr_0.4fr_1fr_0.6fr_1fr_0.2fr]"} overflow-x-auto`}>
           {/* 테이블 헤더 */}
           {packageTableHeaders.map((title, index) => (
             <span
               key={index}
-              className={"flex items-center font-bold text-gray-700 border-b border-gray-300 h-12 px-2 " + (index === 0 || index >= 7 ? "justify-center" : "justify-start") + (index > 0 && index < 7 ? " cursor-pointer hover:bg-gray-50" : "")}
+              className={"flex items-center font-bold text-gray-700 border-b border-gray-300 h-12 px-2 " + (index === 0 || (canEdit ? index >= 8 : index >= 7) ? "justify-center" : "justify-start") + (index > 0 && (canEdit ? index < 8 : index < 7) ? " cursor-pointer hover:bg-gray-50" : "")}
               onClick={() => {
                 if (index === 1) {
                   handleSortChange("packageName");

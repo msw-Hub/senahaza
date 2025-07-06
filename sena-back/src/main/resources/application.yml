@@ -27,7 +27,7 @@ spring:
 
 logging:
   level:
-    root: DEBUG
+    root: INFO
     org.example.analytics: DEBUG
     com.google.analytics: DEBUG
     com.google.api: DEBUG

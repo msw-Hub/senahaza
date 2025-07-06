@@ -2,13 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import axios from "axios";
+import apiClient from "@/lib/axios";
+import { useRoleStore } from "@/store/role";
 
 export default function Header() {
   const [adminName, setAdminName] = useState<string>("");
   const pathname = usePathname();
   const router = useRouter();
   const isAdminPage = pathname.startsWith("/admin/root");
+
+  // 관리자 페이지 여부를 판단하기 위한 변수
+  //zustand store 사용 useRoleStore
+  const { setRole } = useRoleStore();
 
   useEffect(() => {
     // 관리자 페이지에서만 관리자 이름을 가져옴
@@ -19,31 +24,38 @@ export default function Header() {
 
   const fetchAdminName = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/viewer/admin/name`, {
-        withCredentials: true,
-      });
-      setAdminName(response.data);
+      const response = await apiClient.get("/viewer/admin/info");
+      setAdminName(response.data.name || ""); // 이름이 없을 경우 빈 문자열로 설정
+      setRole(response.data.role || "VIEWER"); // role 정보도 저장
     } catch (error) {
       console.error("관리자 이름 조회 실패:", error);
       // 에러 시 이름을 빈 문자열로 유지
       setAdminName("");
+      setRole("VIEWER"); // 에러 시 기본 role로 설정
     }
   };
 
   const handleLogout = async () => {
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/viewer/logout`,
-        {},
-        {
-          withCredentials: true,
-        }
-      );
+      // 서버에 로그아웃 요청 (서버에서 httpOnly 쿠키 삭제)
+      await apiClient.post("/viewer/logout", {});
+      
+      // 클라이언트 측 상태 초기화
+      setAdminName("");
+      setRole("VIEWER");
+      
+      // 브라우저의 일반 쿠키나 localStorage 정리 (필요한 경우)
+      // localStorage.clear(); // 필요한 경우 주석 해제
+      // sessionStorage.clear(); // 필요한 경우 주석 해제
+      
       // 로그아웃 성공 시 로그인 페이지로 리다이렉트
       router.push("/admin/login");
     } catch (error) {
       console.error("로그아웃 실패:", error);
-      alert("로그아웃 중 오류가 발생했습니다.");
+      // 에러가 발생해도 클라이언트 상태는 초기화
+      setAdminName("");
+      setRole("VIEWER");
+      router.push("/admin/login");
     }
   };
 

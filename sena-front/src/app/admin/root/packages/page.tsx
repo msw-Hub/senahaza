@@ -1,9 +1,10 @@
 "use client";
 
-import axios from "axios";
+import apiClient from "@/lib/axios";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import PackageModal from "./components/PackageModal";
+import { TableLoading } from "@/components/LoadingSpinner";
 
 interface Item {
   itemId: number;
@@ -68,12 +69,12 @@ export default function PackageManagePage() {
   const fetchPackages = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/viewer/packages`, { withCredentials: true });
+      const response = await apiClient.get("/viewer/packages");
       setPackages(response.data.packages);
       console.log("패키지 목록:", response.data.packages);
     } catch (error) {
       console.error("패키지 목록 조회 중 오류 발생", error);
-      alert("패키지 목록 조회 중 오류가 발생했습니다.");
+      // 에러는 인터셉터에서 처리됨
     } finally {
       setIsLoading(false);
     }
@@ -82,12 +83,12 @@ export default function PackageManagePage() {
   // 아이템 목록 조회
   const fetchItems = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/viewer/items`, { withCredentials: true });
+      const response = await apiClient.get("/viewer/items");
       setItems(response.data);
       console.log("아이템 목록:", response.data);
     } catch (error) {
       console.error("아이템 목록 조회 중 오류 발생", error);
-      alert("아이템 목록 조회 중 오류가 발생했습니다.");
+      // 에러는 인터셉터에서 처리됨
     }
   };
 
@@ -119,8 +120,7 @@ export default function PackageManagePage() {
         items: formData.items,
       };
 
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/editor/packages`, requestData, {
-        withCredentials: true,
+      const response = await apiClient.post("/editor/packages", requestData, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -177,8 +177,7 @@ export default function PackageManagePage() {
         ],
       };
 
-      const response = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/editor/packages/${editingPackage.packageId}`, requestData, {
-        withCredentials: true,
+      const response = await apiClient.patch(`/editor/packages/${editingPackage.packageId}`, requestData, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -211,11 +210,10 @@ export default function PackageManagePage() {
     }
 
     try {
-      const response = await axios.patch(
-        `${process.env.NEXT_PUBLIC_API_URL}/editor/packages/${packageId}/status`,
+      const response = await apiClient.patch(
+        `/editor/packages/${packageId}/status`,
         { status: newStatus },
         {
-          withCredentials: true,
           headers: {
             "Content-Type": "application/json",
           },
@@ -241,7 +239,7 @@ export default function PackageManagePage() {
     }
 
     try {
-      const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/editor/packages/${packageId}`, { withCredentials: true });
+      const response = await apiClient.delete(`/editor/packages/${packageId}`);
       if (response.status === 200) {
         alert(`"${packageName}" 패키지가 삭제되었습니다.`);
         fetchPackages();
@@ -456,8 +454,8 @@ export default function PackageManagePage() {
 
           {/* 로딩 상태 */}
           {isLoading ? (
-            <div className="col-span-12 flex items-center justify-center h-20">
-              <span className="text-gray-500">로딩 중...</span>
+            <div className="col-span-12">
+              <TableLoading rows={5} />
             </div>
           ) : filteredPackages.length === 0 ? (
             <div className="col-span-12 flex items-center justify-center h-20">

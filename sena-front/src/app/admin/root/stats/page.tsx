@@ -58,6 +58,37 @@ export default function StatsPage() {
     start: "2025-06-01",
     end: "2025-06-09",
   });
+  const [dateValidationError, setDateValidationError] = useState("");
+
+  // 날짜 유효성 검증
+  const validateDates = (startDate: string, endDate: string) => {
+    if (!startDate || !endDate) {
+      setDateValidationError("");
+      return true;
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (start > end) {
+      setDateValidationError("시작일이 종료일보다 뒤에 있습니다. 날짜를 다시 확인해주세요.");
+      return false;
+    }
+
+    setDateValidationError("");
+    return true;
+  };
+
+  // 날짜 변경 핸들러
+  const handleDateChange = (field: "start" | "end", value: string) => {
+    const newDateRange = { ...dateRange, [field]: value };
+    setDateRange(newDateRange);
+
+    // 두 날짜가 모두 있으면 유효성 검증
+    if (newDateRange.start && newDateRange.end) {
+      validateDates(newDateRange.start, newDateRange.end);
+    }
+  };
 
   // 애널리틱스 데이터 조회
   const fetchAnalyticsData = async () => {
@@ -182,16 +213,25 @@ export default function StatsPage() {
       <h1 className="text-black font-bold text-xl">통계 관리</h1>
 
       {/* 날짜 범위 선택 */}
-      <div className="flex gap-4 items-center w-full">
-        <div className="flex gap-2 items-center">
-          <label className="text-gray-700 font-medium">기간:</label>
-          <input type="date" value={dateRange.start} onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })} className="border border-gray-300 rounded-sm px-3 py-2" />
-          <span className="text-gray-500">~</span>
-          <input type="date" value={dateRange.end} onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })} className="border border-gray-300 rounded-sm px-3 py-2" />
-          <button onClick={fetchAnalyticsData} disabled={isLoading} className="px-4 py-2 bg-blue-500 text-white rounded-sm hover:bg-blue-600 disabled:opacity-50">
-            {isLoading ? "조회 중..." : "조회"}
-          </button>
+      <div className="flex flex-col gap-2 w-full">
+        <div className="flex gap-4 items-center">
+          <div className="flex gap-2 items-center">
+            <label className="text-gray-700 font-medium">기간:</label>
+            <input type="date" value={dateRange.start} onChange={(e) => handleDateChange("start", e.target.value)} className="border border-gray-300 rounded-sm px-3 py-2" />
+            <span className="text-gray-500">~</span>
+            <input type="date" value={dateRange.end} onChange={(e) => handleDateChange("end", e.target.value)} className="border border-gray-300 rounded-sm px-3 py-2" />
+            <button onClick={fetchAnalyticsData} disabled={isLoading} className="px-4 py-2 bg-blue-500 text-white rounded-sm hover:bg-blue-600 disabled:opacity-50">
+              {isLoading ? "조회 중..." : "조회"}
+            </button>
+          </div>
         </div>
+        {/* 날짜 유효성 검증 오류 메시지 */}
+        {dateValidationError && (
+          <div className="text-red-500 text-sm bg-red-50 border border-red-200 rounded-sm px-3 py-2">
+            <i className="xi-error-o mr-1"></i>
+            {dateValidationError}
+          </div>
+        )}
       </div>
 
       {isLoading ? (

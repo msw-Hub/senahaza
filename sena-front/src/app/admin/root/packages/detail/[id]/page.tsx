@@ -217,7 +217,7 @@ export default function PackageDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="w-full h-full bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">패키지 정보를 불러오는 중...</p>
@@ -228,7 +228,7 @@ export default function PackageDetailPage() {
 
   if (error || !packageDetail) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="w-full h-full bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="bg-white rounded-lg shadow-lg p-8 max-w-md">
             <div className="text-red-500 text-6xl mb-4">⚠️</div>

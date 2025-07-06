@@ -1,8 +1,9 @@
 "use client";
 
-import axios from "axios";
+import apiClient from "@/lib/axios";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import { TableLoading } from "@/components/LoadingSpinner";
 
 interface Admin {
   adminId: number;
@@ -24,6 +25,11 @@ interface AdminListResponse {
   currentPage: number;
 }
 
+// 페이지별 캐시 인터페이스
+interface PageCache {
+  [page: number]: Admin[];
+}
+
 export default function UsersPage() {
   const [adminData, setAdminData] = useState<AdminListResponse>({
     adminList: [],
@@ -37,22 +43,70 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // 페이지별 캐시 및 로드된 페이지 추적
+  const [pageCache, setPageCache] = useState<PageCache>({});
+  const [loadedPages, setLoadedPages] = useState<Set<number>>(new Set());
+  const [maxLoadedPage, setMaxLoadedPage] = useState(0);
+
   const router = useRouter();
   // 관리자 목록 테이블 헤더
   const adminListHeaders = ["ID", "이름", "권한", "부서", "이메일", "전화번호", "최근 로그인", "권한 변경", "삭제"];
 
-  // 관리자 목록을 조회하는 API 호출
-  const fetchAdminList = async (page: number = 1, sort: string = "") => {
+  // 관리자 목록을 조회하는 API 호출 (개선된 버전)
+  const fetchAdminList = async (page: number = 1, sort: string = "", mergeWithPrevious: boolean = false) => {
+    // 이미 로드된 페이지인지 확인
+    if (loadedPages.has(page) && !sort) {
+      console.log(`Page ${page} already loaded, using cache`);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
       if (page) params.append("page", page.toString());
       if (sort) params.append("sortBy", sort);
 
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/root/admins?${params.toString()}`, { withCredentials: true });
+      const response = await apiClient.get(`/root/admins?${params.toString()}`);
+      const newData = response.data;
 
-      setAdminData(response.data);
-      console.log("관리자 목록:", response.data);
+      if (mergeWithPrevious && pageCache[page - 1]) {
+        // 이전 페이지들과 새 페이지를 합치기
+        const allAdmins: Admin[] = [];
+
+        // 1페이지부터 현재 페이지까지 순서대로 합치기
+        for (let i = 1; i <= page; i++) {
+          if (i === page) {
+            allAdmins.push(...newData.adminList);
+            // 새 페이지 캐시에 저장
+            setPageCache((prev) => ({ ...prev, [page]: newData.adminList }));
+          } else if (pageCache[i]) {
+            allAdmins.push(...pageCache[i]);
+          }
+        }
+
+        setAdminData({
+          ...newData,
+          adminList: allAdmins,
+        });
+      } else {
+        // 첫 로드이거나 정렬 변경시
+        setAdminData(newData);
+        setPageCache({ [page]: newData.adminList });
+
+        // 정렬이 변경된 경우 캐시 초기화
+        if (sort) {
+          setLoadedPages(new Set([page]));
+          setMaxLoadedPage(page);
+        }
+      }
+
+      // 로드된 페이지 추적 업데이트
+      if (!sort) {
+        setLoadedPages((prev) => new Set([...prev, page]));
+        setMaxLoadedPage((prev) => Math.max(prev, page));
+      }
+
+      console.log("관리자 목록:", newData);
     } catch (err) {
       // 권한이 없으므로 에러 발생시 packages 페이지로 리다이렉트
       console.error("관리자 목록 조회 실패:", err);
@@ -62,14 +116,33 @@ export default function UsersPage() {
     }
   };
 
+  // 다음 페이지 로드 함수
+  const loadNextPage = () => {
+    const nextPage = maxLoadedPage + 1;
+    if (nextPage <= adminData.totalPages) {
+      setCurrentPage(nextPage);
+      fetchAdminList(nextPage, "", true); // mergeWithPrevious = true
+    }
+  };
+
+  // 캐시 초기화 함수 (정렬이나 검색 시 사용)
+  const resetCache = () => {
+    setPageCache({});
+    setLoadedPages(new Set());
+    setMaxLoadedPage(0);
+  };
+
   // 관리자 권한 변경
   const handleRoleChange = async (adminId: number, newRole: "VIEWER" | "EDITOR" | "ROOT") => {
     try {
-      const response = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/root/admins/${adminId}/role`, { role: newRole }, { withCredentials: true });
+      const response = await apiClient.patch(`/root/admins/${adminId}/role`, { role: newRole });
 
       if (response.status === 200) {
         alert(`관리자 권한이 ${newRole}로 변경되었습니다.`);
-        fetchAdminList(currentPage, sortBy);
+        // 캐시를 초기화하고 첫 페이지부터 다시 로드
+        resetCache();
+        setCurrentPage(1);
+        fetchAdminList(1, sortBy);
       } else {
         alert("관리자 권한 변경에 실패했습니다.");
       }
@@ -86,10 +159,13 @@ export default function UsersPage() {
     }
 
     try {
-      const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/root/admins/${adminId}`, { withCredentials: true });
+      const response = await apiClient.delete(`/root/admins/${adminId}`);
       if (response.status === 200) {
         alert("관리자가 삭제되었습니다.");
-        fetchAdminList(currentPage, sortBy);
+        // 캐시를 초기화하고 첫 페이지부터 다시 로드
+        resetCache();
+        setCurrentPage(1);
+        fetchAdminList(1, sortBy);
       } else {
         alert("관리자 삭제에 실패했습니다.");
       }
@@ -148,6 +224,10 @@ export default function UsersPage() {
       setSortBy(newSortBy);
       setSortOrder("asc");
     }
+
+    // 정렬 변경시 캐시 초기화하고 첫 페이지부터 다시 로드
+    resetCache();
+    setCurrentPage(1);
   };
 
   // 권한 스타일 반환
@@ -168,19 +248,27 @@ export default function UsersPage() {
   const getRoleText = (role: string) => {
     switch (role) {
       case "ROOT":
-        return "최고관리자";
+        return "ROOT";
       case "EDITOR":
-        return "편집자";
+        return "EDITOR";
       case "VIEWER":
-        return "뷰어";
+        return "VIEWER";
       default:
         return role;
     }
   };
 
   useEffect(() => {
-    fetchAdminList(currentPage, sortBy);
+    // 페이지 변경 시에만 실행 (정렬은 handleSortChange에서 별도 처리)
+    if (currentPage === 1 || !loadedPages.has(currentPage)) {
+      fetchAdminList(currentPage, sortBy);
+    }
   }, [currentPage]);
+
+  useEffect(() => {
+    // 정렬 변경 시 실행
+    fetchAdminList(1, sortBy);
+  }, [sortBy, sortOrder]);
 
   return (
     <div className="w-full h-full flex flex-col justify-start items-start gap-4">
@@ -204,6 +292,10 @@ export default function UsersPage() {
               const [newSortBy, newSortOrder] = e.target.value.split("_");
               setSortBy(newSortBy);
               setSortOrder(newSortOrder as "asc" | "desc");
+
+              // 정렬 변경시 캐시 초기화하고 첫 페이지부터 다시 로드
+              resetCache();
+              setCurrentPage(1);
             }}>
             <option value="createdAt_desc">최신 가입순</option>
             <option value="createdAt_asc">오래된 가입순</option>
@@ -257,8 +349,8 @@ export default function UsersPage() {
 
           {/* 로딩 상태 */}
           {isLoading ? (
-            <div className="col-span-9 flex items-center justify-center h-20">
-              <span className="text-gray-500">로딩 중...</span>
+            <div className="col-span-9">
+              <TableLoading rows={5} />
             </div>
           ) : filteredAdmins.length === 0 ? (
             <div className="col-span-9 flex items-center justify-center h-20">
@@ -293,9 +385,9 @@ export default function UsersPage() {
                     className="text-sm border border-gray-300 rounded px-2 py-1"
                     disabled={admin.role === "ROOT"} // ROOT 권한은 변경 불가
                   >
-                    <option value="VIEWER">뷰어</option>
-                    <option value="EDITOR">편집자</option>
-                    <option value="ROOT">최고관리자</option>
+                    <option value="VIEWER">VIEWER</option>
+                    <option value="EDITOR">EDITOR</option>
+                    <option value="ROOT">ROOT</option>
                   </select>
                 </div>
                 {/* 삭제 버튼 */}
@@ -313,25 +405,58 @@ export default function UsersPage() {
 
       {/* 하단 정보 */}
       <div className="flex justify-between items-center w-full text-gray-600 text-sm">
-        <span>
-          총 {adminData.count}명의 관리자
-          {searchTerm && ` (검색 결과: ${filteredAdmins.length}명)`}
-        </span>
+        <div className="flex flex-col gap-1">
+          <span>
+            총 {adminData.count}명의 관리자
+            {searchTerm && ` (검색 결과: ${filteredAdmins.length}명)`}
+          </span>
+          {loadedPages.size > 1 && (
+            <span className="text-xs text-gray-500">
+              로드된 페이지:{" "}
+              {Array.from(loadedPages)
+                .sort((a, b) => a - b)
+                .join(", ")}{" "}
+              ({adminData.adminList.length}명 표시 중)
+            </span>
+          )}
+        </div>
         {adminData.totalPages > 1 && (
           <div className="flex gap-1">
-            <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="px-2 py-1 border rounded text-sm disabled:opacity-50">
+            <button
+              onClick={() => {
+                resetCache();
+                setCurrentPage(1);
+                fetchAdminList(1, sortBy);
+              }}
+              disabled={currentPage === 1}
+              className="px-2 py-1 border rounded text-sm disabled:opacity-50">
               처음
             </button>
-            <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} className="px-2 py-1 border rounded text-sm disabled:opacity-50">
+            <button
+              onClick={() => {
+                const prevPage = currentPage - 1;
+                setCurrentPage(prevPage);
+                if (!loadedPages.has(prevPage)) {
+                  fetchAdminList(prevPage, sortBy);
+                }
+              }}
+              disabled={currentPage === 1}
+              className="px-2 py-1 border rounded text-sm disabled:opacity-50">
               이전
             </button>
             <span className="px-2 py-1 text-sm">
               {currentPage} / {adminData.totalPages}
             </span>
-            <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === adminData.totalPages} className="px-2 py-1 border rounded text-sm disabled:opacity-50">
+            <button onClick={loadNextPage} disabled={maxLoadedPage >= adminData.totalPages} className="px-2 py-1 border rounded text-sm disabled:opacity-50" title={maxLoadedPage >= adminData.totalPages ? "마지막 페이지입니다" : "다음 페이지 로드"}>
               다음
             </button>
-            <button onClick={() => setCurrentPage(adminData.totalPages)} disabled={currentPage === adminData.totalPages} className="px-2 py-1 border rounded text-sm disabled:opacity-50">
+            <button
+              onClick={() => {
+                setCurrentPage(adminData.totalPages);
+                fetchAdminList(adminData.totalPages, sortBy);
+              }}
+              disabled={currentPage === adminData.totalPages}
+              className="px-2 py-1 border rounded text-sm disabled:opacity-50">
               마지막
             </button>
           </div>

@@ -252,7 +252,7 @@ export default function IpLogPage() {
 
         {/* 날짜 유효성 검증 오류 메시지 */}
         {dateValidationError && (
-          <div className="mt-3">
+          <div className="mt-3 col-span-4">
             <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2">{dateValidationError}</div>
           </div>
         )}

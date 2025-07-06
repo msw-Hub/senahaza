@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from "chart.js";
 import { Bar, Doughnut } from "react-chartjs-2";
 import { GoogleMap, Marker, InfoWindow } from "@react-google-maps/api";
+import { PageLoading } from "@/components/LoadingSpinner";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
@@ -390,15 +391,7 @@ export default function LiveStatsPage() {
   if (loading && !liveData) {
     return (
       <div className="w-full h-full flex flex-col justify-start items-start gap-4 overflow-y-scroll">
-        <div className="animate-pulse w-full">
-          <div className="h-8 bg-gray-200 rounded mb-4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-          <div className="h-64 bg-gray-200 rounded"></div>
-        </div>
+        <PageLoading message="실시간 통계 데이터를 불러오는 중..." />
       </div>
     );
   }

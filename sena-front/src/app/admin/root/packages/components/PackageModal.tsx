@@ -190,7 +190,7 @@ export default function PackageModal({ showModal, editingPackage, formData, item
                 </div>
                 {searchTerm && (
                   <p className="text-sm text-gray-500 mt-2">
-                    "{searchTerm}" 검색 결과: {filteredItems.length}개
+                    &quot;{searchTerm}&quot; 검색 결과: {filteredItems.length}개
                   </p>
                 )}
               </div>

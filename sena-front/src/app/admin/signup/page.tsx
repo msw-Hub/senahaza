@@ -25,18 +25,84 @@ export default function SignupPage() {
     tel: "",
   });
 
+  // 비밀번호 유효성 검사 상태
+  const [passwordValidation, setPasswordValidation] = useState({
+    hasLetter: false,
+    hasNumber: false,
+    hasSpecial: false,
+    hasValidLength: false,
+  });
+
+  // 비밀번호 확인 일치 여부
+  const [passwordMatch, setPasswordMatch] = useState<boolean | null>(null);
+
+  // 비밀번호 표시/숨김 상태
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+
   // 회원가입 폼 변경 핸들러
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
-    // tel 필드일 경우 -을 자동으로 추가
-    if (event.target.name === "tel") {
-      const value = event.target.value.replace(/[^0-9]/g, ""); // 숫자만 허용
-      const formattedValue = value.length < 4 ? value : value.length < 8 ? value.replace(/(\d{3})(\d{1,4})/, "$1-$2") : value.replace(/(\d{3})(\d{3,4})(\d{1,4})/, "$1-$2-$3"); // 4글자부터 변환
+    const { name, value } = event.target;
+
+    // tel 필드일 경우 -을 자동으로 추가 (00-000-0000 또는 000-0000-0000 형식, 최대 11자리)
+    if (name === "tel") {
+      const numericValue = value.replace(/[^0-9]/g, ""); // 숫자만 허용
+
+      // 최대 11자리까지만 허용
+      const limitedValue = numericValue.slice(0, 11);
+
+      // 자동 포맷팅: 000-0000-0000 또는 00-000-0000 형식
+      let formattedValue = limitedValue;
+
+      if (limitedValue.length >= 3) {
+        // 첫 3자리 입력
+        formattedValue = limitedValue.slice(0, 3);
+
+        if (limitedValue.length >= 4) {
+          formattedValue += "-" + limitedValue.slice(3, 7);
+
+          if (limitedValue.length >= 8) {
+            formattedValue += "-" + limitedValue.slice(7, 11);
+          }
+        }
+      }
+
       setSignupForm((prev) => ({
         ...prev,
         tel: formattedValue,
       }));
+    } else if (name === "password") {
+      // 비밀번호 유효성 검사
+      const hasLetter = /[A-Za-z]/.test(value);
+      const hasNumber = /\d/.test(value);
+      const hasSpecial = /[!@#$%^&*]/.test(value);
+      const hasValidLength = value.length >= 8 && value.length <= 20;
+
+      setPasswordValidation({
+        hasLetter,
+        hasNumber,
+        hasSpecial,
+        hasValidLength,
+      });
+
+      setSignupForm((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+
+      // 비밀번호 확인과 일치 여부 확인
+      if (signupForm.passwordConfirm) {
+        setPasswordMatch(value === signupForm.passwordConfirm);
+      }
+    } else if (name === "passwordConfirm") {
+      setSignupForm((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+
+      // 비밀번호와 일치 여부 확인
+      setPasswordMatch(signupForm.password === value);
     } else {
-      const { name, value } = event.target;
       setSignupForm((prev) => ({
         ...prev,
         [name]: value,
@@ -66,12 +132,6 @@ export default function SignupPage() {
       return;
     }
 
-    // 비밀번호 확인 로직 4자리 이상
-    if (signupForm.password.length < 8) {
-      alert("비밀번호는 최소 8자 이상이어야 합니다.");
-      return;
-    }
-
     // 비밀번호는 영문, 숫자, 특수문자를 포함한 8~20자리
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,20}$/;
     if (!passwordRegex.test(signupForm.password)) {
@@ -85,14 +145,13 @@ export default function SignupPage() {
       return;
     }
 
-    // 전화번호 확인 로직
-    const telRegex = /^\d{2,3}-\d{3,4}-\d{4}$/; // 000-0000-0000 형식
+    // 전화번호 확인 로직 (00-000-0000 또는 000-0000-0000 형식)
+    const telRegex = /^(\d{2}-\d{3}-\d{4}|\d{3}-\d{4}-\d{4})$/;
     if (!telRegex.test(signupForm.tel)) {
-      alert("유효한 전화번호를 입력해주세요.");
+      alert("유효한 전화번호를 입력해주세요. (00-000-0000 또는 000-0000-0000 형식)");
       return;
     }
 
-    console.log(signupForm);
     const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/signup`, {
       name: signupForm.name,
       dept: signupForm.dept,
@@ -102,7 +161,7 @@ export default function SignupPage() {
     });
     if (response.status === 200) {
       // 회원가입 성공 처리
-      alert(response.data.message || "회원가입이 완료되었습니다.");
+      alert(response.data.message || "관리자 계정 생성 요청이 접수되었습니다. 승인을 기다려주세요.");
       router.push("/admin/login");
     } else {
       // 회원가입 실패 처리
@@ -132,7 +191,7 @@ export default function SignupPage() {
                   value={signupForm.name}
                   onChange={handleChange}
                   className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  placeholder="홍길동"
+                  placeholder="이름"
                   required
                 />
               </div>
@@ -148,14 +207,14 @@ export default function SignupPage() {
                   value={signupForm.dept}
                   onChange={handleChange}
                   className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  placeholder="개발팀"
+                  placeholder="부서"
                   required
                 />
               </div>
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  이메일 주소
+                  이메일
                 </label>
                 <input
                   type="email"
@@ -164,7 +223,7 @@ export default function SignupPage() {
                   value={signupForm.email}
                   onChange={handleChange}
                   className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  placeholder="admin@example.com"
+                  placeholder="이메일"
                   required
                 />
               </div>
@@ -180,7 +239,7 @@ export default function SignupPage() {
                   value={signupForm.tel}
                   onChange={handleChange}
                   className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  placeholder="010-1234-5678"
+                  placeholder="전화번호"
                   required
                 />
               </div>
@@ -189,32 +248,88 @@ export default function SignupPage() {
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                   비밀번호
                 </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={signupForm.password}
-                  onChange={handleChange}
-                  className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  placeholder="영문, 숫자, 특수문자 포함 8-20자"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    name="password"
+                    value={signupForm.password}
+                    onChange={handleChange}
+                    className="appearance-none relative block w-full px-4 py-3 pr-12 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    placeholder="비밀번호"
+                    required
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
+                    {showPassword ? (
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                      </svg>
+                    ) : (
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                {signupForm.password && (
+                  <div className="mt-2 space-y-1">
+                    <div className={`text-xs flex items-center ${passwordValidation.hasValidLength ? "text-green-600" : "text-red-500"}`}>
+                      <span className="mr-1">{passwordValidation.hasValidLength ? "✓" : "✗"}</span>
+                      8-20자리
+                    </div>
+                    <div className={`text-xs flex items-center ${passwordValidation.hasLetter ? "text-green-600" : "text-red-500"}`}>
+                      <span className="mr-1">{passwordValidation.hasLetter ? "✓" : "✗"}</span>
+                      영문 포함
+                    </div>
+                    <div className={`text-xs flex items-center ${passwordValidation.hasNumber ? "text-green-600" : "text-red-500"}`}>
+                      <span className="mr-1">{passwordValidation.hasNumber ? "✓" : "✗"}</span>
+                      숫자 포함
+                    </div>
+                    <div className={`text-xs flex items-center ${passwordValidation.hasSpecial ? "text-green-600" : "text-red-500"}`}>
+                      <span className="mr-1">{passwordValidation.hasSpecial ? "✓" : "✗"}</span>
+                      특수문자 포함 (!@#$%^&*)
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
                 <label htmlFor="passwordConfirm" className="block text-sm font-medium text-gray-700 mb-2">
                   비밀번호 확인
                 </label>
-                <input
-                  type="password"
-                  id="passwordConfirm"
-                  name="passwordConfirm"
-                  value={signupForm.passwordConfirm}
-                  onChange={handleChange}
-                  className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  placeholder="비밀번호를 다시 입력하세요"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPasswordConfirm ? "text" : "password"}
+                    id="passwordConfirm"
+                    name="passwordConfirm"
+                    value={signupForm.passwordConfirm}
+                    onChange={handleChange}
+                    className="appearance-none relative block w-full px-4 py-3 pr-12 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    placeholder="비밀번호 확인"
+                    required
+                  />
+                  <button type="button" onClick={() => setShowPasswordConfirm(!showPasswordConfirm)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
+                    {showPasswordConfirm ? (
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                      </svg>
+                    ) : (
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                {signupForm.passwordConfirm && passwordMatch !== null && (
+                  <div className="mt-2">
+                    <div className={`text-xs flex items-center ${passwordMatch ? "text-green-600" : "text-red-500"}`}>
+                      <span className="mr-1">{passwordMatch ? "✓" : "✗"}</span>
+                      {passwordMatch ? "비밀번호가 일치합니다" : "비밀번호가 일치하지 않습니다"}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

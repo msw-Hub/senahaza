@@ -1,6 +1,6 @@
 "use client";
 
-import axios from "axios";
+import apiClient from "@/lib/axios";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import ItemModal from "./components/ItemModal";
@@ -42,7 +42,7 @@ export default function ItemManagePage() {
   const fetchItems = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/viewer/items`, { withCredentials: true });
+      const response = await apiClient.get("/viewer/items");
       setItems(response.data);
       console.log("아이템 목록:", response.data);
     } catch (error) {
@@ -80,8 +80,7 @@ export default function ItemManagePage() {
       formDataToSend.append("message", formData.message);
       formDataToSend.append("file", formData.file);
 
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/editor/items`, formDataToSend, {
-        withCredentials: true,
+      const response = await apiClient.post("/editor/items", formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -129,8 +128,7 @@ export default function ItemManagePage() {
       if (formData.file) {
         formDataToSend.append("file", formData.file);
       }
-      const response = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/editor/items/${editingItem.itemId}`, formDataToSend, {
-        withCredentials: true,
+      const response = await apiClient.patch(`/editor/items/${editingItem.itemId}`, formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -163,7 +161,7 @@ export default function ItemManagePage() {
     }
 
     try {
-      const response = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/editor/items/${itemId}/status`, { status: newStatus }, { withCredentials: true });
+      const response = await apiClient.patch(`/editor/items/${itemId}/status`, { status: newStatus });
 
       if (response.status === 200) {
         alert(`아이템이 ${actionText}되었습니다.`);
@@ -184,7 +182,7 @@ export default function ItemManagePage() {
     }
 
     try {
-      const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/editor/items/${itemId}`, { withCredentials: true });
+      const response = await apiClient.delete(`/editor/items/${itemId}`);
       if (response.status === 200) {
         alert("아이템이 삭제되었습니다.");
         fetchItems();

@@ -41,7 +41,7 @@ export default function LoginPage() {
         // 프론트엔드에서는 httpOnly 쿠키를 직접 저장/읽을 수 없음
         // 만약 토큰이 response.data.token으로 온다면, httpOnly가 아니라면 localStorage에 저장 가능
         // 하지만 httpOnly라면 아래처럼 안내만 가능
-        console.log("로그인 성공", response.data);
+        // console.log("로그인 성공", response.data);
 
         // 예시: httpOnly가 아닌 경우(로컬스토리지 저장)
         // localStorage.setItem("token", response.data.token);
@@ -49,8 +49,7 @@ export default function LoginPage() {
         // 로그인 후 페이지 이동
         router.push("/admin/root/items"); // 관리자 아이템 페이지로 이동
       } else {
-        console.error("로그인 실패", response.data);
-        alert("로그인에 실패했습니다.");
+        alert(response.data.error || "로그인에 실패했습니다.");
       }
     } catch (error: unknown) {
       console.error("로그인 에러", error);

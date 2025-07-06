@@ -102,6 +102,8 @@ public class EditorService {
             // Firebase Storage 경로 설정
             String blobString = "items/" + newFileName;
 
+            log.info("StorageClient 초기화 확인: {}", StorageClient.getInstance().bucket().getName());
+
             // 파일 업로드
             StorageClient.getInstance()
                     .bucket()

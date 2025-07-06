@@ -45,7 +45,7 @@ public class FirebaseConfig {
         try (InputStream serviceAccount = new ByteArrayInputStream(firebaseJson.getBytes(StandardCharsets.UTF_8))) {
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .setStorageBucket("senahaza-a5333.appspot.com") // 실제 버킷명으로 변경
+                    .setStorageBucket("senahaza-a5333.firebasestorage.app") // 실제 버킷명으로 변경
                     .build();
             FirebaseApp.initializeApp(options);
             log.info("Firebase initialized successfully from SSM parameter");

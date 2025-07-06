@@ -289,6 +289,7 @@ public class ViewerService {
         response.getWriter().write("{\"message\":\"로그아웃 성공\"}");
     }
 
+    
     // 관리자 이름과 권한 조회 - 이메일로
     public Map<String, String> getAdminInfo(String email) {
         AdminEntity admin = adminRepository.findByEmail(email)

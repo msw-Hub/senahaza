@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from "chart.js";
 import { Bar, Doughnut } from "react-chartjs-2";
 import { GoogleMap, Marker, InfoWindow } from "@react-google-maps/api";
-import { PageLoading, ChartLoading } from "@/components/LoadingSpinner";
+import { PageLoading } from "@/components/LoadingSpinner";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 

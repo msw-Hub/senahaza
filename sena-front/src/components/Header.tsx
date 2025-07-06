@@ -13,7 +13,7 @@ export default function Header() {
 
   // 관리자 페이지 여부를 판단하기 위한 변수
   //zustand store 사용 useRoleStore
-  const { role, setRole } = useRoleStore();
+  const { setRole } = useRoleStore();
 
   useEffect(() => {
     // 관리자 페이지에서만 관리자 이름을 가져옴

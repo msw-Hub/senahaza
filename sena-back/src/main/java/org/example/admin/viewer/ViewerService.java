@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -267,7 +268,7 @@ public class ViewerService {
     }
 
     // 로그아웃 처리
-    public void logout(String email, HttpServletRequest request, HttpServletResponse response) {
+    public void logout(String email,HttpServletResponse response) throws IOException{
         // 이메일로 해당 관리자 계정 조회
         AdminEntity admin = adminRepository.findByEmail(email)
                 .orElseThrow(() -> new AdminNotFoundException("해당 이메일의 관리자가 존재하지 않습니다."));
@@ -275,13 +276,19 @@ public class ViewerService {
         tokenBlacklistService.blacklistAllActiveTokens(email);
 
         // 쿠키 삭제 처리
-        Cookie deleteCookie = new Cookie("token", null);
-        deleteCookie.setHttpOnly(true);
-        deleteCookie.setSecure(true);
-        deleteCookie.setPath("/");
-        deleteCookie.setMaxAge(0);
-        response.addCookie(deleteCookie);
+        String cookieDomain = ".senahaza.store";
+        String cookieHeader = String.format(
+                "token=; Max-Age=0; Path=/; Domain=%s; HttpOnly; Secure; SameSite=None",
+                cookieDomain
+        );
+
+        response.addHeader("Set-Cookie", cookieHeader);
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"message\":\"로그아웃 성공\"}");
     }
+
     // 관리자 이름과 권한 조회 - 이메일로
     public Map<String, String> getAdminInfo(String email) {
         AdminEntity admin = adminRepository.findByEmail(email)

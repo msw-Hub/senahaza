@@ -36,6 +36,10 @@ public class FirebaseConfig {
         String firebaseJson = getParameterFromSSM(PARAMETER_NAME);
         if (firebaseJson == null || firebaseJson.isEmpty()) {
             throw new IllegalStateException("Firebase service account JSON not found in SSM parameter store");
+        } else {
+            // 앞부분만 일부 출력 (예: 100자 이내)
+            log.info("Firebase JSON from SSM parameter (preview): {}",
+                    firebaseJson.length() > 100 ? firebaseJson.substring(0, 100) + "..." : firebaseJson);
         }
 
         try (InputStream serviceAccount = new ByteArrayInputStream(firebaseJson.getBytes(StandardCharsets.UTF_8))) {

@@ -3,6 +3,7 @@
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import { TableLoading } from "@/components/LoadingSpinner";
 
 interface Admin {
   adminId: number;
@@ -257,8 +258,8 @@ export default function UsersPage() {
 
           {/* 로딩 상태 */}
           {isLoading ? (
-            <div className="col-span-9 flex items-center justify-center h-20">
-              <span className="text-gray-500">로딩 중...</span>
+            <div className="col-span-9">
+              <TableLoading rows={5} />
             </div>
           ) : filteredAdmins.length === 0 ? (
             <div className="col-span-9 flex items-center justify-center h-20">

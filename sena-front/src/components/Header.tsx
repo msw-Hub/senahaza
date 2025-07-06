@@ -3,12 +3,17 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
+import { useRoleStore } from "@/store/role";
 
 export default function Header() {
   const [adminName, setAdminName] = useState<string>("");
   const pathname = usePathname();
   const router = useRouter();
   const isAdminPage = pathname.startsWith("/admin/root");
+
+  // 관리자 페이지 여부를 판단하기 위한 변수
+  //zustand store 사용 useRoleStore
+  const { role, setRole } = useRoleStore();
 
   useEffect(() => {
     // 관리자 페이지에서만 관리자 이름을 가져옴
@@ -19,14 +24,16 @@ export default function Header() {
 
   const fetchAdminName = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/viewer/admin/name`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/viewer/admin/info`, {
         withCredentials: true,
       });
-      setAdminName(response.data);
+      setAdminName(response.data.name || ""); // 이름이 없을 경우 빈 문자열로 설정
+      setRole(response.data.role || "VIEWER"); // role 정보도 저장
     } catch (error) {
       console.error("관리자 이름 조회 실패:", error);
       // 에러 시 이름을 빈 문자열로 유지
       setAdminName("");
+      setRole("VIEWER"); // 에러 시 기본 role로 설정
     }
   };
 

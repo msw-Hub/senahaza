@@ -4,6 +4,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import PackageModal from "./components/PackageModal";
+import { TableLoading } from "@/components/LoadingSpinner";
 
 interface Item {
   itemId: number;
@@ -456,8 +457,8 @@ export default function PackageManagePage() {
 
           {/* 로딩 상태 */}
           {isLoading ? (
-            <div className="col-span-12 flex items-center justify-center h-20">
-              <span className="text-gray-500">로딩 중...</span>
+            <div className="col-span-12">
+              <TableLoading rows={5} />
             </div>
           ) : filteredPackages.length === 0 ? (
             <div className="col-span-12 flex items-center justify-center h-20">

@@ -47,7 +47,7 @@ export default function LoginPage() {
         // localStorage.setItem("token", response.data.token);
 
         // 로그인 후 페이지 이동
-        router.push("/admin/root/approve"); // 관리자 승인 페이지로 이동
+        router.push("/admin/root/items"); // 관리자 아이템 페이지로 이동
       } else {
         console.error("로그인 실패", response.data);
         alert("로그인에 실패했습니다.");

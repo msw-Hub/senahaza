@@ -43,9 +43,6 @@ public class SecurityConfig {
     private final RedisIpRateLimitService redisIpRateLimitService;
     private final IpRateLimitingFilter ipRateLimitingFilter;
 
-    @Value("${cors.allowed-origins}")
-    private String allowedOrigins;
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
@@ -107,8 +104,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        List<String> origins = Arrays.asList(allowedOrigins.split(","));
-        config.setAllowedOriginPatterns(origins); // 좀 더 유연하게
+
+        config.setAllowedOrigins(List.of("https://senahaza.store"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

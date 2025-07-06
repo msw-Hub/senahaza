@@ -26,22 +26,22 @@ spring:
       enabled: true
 
 logging:
+  level:
+    root: INFO
+    org.example.analytics: DEBUG
+    com.google.analytics: DEBUG
+    com.google.api: DEBUG
+    org.example: DEBUG
+    org.example.traffic: DEBUG
   pattern:
     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} : %msg%n"
   file:
     encoding: UTF-8
   encoding:
     charset: UTF-8
-  level:
-    org.example.analytics: DEBUG
-    com.google.analytics: DEBUG
-    com.google.api: DEBUG
-    org.example: DEBUG
-    org.example.traffic: DEBUG
 
 jwt:
   secret: ${JWT_SECRET}
-  cookie-domain: ${JWT_COOKIE_DOMAIN:localhost}
 
 analytics:
   google:
@@ -49,6 +49,3 @@ analytics:
 
 server:
   port: ${PORT:8080}
-
-cors:
-  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:3000}

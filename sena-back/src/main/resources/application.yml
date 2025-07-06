@@ -42,7 +42,6 @@ logging:
 
 jwt:
   secret: ${JWT_SECRET}
-  cookie-domain: ${JWT_COOKIE_DOMAIN:localhost}
 
 analytics:
   google:
@@ -50,6 +49,3 @@ analytics:
 
 server:
   port: ${PORT:8080}
-
-cors:
-  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:3000}

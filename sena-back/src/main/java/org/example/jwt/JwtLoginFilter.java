@@ -29,8 +29,6 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     private final AdminLoginService adminLoginService;
     private final RedisService redisService;
 
-    @Value("${jwt.cookie-domain}")
-    private String cookieDomain;
 
     // 로그인 요청 시 실행되는 메서드
     @Override
@@ -97,6 +95,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
 
         String token = tokenInfo.getToken();
         int maxAge = (int)(tokenInfo.getExpirationMs() / 1000);
+        String cookieDomain = ".senahaza.store";
 
         // ✅ SameSite=None, Secure, Domain 수동 설정
         String cookieHeader = String.format(

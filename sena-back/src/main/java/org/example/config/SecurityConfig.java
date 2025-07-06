@@ -43,9 +43,6 @@ public class SecurityConfig {
     private final RedisIpRateLimitService redisIpRateLimitService;
     private final IpRateLimitingFilter ipRateLimitingFilter;
 
-    @Value("${cors.allowed-origins}")
-    private String allowedOrigins;
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();

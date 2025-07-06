@@ -268,7 +268,7 @@ public class ViewerService {
     }
 
     // 로그아웃 처리
-    public void logout(String email,HttpServletResponse response) throws IOException{
+    public void logout(String email,HttpServletRequest  request, HttpServletResponse response) throws IOException{
         // 이메일로 해당 관리자 계정 조회
         AdminEntity admin = adminRepository.findByEmail(email)
                 .orElseThrow(() -> new AdminNotFoundException("해당 이메일의 관리자가 존재하지 않습니다."));
@@ -289,7 +289,7 @@ public class ViewerService {
         response.getWriter().write("{\"message\":\"로그아웃 성공\"}");
     }
 
-    
+
     // 관리자 이름과 권한 조회 - 이메일로
     public Map<String, String> getAdminInfo(String email) {
         AdminEntity admin = adminRepository.findByEmail(email)

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -69,7 +70,7 @@ public class ViewerController {
 
     // 로그아웃
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) throws IOException {
         log.info("로그아웃 요청");
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         viewerService.logout(email, request, response);

@@ -1,6 +1,6 @@
 "use client";
 
-import apiClient from "@/lib/axios";
+import apiClient, { handleApiError } from "@/lib/axios";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import PackageModal from "./components/PackageModal";
@@ -79,7 +79,7 @@ export default function PackageManagePage() {
       console.log("패키지 목록:", response.data.packages);
     } catch (error) {
       console.error("패키지 목록 조회 중 오류 발생", error);
-      // 에러는 인터셉터에서 처리됨
+      handleApiError(error);
     } finally {
       setIsLoading(false);
     }
@@ -93,7 +93,7 @@ export default function PackageManagePage() {
       console.log("아이템 목록:", response.data);
     } catch (error) {
       console.error("아이템 목록 조회 중 오류 발생", error);
-      // 에러는 인터셉터에서 처리됨
+      handleApiError(error);
     }
   };
 
@@ -141,7 +141,7 @@ export default function PackageManagePage() {
       }
     } catch (error) {
       console.error("패키지 추가 중 오류 발생", error);
-      alert("패키지 추가 중 오류가 발생했습니다.");
+      handleApiError(error);
     } finally {
       setIsLoading(false);
     }
@@ -199,7 +199,7 @@ export default function PackageManagePage() {
       }
     } catch (error) {
       console.error("패키지 수정 중 오류 발생", error);
-      alert("패키지 수정 중 오류가 발생했습니다.");
+      handleApiError(error);
     } finally {
       setIsLoading(false);
     }
@@ -233,7 +233,7 @@ export default function PackageManagePage() {
       }
     } catch (error) {
       console.error("패키지 상태 변경 중 오류 발생", error);
-      alert("패키지 상태 변경 중 오류가 발생했습니다.");
+      handleApiError(error);
     }
   };
 
@@ -253,7 +253,7 @@ export default function PackageManagePage() {
       }
     } catch (error) {
       console.error("패키지 삭제 중 오류 발생", error);
-      alert("패키지 삭제 중 오류가 발생했습니다.");
+      handleApiError(error);
     }
   };
 

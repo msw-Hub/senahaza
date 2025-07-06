@@ -1,6 +1,6 @@
 "use client";
 
-import apiClient from "@/lib/axios";
+import apiClient, { handleApiError } from "@/lib/axios";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import ItemModal from "./components/ItemModal";
@@ -52,7 +52,7 @@ export default function ItemManagePage() {
       console.log("아이템 목록:", response.data);
     } catch (error) {
       console.error("아이템 목록 조회 중 오류 발생", error);
-      alert("아이템 목록 조회 중 오류가 발생했습니다.");
+      handleApiError(error);
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +101,7 @@ export default function ItemManagePage() {
       }
     } catch (error) {
       console.error("아이템 추가 중 오류 발생", error);
-      alert("아이템 추가 중 오류가 발생했습니다.");
+      handleApiError(error);
     } finally {
       setIsLoading(false);
     }
@@ -150,7 +150,7 @@ export default function ItemManagePage() {
       }
     } catch (error) {
       console.error("아이템 수정 중 오류 발생", error);
-      alert("아이템 수정 중 오류가 발생했습니다.");
+      handleApiError(error);
     } finally {
       setIsLoading(false);
     }
@@ -176,7 +176,7 @@ export default function ItemManagePage() {
       }
     } catch (error) {
       console.error(`아이템 ${actionText} 중 오류 발생`, error);
-      alert(`아이템 ${actionText} 중 오류가 발생했습니다.`);
+      handleApiError(error);
     }
   };
 
@@ -196,7 +196,7 @@ export default function ItemManagePage() {
       }
     } catch (error) {
       console.error("아이템 삭제 중 오류 발생", error);
-      alert("아이템 삭제 중 오류가 발생했습니다.");
+      handleApiError(error);
     }
   };
 

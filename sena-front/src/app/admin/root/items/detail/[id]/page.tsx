@@ -16,7 +16,7 @@ interface ItemDetail {
   itemName: string;
   ruby: number;
   imgUrl: string;
-  updateLogList: Logmessage[];
+  updateLogs: Logmessage[];
   status: "ACTIVE" | "INACTIVE";
 }
 
@@ -196,7 +196,7 @@ export default function ItemDetailPage() {
             아이템 정보
           </button>
           <button onClick={() => setActiveTab("logs")} className={`px-4 py-2 rounded-sm font-medium text-sm ${activeTab === "logs" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}>
-            변경 이력 ({itemDetail?.updateLogList?.length || 0})
+            변경 이력 ({itemDetail?.updateLogs?.length || 0})
           </button>
         </div>
         <button onClick={openEditModal} className="px-4 py-2 bg-green-400 text-white rounded-sm hover:bg-green-600 transition-colors text-nowrap">
@@ -253,7 +253,7 @@ export default function ItemDetailPage() {
                   </div>
 
                   {/* 최근 수정 정보 */}
-                  {itemDetail.updateLogList && itemDetail.updateLogList.length > 0 && (
+                  {itemDetail.updateLogs && itemDetail.updateLogs.length > 0 && (
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
                         <i className="xi-time mr-2 text-orange-600"></i>
@@ -262,15 +262,15 @@ export default function ItemDetailPage() {
                       <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">수정자</span>
-                          <span className="font-medium text-gray-900">{itemDetail.updateLogList[0].adminName}</span>
+                          <span className="font-medium text-gray-900">{itemDetail.updateLogs[0].adminName}</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">수정일</span>
-                          <span className="font-medium text-gray-900">{formatDateTime(itemDetail.updateLogList[0].updatedAt)}</span>
+                          <span className="font-medium text-gray-900">{formatDateTime(itemDetail.updateLogs[0].updatedAt)}</span>
                         </div>
                         <div className="flex justify-between items-start">
                           <span className="text-sm text-gray-600">메시지</span>
-                          <span className="font-medium text-gray-900 text-right max-w-[200px] break-words">{itemDetail.updateLogList[0].message || "메시지 없음"}</span>
+                          <span className="font-medium text-gray-900 text-right max-w-[200px] break-words">{itemDetail.updateLogs[0].message || "메시지 없음"}</span>
                         </div>
                       </div>
                     </div>
@@ -285,7 +285,7 @@ export default function ItemDetailPage() {
                     <div className="bg-gray-50 rounded-lg p-4">
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">총 변경 이력</span>
-                        <span className="font-medium text-gray-900">{itemDetail.updateLogList?.length || 0}개</span>
+                        <span className="font-medium text-gray-900">{itemDetail.updateLogs?.length || 0}개</span>
                       </div>
                     </div>
                   </div>
@@ -306,11 +306,11 @@ export default function ItemDetailPage() {
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">아이템 수정 기록을 확인할 수 있습니다</p>
               </div>
-              <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">총 {itemDetail?.updateLogList?.length || 0}개</div>
+              <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">총 {itemDetail?.updateLogs?.length || 0}개</div>
             </div>
           </div>
 
-          {!itemDetail?.updateLogList || itemDetail.updateLogList.length === 0 ? (
+          {!itemDetail?.updateLogs || itemDetail.updateLogs.length === 0 ? (
             <div className="p-12 text-center">
               <div className="text-gray-300 text-6xl mb-4">📝</div>
               <h4 className="text-lg font-medium text-gray-500 mb-2">변경 이력이 없습니다</h4>
@@ -319,7 +319,7 @@ export default function ItemDetailPage() {
           ) : (
             <div className="p-6">
               <div className="space-y-4">
-                {itemDetail.updateLogList.map((log, index) => (
+                {itemDetail.updateLogs.map((log, index) => (
                   <div key={index} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

@@ -1,6 +1,6 @@
 "use client";
 
-import apiClient from "@/lib/axios";
+import apiClient, { handleApiError } from "@/lib/axios";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { TableLoading } from "@/components/LoadingSpinner";
@@ -148,7 +148,7 @@ export default function UsersPage() {
       }
     } catch (error) {
       console.error("관리자 권한 변경 중 오류 발생", error);
-      alert("관리자 권한 변경 중 오류가 발생했습니다.");
+      handleApiError(error);
     }
   };
 
@@ -171,7 +171,7 @@ export default function UsersPage() {
       }
     } catch (error) {
       console.error("관리자 삭제 중 오류 발생", error);
-      alert("관리자 삭제 중 오류가 발생했습니다.");
+      handleApiError(error);
     }
   };
 

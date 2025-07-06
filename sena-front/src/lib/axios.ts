@@ -33,11 +33,6 @@ apiClient.interceptors.response.use(
     const { data } = response;
 
     if (data && data.errorCode && ERROR_MESSAGES[data.errorCode as keyof typeof ERROR_MESSAGES]) {
-      const errorMessage = ERROR_MESSAGES[data.errorCode as keyof typeof ERROR_MESSAGES];
-
-      // 에러 메시지 출력
-      alert(errorMessage);
-
       // 추가적인 서버 메시지가 있다면 콘솔에 출력
       if (data.message) {
         console.error(`[${data.errorCode}] ${data.message}`);
@@ -49,6 +44,7 @@ apiClient.interceptors.response.use(
         isBusinessError: true,
         errorCode: data.errorCode,
         message: data.message,
+        userMessage: ERROR_MESSAGES[data.errorCode as keyof typeof ERROR_MESSAGES],
       });
     }
 
@@ -62,42 +58,74 @@ apiClient.interceptors.response.use(
 
       // HTTP 403 Forbidden 상태 코드 처리
       if (status === 403) {
-        alert("접근 권한이 없습니다.");
         console.error("Access denied (403):", error.response);
-        return Promise.reject(error);
+        return Promise.reject({
+          ...error,
+          userMessage: "접근 권한이 없습니다.",
+          isAccessDenied: true,
+        });
       }
 
       // 서버에서 온 에러 코드 확인 (code 또는 errorCode 둘 다 지원)
       const errorCode = data?.code || data?.errorCode;
       if (errorCode && ERROR_MESSAGES[errorCode as keyof typeof ERROR_MESSAGES]) {
-        const errorMessage = ERROR_MESSAGES[errorCode as keyof typeof ERROR_MESSAGES];
-
-        // 에러 메시지 출력
-        alert(errorMessage);
-
         // 추가적인 서버 메시지가 있다면 콘솔에 출력
         if (data.message) {
           console.error(`[${errorCode}] ${data.message}`);
         }
+
+        return Promise.reject({
+          ...error,
+          userMessage: ERROR_MESSAGES[errorCode as keyof typeof ERROR_MESSAGES],
+          errorCode,
+        });
       } else {
         // 정의되지 않은 에러 코드인 경우 기본 메시지
         const defaultMessage = data?.message || "알 수 없는 오류가 발생했습니다.";
-        alert(defaultMessage);
         console.error("Unknown error:", error.response);
+        return Promise.reject({
+          ...error,
+          userMessage: defaultMessage,
+        });
       }
     } else if (error.request) {
       // 네트워크 오류
-      alert("네트워크 연결을 확인해주세요.");
       console.error("Network error:", error.request);
+      return Promise.reject({
+        ...error,
+        userMessage: "네트워크 연결을 확인해주세요.",
+        isNetworkError: true,
+      });
     } else {
       // 기타 오류
-      alert("요청 처리 중 오류가 발생했습니다.");
       console.error("Request error:", error.message);
+      return Promise.reject({
+        ...error,
+        userMessage: "요청 처리 중 오류가 발생했습니다.",
+      });
     }
-
-    // 에러를 다시 throw하여 호출하는 곳에서 catch할 수 있도록 함
-    return Promise.reject(error);
   }
 );
+
+// 에러 처리 유틸리티 함수
+export const handleApiError = (error: unknown) => {
+  interface ApiError {
+    userMessage?: string;
+    response?: {
+      data?: {
+        message?: string;
+      };
+    };
+  }
+  
+  const typedError = error as ApiError;
+  if (typedError.userMessage) {
+    alert(typedError.userMessage);
+  } else if (typedError.response?.data?.message) {
+    alert(typedError.response.data.message);
+  } else {
+    alert("알 수 없는 오류가 발생했습니다.");
+  }
+};
 
 export default apiClient;

@@ -1,6 +1,6 @@
 "use client";
 
-import apiClient from "@/lib/axios";
+import apiClient, { handleApiError } from "@/lib/axios";
 import React, { useEffect, useState } from "react";
 
 interface SignupRequest {
@@ -40,7 +40,7 @@ export default function ApprovePage() {
       console.log("승인 대기 중인 사용자 목록:", response.data);
     } catch (error) {
       console.error("승인 요청 조회 중 오류 발생", error);
-      alert("승인 요청 조회 중 오류가 발생했습니다.");
+      handleApiError(error);
     } finally {
       setIsLoading(false);
     }
@@ -58,7 +58,7 @@ export default function ApprovePage() {
       }
     } catch (error) {
       console.error("사용자 승인 중 오류 발생", error);
-      alert("사용자 승인 중 오류가 발생했습니다.");
+      handleApiError(error);
     }
   };
 
@@ -78,7 +78,7 @@ export default function ApprovePage() {
       }
     } catch (error) {
       console.error("사용자 거절 중 오류 발생", error);
-      alert("사용자 거절 중 오류가 발생했습니다.");
+      handleApiError(error);
     }
   };
 
@@ -105,7 +105,7 @@ export default function ApprovePage() {
       }
     } catch (error) {
       console.error("일괄 승인 중 오류 발생", error);
-      alert("일괄 승인 중 오류가 발생했습니다.");
+      handleApiError(error);
     } finally {
       setIsBatchProcessing(false);
     }
@@ -134,7 +134,7 @@ export default function ApprovePage() {
       }
     } catch (error) {
       console.error("일괄 거절 중 오류 발생", error);
-      alert("일괄 거절 중 오류가 발생했습니다.");
+      handleApiError(error);
     } finally {
       setIsBatchProcessing(false);
     }

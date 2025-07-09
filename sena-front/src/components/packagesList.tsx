@@ -11,7 +11,6 @@ interface Item {
   quantity: number; // 아이템 수량
   ruby: number; // 아이템의 루비 가치
 }
-
 interface Package {
   items: Item[]; // 패키지에 포함된 아이템 목록
   packageId: number; // 패키지 ID
@@ -43,6 +42,9 @@ export default function Packages() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [allItems, setAllItems] = useState<Item[]>([]);
+
+  // 검색 기능 추가
+  const [searchTerm, setSearchTerm] = useState("");
 
   // 커스텀 패키지 폼 데이터
   const [customPackageForm, setCustomPackageForm] = useState({
@@ -134,6 +136,17 @@ export default function Packages() {
   const getAllPackages = (): Package[] => {
     const customAsPackages = customPackages.map(convertCustomPackageToPackage);
     return [...packages, ...customAsPackages];
+  };
+
+  // 검색된 패키지 목록
+  const getFilteredPackages = (): Package[] => {
+    const allPackages = getAllPackages();
+
+    if (!searchTerm.trim()) {
+      return allPackages;
+    }
+
+    return allPackages.filter((pkg) => pkg.packageName.toLowerCase().includes(searchTerm.toLowerCase()));
   };
 
   // 커스텀 패키지 추가
@@ -269,19 +282,39 @@ export default function Packages() {
             커스텀 패키지 추가
           </button>
         </div>
+
+        {/* 검색 입력 필드 추가 */}
+        <div className="w-full">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i className="xi-search text-gray-400"></i>
+            </div>
+            <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="패키지명으로 검색..." />
+            {searchTerm && (
+              <button type="button" onClick={() => setSearchTerm("")} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                <i className="xi-close text-sm"></i>
+              </button>
+            )}
+          </div>
+          {searchTerm && (
+            <p className="text-sm text-gray-500 mt-2">
+              &quot;{searchTerm}&quot; 검색 결과: {getFilteredPackages().length}개
+            </p>
+          )}
+        </div>
         {/* 패키지 카드 그리드 - 남은 공간을 모두 사용 */}
         <div className="h-full">
-          {getAllPackages().length === 0 ? (
+          {getFilteredPackages().length === 0 ? (
             <div className="text-center py-12">
               <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                 <i className="xi-package text-2xl text-gray-400"></i>
               </div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">패키지가 없습니다</h3>
-              <p className="text-gray-500 text-sm">아직 등록된 패키지가 없습니다.</p>
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">{searchTerm ? "검색 결과가 없습니다" : "패키지가 없습니다"}</h3>
+              <p className="text-gray-500 text-sm">{searchTerm ? `"${searchTerm}"에 해당하는 패키지가 없습니다.` : "아직 등록된 패키지가 없습니다."}</p>
             </div>
           ) : (
             <div className="grid grid-cols-4 gap-4">
-              {getAllPackages().map((pkg, index) => {
+              {getFilteredPackages().map((pkg, index) => {
                 // 체크된 아이템만 계산
                 const packageValue = calculatePackageValue(pkg);
                 const { checkedItems, totalCash, hasCheckedItems } = packageValue;

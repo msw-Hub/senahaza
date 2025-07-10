@@ -262,7 +262,7 @@ export default function Packages() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
         <div className="container mx-auto px-6 py-12">
           <div className="flex items-center justify-center h-64">
-            <div className="relative">
+            <div className="relative" style={{ minWidth: "896px" }}>
               <div className="w-16 h-16 border-4 border-blue-200 rounded-full animate-spin border-t-blue-600"></div>
               <div className="mt-4 text-center text-gray-600 font-medium">패키지 목록을 불러오는 중...</div>
             </div>
@@ -305,7 +305,7 @@ export default function Packages() {
         {/* 패키지 카드 그리드 - 남은 공간을 모두 사용 */}
         <div className="h-full">
           {getFilteredPackages().length === 0 ? (
-            <div className="text-center py-12">
+            <div className="text-center py-12" style={{ minWidth: "896px" }}>
               <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                 <i className="xi-package text-2xl text-gray-400"></i>
               </div>

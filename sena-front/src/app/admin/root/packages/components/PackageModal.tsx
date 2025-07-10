@@ -139,7 +139,6 @@ export default function PackageModal({ showModal, editingPackage, formData, item
                             <div className="flex items-center gap-2">
                               <input
                                 type="number"
-                                defaultValue={selectedItem.quantity}
                                 onChange={(e) => {
                                   const numValue = Number(e.target.value);
                                   if (numValue > 0) {

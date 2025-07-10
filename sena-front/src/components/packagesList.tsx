@@ -277,7 +277,7 @@ export default function Packages() {
   return (
     <div className="flex flex-col h-full shadow-lg rounded-lg">
       {/* 헤더 섹션 */}
-      <div className="flex flex-col h-full items-start justify-center gap-4 p-4 bg-white shadow-lg rounded-lg">
+      <div className="flex flex-col h-full items-start justify-center gap-4 p-4 bg-white shadow-lg rounded-lg overflow-y-scroll">
         <div className="flex items-center justify-between w-full">
           <h1 className="text-xl font-bold text-gray-800">패키지 목록</h1>
           <button onClick={() => setIsAddModalOpen(true)} className="px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">

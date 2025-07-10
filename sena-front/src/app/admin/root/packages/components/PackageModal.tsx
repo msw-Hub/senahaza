@@ -142,7 +142,6 @@ export default function PackageModal({ showModal, editingPackage, formData, item
                               </button>
                               <input
                                 type="number"
-                                min="1"
                                 value={selectedItem.quantity}
                                 onChange={(e) => {
                                   const value = parseInt(e.target.value) || 1;
@@ -213,7 +212,7 @@ export default function PackageModal({ showModal, editingPackage, formData, item
                     </div>
                   ))
                 ) : (
-                  <div className="col-span-full text-center py-8 text-gray-500">{searchTerm ? `"${searchTerm}"에 대한 검색 결과가 없습니다.` : "추가할 수 있는 아이템이 없습니다."}</div>
+                  <div className="col-span-full text-center py-8 text-gray-500">{searchTerm ? `&quot;${searchTerm}&quot;에 대한 검색 결과가 없습니다.` : "추가할 수 있는 아이템이 없습니다."}</div>
                 )}
               </div>
             </div>

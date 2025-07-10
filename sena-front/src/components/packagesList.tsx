@@ -46,6 +46,9 @@ export default function Packages() {
   // 검색 기능 추가
   const [searchTerm, setSearchTerm] = useState("");
 
+  // 커스텀 패키지 모달의 아이템 검색을 위한 state 추가
+  const [customModalSearchTerm, setCustomModalSearchTerm] = useState("");
+
   // 커스텀 패키지 폼 데이터
   const [customPackageForm, setCustomPackageForm] = useState({
     packageName: "",
@@ -529,177 +532,251 @@ export default function Packages() {
       )}
       {/* 커스텀 패키지 추가 모달 */}
       {isAddModalOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setIsAddModalOpen(false);
-            }
-          }}>
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-[900px] max-w-[95vw] max-h-[95vh] overflow-y-auto">
             {/* 모달 헤더 */}
-            <div className="flex-shrink-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4">
+            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold">커스텀 패키지 추가</h3>
-                <button onClick={() => setIsAddModalOpen(false)} className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors">
-                  <i className="xi-close text-white"></i>
+                <h2 className="text-xl font-bold text-gray-900 flex items-center">
+                  <i className="xi-plus mr-2 text-blue-600"></i>
+                  커스텀 패키지 추가
+                </h2>
+                <button onClick={() => setIsAddModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                  <i className="xi-close text-xl"></i>
                 </button>
               </div>
             </div>
 
-            {/* 모달 내용 */}
-            <div className="flex-1 p-4 overflow-y-auto min-h-0">
-              <div className="space-y-4">
-                {/* 패키지명 입력 */}
+            {/* 모달 컨텐츠 */}
+            <div className="p-6 space-y-6">
+              {/* 기본 정보 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">패키지명</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <i className="xi-tag mr-1"></i>
+                    패키지명
+                  </label>
                   <input
                     type="text"
                     value={customPackageForm.packageName}
                     onChange={(e) => setCustomPackageForm((prev) => ({ ...prev, packageName: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="커스텀 패키지명을 입력하세요"
                   />
                 </div>
-                {/* 패키지 가격 입력 */}
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">패키지 가격</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <i className="xi-won mr-1"></i>
+                    패키지 가격
+                  </label>
                   <input
                     type="number"
                     value={customPackageForm.packagePrice}
                     onChange={(e) => setCustomPackageForm((prev) => ({ ...prev, packagePrice: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="패키지 가격을 입력하세요"
                   />
-                </div>{" "}
+                </div>
+              </div>
+
+              {/* 아이템 구성 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <i className="xi-package mr-1"></i>
+                  아이템 구성
+                </label>
+
                 {/* 선택된 아이템 목록 */}
                 {customPackageForm.selectedItems.length > 0 && (
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="block text-sm font-medium text-gray-700">선택된 아이템 ({customPackageForm.selectedItems.length}개)</label> {/* 패키지 정보 */}
-                      <div className="text-sm bg-purple-50 px-3 py-1 rounded-lg border border-purple-200">
-                        <div className="flex items-center gap-4">
-                          <div>
-                            <span className="text-gray-600">총 개수: </span>
-                            <span className="font-medium text-gray-700">{customPackageForm.selectedItems.reduce((sum, item) => sum + item.quantity, 0)}개</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">총 루비: </span>
-                            <span className="font-medium text-purple-600">
-                              {customPackageForm.selectedItems
-                                .reduce((sum, selectedItem) => {
-                                  const itemInfo = allItems.find((item) => item.itemId === selectedItem.itemId);
-                                  return sum + (itemInfo?.ruby || 0) * selectedItem.quantity;
-                                }, 0)
-                                .toLocaleString()}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">총 현금: </span>
-                            <span className="font-medium text-green-600">
-                              {(
-                                customPackageForm.selectedItems.reduce((sum, selectedItem) => {
-                                  const itemInfo = allItems.find((item) => item.itemId === selectedItem.itemId);
-                                  return sum + (itemInfo?.ruby || 0) * selectedItem.quantity;
-                                }, 0) * 7.5
-                              ).toLocaleString()}
-                              원
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3">
-                      {customPackageForm.selectedItems.map((selectedItem) => {
-                        const itemInfo = allItems.find((item) => item.itemId === selectedItem.itemId);
-                        return (
-                          <div key={selectedItem.itemId} className="flex items-center justify-between bg-purple-50 rounded-lg p-2">
-                            <div className="flex items-center gap-2">
-                              <img src={itemInfo?.imgUrl} alt={itemInfo?.itemName} className="w-8 h-8 object-cover rounded" />
-                              <div>
-                                <span className="font-medium">{itemInfo?.itemName}</span>
-                                <span className="text-gray-600 text-sm ml-2">({itemInfo?.ruby} 루비)</span>
+                  <div className="mb-6">
+                    <div className="bg-blue-50 rounded-lg p-4 mb-4">
+                      <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                        <i className="xi-check-circle mr-2 text-blue-600"></i>
+                        선택된 아이템 ({customPackageForm.selectedItems.length}개)
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {customPackageForm.selectedItems.map((selectedItem) => {
+                          const itemInfo = allItems.find((item) => item.itemId === selectedItem.itemId);
+                          return (
+                            <div key={selectedItem.itemId} className="bg-white rounded-lg p-3 shadow-sm">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <img src={itemInfo?.imgUrl} alt={itemInfo?.itemName} className="w-10 h-10 object-cover rounded-lg" />
+                                  <div>
+                                    <h5 className="font-medium text-gray-900 text-sm">{itemInfo?.itemName}</h5>
+                                    <p className="text-xs text-purple-600">{itemInfo?.ruby?.toLocaleString()} 루비</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setCustomPackageForm((prev) => ({
+                                        ...prev,
+                                        selectedItems: prev.selectedItems.map((item) => (item.itemId === selectedItem.itemId ? { ...item, quantity: Math.max(1, item.quantity - 1) } : item)),
+                                      }));
+                                    }}
+                                    className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
+                                    disabled={selectedItem.quantity <= 1}>
+                                    <i className="xi-minus text-xs"></i>
+                                  </button>
+                                  <input
+                                    type="number"
+                                    value={selectedItem.quantity}
+                                    onChange={(e) => {
+                                      const value = parseInt(e.target.value) || 1;
+                                      if (value >= 1) {
+                                        setCustomPackageForm((prev) => ({
+                                          ...prev,
+                                          selectedItems: prev.selectedItems.map((item) => (item.itemId === selectedItem.itemId ? { ...item, quantity: value } : item)),
+                                        }));
+                                      }
+                                    }}
+                                    className="w-12 h-7 text-center border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setCustomPackageForm((prev) => ({
+                                        ...prev,
+                                        selectedItems: prev.selectedItems.map((item) => (item.itemId === selectedItem.itemId ? { ...item, quantity: item.quantity + 1 } : item)),
+                                      }));
+                                    }}
+                                    className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors">
+                                    <i className="xi-plus text-xs"></i>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setCustomPackageForm((prev) => ({
+                                        ...prev,
+                                        selectedItems: prev.selectedItems.filter((item) => item.itemId !== selectedItem.itemId),
+                                      }));
+                                    }}
+                                    className="ml-2 w-7 h-7 bg-red-100 text-red-600 rounded-full flex items-center justify-center hover:bg-red-200 transition-colors">
+                                    <i className="xi-trash text-xs"></i>
+                                  </button>
+                                </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => {
-                                  setCustomPackageForm((prev) => ({
-                                    ...prev,
-                                    selectedItems: prev.selectedItems.map((item) => (item.itemId === selectedItem.itemId ? { ...item, quantity: Math.max(1, item.quantity - 1) } : item)),
-                                  }));
-                                }}
-                                className="w-6 h-6 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300">
-                                -
-                              </button>
-                              <span className="w-8 text-center">{selectedItem.quantity}</span>
-                              <button
-                                onClick={() => {
-                                  setCustomPackageForm((prev) => ({
-                                    ...prev,
-                                    selectedItems: prev.selectedItems.map((item) => (item.itemId === selectedItem.itemId ? { ...item, quantity: item.quantity + 1 } : item)),
-                                  }));
-                                }}
-                                className="w-6 h-6 bg-gray-200 rounded flex items-center justify-center hover:bg-gray-300">
-                                +
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setCustomPackageForm((prev) => ({
-                                    ...prev,
-                                    selectedItems: prev.selectedItems.filter((item) => item.itemId !== selectedItem.itemId),
-                                  }));
-                                }}
-                                className="ml-2 text-red-500 hover:text-red-700">
-                                <i className="xi-trash"></i>
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}
+
                 {/* 아이템 추가 목록 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">아이템 추가</label>
-                  <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3">
-                    <div className="grid grid-cols-1 gap-2">
-                      {allItems
-                        .filter((item) => !customPackageForm.selectedItems.some((selected) => selected.itemId === item.itemId))
-                        .map((item) => (
-                          <div key={item.itemId} className="flex items-center justify-between border border-gray-200 rounded-lg p-2 hover:bg-gray-50">
-                            <div className="flex items-center gap-2">
-                              <img src={item.imgUrl} alt={item.itemName} className="w-6 h-6 object-cover rounded" />
-                              <span>{item.itemName}</span>
-                              <span className="text-gray-600 text-sm">({item.ruby} 루비)</span>
+                <div className="border border-gray-300 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-700 mb-3 flex items-center">
+                    <i className="xi-plus-circle mr-2 text-green-600"></i>
+                    아이템 추가
+                  </h4>
+
+                  {/* 검색 입력 */}
+                  <div className="mb-4">
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i className="xi-search text-gray-400"></i>
+                      </div>
+                      <input type="text" value={customModalSearchTerm} onChange={(e) => setCustomModalSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="아이템명으로 검색..." />
+                      {customModalSearchTerm && (
+                        <button type="button" onClick={() => setCustomModalSearchTerm("")} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                          <i className="xi-close text-sm"></i>
+                        </button>
+                      )}
+                    </div>
+                    {customModalSearchTerm && (
+                      <p className="text-sm text-gray-500 mt-2">
+                        &quot;{customModalSearchTerm}&quot; 검색 결과: {allItems.filter((item) => !customPackageForm.selectedItems.some((selected) => selected.itemId === item.itemId) && item.itemName.toLowerCase().includes(customModalSearchTerm.toLowerCase())).length}개
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto">
+                    {(() => {
+                      const filteredItems = allItems.filter((item) => !customPackageForm.selectedItems.some((selected) => selected.itemId === item.itemId) && item.itemName.toLowerCase().includes(customModalSearchTerm.toLowerCase()));
+
+                      return filteredItems.length > 0 ? (
+                        filteredItems.map((item) => (
+                          <div key={item.itemId} className="flex items-center justify-between border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <img src={item.imgUrl} alt={item.itemName} className="w-8 h-8 object-cover rounded-lg" />
+                              <div>
+                                <span className="font-medium text-sm">{item.itemName}</span>
+                                <p className="text-xs text-purple-600">{item.ruby?.toLocaleString()} 루비</p>
+                              </div>
                             </div>
                             <button
+                              type="button"
                               onClick={() => {
                                 setCustomPackageForm((prev) => ({
                                   ...prev,
                                   selectedItems: [...prev.selectedItems, { itemId: item.itemId, quantity: 1 }],
                                 }));
                               }}
-                              className="px-2 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600">
+                              className="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors flex items-center gap-1">
+                              <i className="xi-plus text-xs"></i>
                               추가
                             </button>
                           </div>
-                        ))}
-                    </div>
-                  </div>{" "}
+                        ))
+                      ) : (
+                        <div className="col-span-full text-center py-8 text-gray-500">{customModalSearchTerm ? `&quot;${customModalSearchTerm}&quot;에 대한 검색 결과가 없습니다.` : "추가할 수 있는 아이템이 없습니다."}</div>
+                      );
+                    })()}
+                  </div>
                 </div>
               </div>
+
+              {/* 패키지 정보 요약 */}
+              {customPackageForm.selectedItems.length > 0 && (
+                <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                    <i className="xi-chart-bar mr-2 text-purple-600"></i>
+                    패키지 정보 요약
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600">총 아이템</p>
+                      <p className="text-lg font-bold text-gray-900">{customPackageForm.selectedItems.reduce((sum, item) => sum + item.quantity, 0)}개</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600">아이템 종류</p>
+                      <p className="text-lg font-bold text-gray-900">{customPackageForm.selectedItems.length}종</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600">총 루비</p>
+                      <p className="text-lg font-bold text-purple-600">
+                        {customPackageForm.selectedItems
+                          .reduce((sum, selectedItem) => {
+                            const itemInfo = allItems.find((item) => item.itemId === selectedItem.itemId);
+                            return sum + (itemInfo?.ruby || 0) * selectedItem.quantity;
+                          }, 0)
+                          .toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600">판매가격</p>
+                      <p className="text-lg font-bold text-green-600">{customPackageForm.packagePrice ? Number(customPackageForm.packagePrice).toLocaleString() : "0"}원</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 모달 푸터 */}
-            <div className="flex-shrink-0 border-t border-gray-200 p-4">
-              <div className="flex gap-2">
-                <button onClick={() => setIsAddModalOpen(false)} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <div className="p-6 border-t border-gray-200 bg-gray-50">
+              <div className="flex gap-3">
+                <button onClick={() => setIsAddModalOpen(false)} className="flex-1 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium">
                   취소
                 </button>
-                <button onClick={addCustomPackage} className="flex-1 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600">
-                  추가
+                <button onClick={addCustomPackage} className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                  <span className="flex items-center justify-center">
+                    <i className="xi-plus mr-2"></i>
+                    추가 완료
+                  </span>
                 </button>
               </div>
             </div>

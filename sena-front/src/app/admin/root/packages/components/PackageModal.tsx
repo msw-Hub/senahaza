@@ -144,9 +144,20 @@ export default function PackageModal({ showModal, editingPackage, formData, item
                                 type="number"
                                 value={selectedItem.quantity}
                                 onChange={(e) => {
-                                  const value = parseInt(e.target.value) || 1;
-                                  if (value >= 1) {
-                                    onQuantityChange(selectedItem.itemId, value);
+                                  const value = e.target.value;
+                                  if (value === "" || value === "0") {
+                                    // 빈 값이나 0일 때는 그대로 두고, blur 시에 처리
+                                    return;
+                                  }
+                                  const numValue = parseInt(value);
+                                  if (!isNaN(numValue) && numValue >= 1) {
+                                    onQuantityChange(selectedItem.itemId, numValue);
+                                  }
+                                }}
+                                onBlur={(e) => {
+                                  const value = e.target.value;
+                                  if (value === "" || parseInt(value) < 1 || isNaN(parseInt(value))) {
+                                    onQuantityChange(selectedItem.itemId, 1);
                                   }
                                 }}
                                 className="w-12 h-7 text-center border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"

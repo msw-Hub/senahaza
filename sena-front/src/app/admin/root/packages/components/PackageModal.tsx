@@ -137,11 +137,9 @@ export default function PackageModal({ showModal, editingPackage, formData, item
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <button type="button" onClick={() => onQuantityChange(selectedItem.itemId, selectedItem.quantity - 1)} className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors" disabled={selectedItem.quantity <= 1}>
-                                <i className="xi-minus text-xs"></i>
-                              </button>
                               <input
                                 type="number"
+                                defaultValue={selectedItem.quantity}
                                 onChange={(e) => {
                                   const numValue = Number(e.target.value);
                                   if (numValue > 0) {
@@ -150,9 +148,6 @@ export default function PackageModal({ showModal, editingPackage, formData, item
                                 }}
                                 className="w-12 h-7 text-center border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               />
-                              <button type="button" onClick={() => onQuantityChange(selectedItem.itemId, selectedItem.quantity + 1)} className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors">
-                                <i className="xi-plus text-xs"></i>
-                              </button>
                               <button type="button" onClick={() => onRemoveItem(selectedItem.itemId)} className="ml-2 w-7 h-7 bg-red-100 text-red-600 rounded-full flex items-center justify-center hover:bg-red-200 transition-colors">
                                 <i className="xi-trash text-xs"></i>
                               </button>

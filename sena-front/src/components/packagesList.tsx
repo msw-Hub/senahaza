@@ -609,20 +609,9 @@ export default function Packages() {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setCustomPackageForm((prev) => ({
-                                        ...prev,
-                                        selectedItems: prev.selectedItems.map((item) => (item.itemId === selectedItem.itemId ? { ...item, quantity: Math.max(1, item.quantity - 1) } : item)),
-                                      }));
-                                    }}
-                                    className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
-                                    disabled={selectedItem.quantity <= 1}>
-                                    <i className="xi-minus text-xs"></i>
-                                  </button>
                                   <input
                                     type="number"
+                                    defaultValue={selectedItem.quantity}
                                     onChange={(e) => {
                                       const numValue = Number(e.target.value);
                                       if (numValue > 0) {
@@ -634,17 +623,6 @@ export default function Packages() {
                                     }}
                                     className="w-12 h-7 text-center border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                   />
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setCustomPackageForm((prev) => ({
-                                        ...prev,
-                                        selectedItems: prev.selectedItems.map((item) => (item.itemId === selectedItem.itemId ? { ...item, quantity: item.quantity + 1 } : item)),
-                                      }));
-                                    }}
-                                    className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors">
-                                    <i className="xi-plus text-xs"></i>
-                                  </button>
                                   <button
                                     type="button"
                                     onClick={() => {

@@ -623,27 +623,13 @@ export default function Packages() {
                                   </button>
                                   <input
                                     type="number"
-                                    value={selectedItem.quantity}
+                                    defaultValue={0}
                                     onChange={(e) => {
-                                      const value = e.target.value;
-                                      if (value === "" || value === "0") {
-                                        // 빈 값이나 0일 때는 그대로 두고, blur 시에 처리
-                                        return;
-                                      }
-                                      const numValue = parseInt(value);
-                                      if (!isNaN(numValue) && numValue >= 1) {
+                                      const numValue = Number(e.target.value);
+                                      if (numValue > 0) {
                                         setCustomPackageForm((prev) => ({
                                           ...prev,
                                           selectedItems: prev.selectedItems.map((item) => (item.itemId === selectedItem.itemId ? { ...item, quantity: numValue } : item)),
-                                        }));
-                                      }
-                                    }}
-                                    onBlur={(e) => {
-                                      const value = e.target.value;
-                                      if (value === "" || parseInt(value) < 1 || isNaN(parseInt(value))) {
-                                        setCustomPackageForm((prev) => ({
-                                          ...prev,
-                                          selectedItems: prev.selectedItems.map((item) => (item.itemId === selectedItem.itemId ? { ...item, quantity: 1 } : item)),
                                         }));
                                       }
                                     }}

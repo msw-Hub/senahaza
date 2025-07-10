@@ -142,7 +142,6 @@ export default function PackageModal({ showModal, editingPackage, formData, item
                               </button>
                               <input
                                 type="number"
-                                defaultValue={0}
                                 onChange={(e) => {
                                   const numValue = Number(e.target.value);
                                   if (numValue > 0) {

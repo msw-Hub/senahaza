@@ -623,7 +623,6 @@ export default function Packages() {
                                   </button>
                                   <input
                                     type="number"
-                                    defaultValue={0}
                                     onChange={(e) => {
                                       const numValue = Number(e.target.value);
                                       if (numValue > 0) {

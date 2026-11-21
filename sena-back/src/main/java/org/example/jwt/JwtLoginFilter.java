@@ -78,7 +78,8 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         }
 
         log.info("인증성공! 이메일: {}, 역할: {}", email, role);
-        log.info("JWT 토큰 생성: {}", tokenInfo.getToken());
+        // 발급한 JWT를 로그에 남기지 않는다. 로그만 보고도 토큰을 쓸 수 있기 때문이다(2026-11, 저장소 공개 정리)
+        // log.info("JWT 토큰 생성: {}", tokenInfo.getToken());
 
 
 //        Cookie cookie = new Cookie("token", tokenInfo.getToken());

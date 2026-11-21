@@ -37,9 +37,11 @@ public class FirebaseConfig {
         if (firebaseJson == null || firebaseJson.isEmpty()) {
             throw new IllegalStateException("Firebase service account JSON not found in SSM parameter store");
         } else {
+            // 서비스 계정 JSON은 앞부분이라도 로그에 남기지 않고, 읽었다는 사실만 남긴다(2026-11, 저장소 공개 정리)
             // 앞부분만 일부 출력 (예: 100자 이내)
-            log.info("Firebase JSON from SSM parameter (preview): {}",
-                    firebaseJson.length() > 100 ? firebaseJson.substring(0, 100) + "..." : firebaseJson);
+            // log.info("Firebase JSON from SSM parameter (preview): {}",
+            //         firebaseJson.length() > 100 ? firebaseJson.substring(0, 100) + "..." : firebaseJson);
+            log.info("SSM에서 Firebase 서비스 계정 JSON을 읽었습니다.");
         }
 
         try (InputStream serviceAccount = new ByteArrayInputStream(firebaseJson.getBytes(StandardCharsets.UTF_8))) {
